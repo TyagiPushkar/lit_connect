@@ -69,7 +69,7 @@ function VisitMap({ markers, mapCenter }) {
   }, [markers]);
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyBtEmyBwz_YotZK8Iabl_nQQldaAtN0jhM">
+    <LoadScript googleMapsApiKey="abcd">
       {" "}
       {/* Use an environment variable */}
       <GoogleMap
