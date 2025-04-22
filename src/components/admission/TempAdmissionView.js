@@ -363,18 +363,25 @@ localStorage.setItem("student_course", course);
         right: 0,
         p: 2,
         display: "flex",
-        justifyContent: "flex-end",
+          justifyContent: "flex-end",
+        gap:"100px",
         backgroundColor: "#fff",
         boxShadow: "0 -2px 8px rgba(0,0,0,0.05)",
         zIndex: 1000,
       }}
-    >
+      >
+        <Button
+        variant="contained"
+        sx={{ backgroundColor: "#CC7A00" }}
+      >
+        Reject
+      </Button>
       <Button
         variant="contained"
         sx={{ backgroundColor: "#CC7A00" }}
         onClick={handleNext}
       >
-        Submit
+        Approve
       </Button>
     </Box>
   </Box>
