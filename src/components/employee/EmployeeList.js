@@ -455,8 +455,10 @@ function EmployeeList() {
     onChange={(e) => setFormData({ ...formData, Role: e.target.value })}
     required
   >
-    <MenuItem value="HR">HR</MenuItem>
-    <MenuItem value="Employee">Employee</MenuItem>
+                                    <MenuItem value="HR">HR</MenuItem>
+                                    <MenuItem value="Employee">Employee</MenuItem>
+                                    <MenuItem value="Librarian">Librarian</MenuItem>
+                                    <MenuItem value="Accounts">Accounts</MenuItem>
   </TextField>
                             </Grid>
                             <Grid item xs={12} md={6}>
