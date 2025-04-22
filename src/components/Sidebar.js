@@ -29,6 +29,7 @@ function Sidebar() {
         8: { path: '/holiday', name: 'Holiday', icon: <HolidayVillage /> },
         12: { path: '/library', name: 'Library', icon: <LibraryBooksIcon /> },
         17: { path: '/fee-structure', name: 'Fees', icon: <AppsIcon /> },
+        18:  { path: '/teachers', name: 'Teachers', icon: <Person /> },
     };
 
     // Default routes visible to everyone
@@ -44,7 +45,7 @@ function Sidebar() {
     // HR-specific routes
     if (user?.role === 'HR') {
         allowedRoutes.push(
-            { path: '/employees', name: 'Employees', icon: <Person /> },
+           
             { path: '/report', name: 'Report', icon: <SummarizeIcon /> },
         //      { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
         // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },

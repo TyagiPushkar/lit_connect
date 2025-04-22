@@ -42,8 +42,8 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Login />} />
-            <Route path="/employees" element={<PrivateRoute element={Employee} requiredRole="HR" />} />
-            <Route path="/employees/:empId" element={<PrivateRoute element={EmployeeProfile} requiredRole="HR" />} />
+            <Route path="/teachers" element={<PrivateRoute element={Employee} />} />
+            <Route path="/teachers/:empId" element={<PrivateRoute element={EmployeeProfile} requiredRole="HR" />} />
             <Route path="/holiday" element={<PrivateRoute element={Holiday} />} />
             <Route path="/policy" element={<PrivateRoute element={Policy} />} />
             <Route path="/attendance" element={<PrivateRoute element={Attendance} />} />
