@@ -63,36 +63,84 @@ const UserProfile = () => {
     };
 
     return (
-        <Box sx={{ padding: { xs: 2, sm: 3 }, maxWidth: 800, margin: 'auto' }}>
-            <Paper elevation={3} sx={{ padding: 3 }}>
-                <Grid container spacing={3} alignItems="center">
-                    <Grid item xs={12} sm={4} container justifyContent="center">
-                        <Avatar
-                            sx={{ width: { xs: 80, sm: 120 }, height: { xs: 80, sm: 120 } }}
-                            src={user?.image || user?.username}
-                            alt={user?.name || 'User Profile Picture'}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={8}>
-                        <Typography variant="h4" gutterBottom>
-                            {user?.username || 'N/A'} Profile
-                        </Typography>
-                        <Divider sx={{ marginY: 2 }} />
-                        <Typography variant="h6">EmpId:  {user?.emp_id || 'N/A'}</Typography>
-                        <Typography variant="body1" sx={{ marginBottom: 1 }} />
-                        <Typography variant="h6">Employee Name: {user?.username || 'N/A'}</Typography>
-                        <Typography variant="h6">Email:  {user?.email || 'N/A'}</Typography>
-                        <Typography variant="body1" sx={{ marginBottom: 1 }} />
-                       
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                           
-                            <Button variant="contained" style={{backgroundColor:"orange"}} onClick={handleOpen}>
-                                Change Password
-                            </Button>
-                        </Box>
-                    </Grid>
-                </Grid>
-            </Paper>
+            <Box
+  sx={{
+    maxWidth: 900,
+    margin: 'auto',
+    mt: 4,
+    p: 3,
+    background: 'linear-gradient(135deg, #f3f4f6, #fff)',
+    borderRadius: 4,
+    boxShadow: 6,
+  }}
+>
+  <Paper
+    elevation={0}
+    sx={{
+      p: 4,
+      display: 'flex',
+      flexDirection: { xs: 'column', sm: 'row' },
+      alignItems: 'center',
+      gap: 4,
+      background: '#fff',
+      borderRadius: 4,
+      boxShadow: 3,
+    }}
+  >
+    {/* Avatar */}
+    <Box sx={{ position: 'relative' }}>
+      <Avatar
+        sx={{
+          width: 120,
+          height: 120,
+          border: '4px solid white',
+          boxShadow: 4,
+        }}
+        src={user?.image}
+        alt={user?.name || 'User'}
+      />
+    </Box>
+
+    {/* User Info */}
+    <Box sx={{ flexGrow: 1 }}>
+      <Typography variant="h4" fontWeight={600} gutterBottom>
+        {user?.username || 'N/A'}
+      </Typography>
+      <Divider sx={{ mb: 2 }} />
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Employee ID
+          </Typography>
+          <Typography variant="body1">{user?.emp_id || 'N/A'}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Email
+          </Typography>
+          <Typography variant="body1">{user?.email || 'N/A'}</Typography>
+        </Grid>
+      </Grid>
+
+      <Box mt={3}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={handleOpen}
+          sx={{
+            background: 'linear-gradient(to right, #ff9800, #f57c00)',
+            borderRadius: 3,
+            px: 4,
+            boxShadow: 2,
+          }}
+        >
+          Change Password
+        </Button>
+      </Box>
+    </Box>
+  </Paper>
+
 
             {/* <DashboardData/> */}
             {/* Change Password Dialog */}
