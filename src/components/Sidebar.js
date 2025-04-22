@@ -23,7 +23,7 @@ function Sidebar() {
     
     // Module Mapping
     const moduleMapping = {
-        1: { path: '/attendance', name: 'Attendance', icon: <BarChart /> },
+        21: { path: '/attendance', name: 'Attendance', icon: <BarChart /> },
         3: { path: '/leave', name: 'Leave', icon: <Person /> },
         10: { path: '/policy', name: 'Policy', icon: <Policy /> },
         8: { path: '/holiday', name: 'Holiday', icon: <HolidayVillage /> },
