@@ -55,7 +55,7 @@ function ViewHoliday() {
         <div className="calendar-container">
             <div style={{ display: "flex", gap: "100px" }}>
 
-                {user && user.role === "HR" ?
+                {user && user.role === "Teacher" ?
                     <Button
                         variant="contained"
                         color="primary"

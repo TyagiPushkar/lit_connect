@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, IconButton } from '@mui/material';
+import {
+    Dialog, DialogActions, DialogContent, DialogTitle,
+    Button, TextField, IconButton, Autocomplete, MenuItem
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 
+const courseOptions = ['BCA', 'B. Sc'];
+const semesterOptions = ['1', '2', '3', '4', '5', '6'];
+
 function AddHoliday({ open, onClose, onHolidayAdded }) {
-    const { user } = useAuth(); // Access `user` from `useAuth`
-    const [holidays, setHolidays] = useState([{ date: '', title: '' }]);
+    const { user } = useAuth();
+    const [holidays, setHolidays] = useState([
+        { date: '', title: '', Course: 'All', Sem: 'All' }
+    ]);
 
     const handleHolidayChange = (index, field, value) => {
         const newHolidays = [...holidays];
@@ -16,7 +24,7 @@ function AddHoliday({ open, onClose, onHolidayAdded }) {
     };
 
     const handleAddHoliday = () => {
-        setHolidays([...holidays, { date: '', title: '' }]);
+        setHolidays([...holidays, { date: '', title: '', Course: 'All', Sem: 'All' }]);
     };
 
     const handleRemoveHoliday = (index) => {
@@ -26,8 +34,8 @@ function AddHoliday({ open, onClose, onHolidayAdded }) {
     const handleSubmit = async () => {
         try {
             const payload = {
-                Tenent_Id: user.tenent_id, // Include Tenent_Id from the user object
-                holidays,
+                Tenent_Id: user.tenent_id,
+                holidays
             };
 
             const response = await axios.post('https://namami-infotech.com/LIT/src/holiday/add_holiday.php', payload);
@@ -44,12 +52,12 @@ function AddHoliday({ open, onClose, onHolidayAdded }) {
     };
 
     return (
-        <Dialog open={open} onClose={onClose}>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle style={{ backgroundColor: "#CC7A00", color: "white" }}>Add Holidays</DialogTitle>
-            <br />
             <DialogContent>
                 {holidays.map((holiday, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                        <br/>
                         <TextField
                             label="Date"
                             type="date"
@@ -57,14 +65,36 @@ function AddHoliday({ open, onClose, onHolidayAdded }) {
                             onChange={(e) => handleHolidayChange(index, 'date', e.target.value)}
                             InputLabelProps={{ shrink: true }}
                             variant="outlined"
-                            style={{ marginRight: '1rem' }}
+                            fullWidth
                         />
                         <TextField
                             label="Title"
                             value={holiday.title}
                             onChange={(e) => handleHolidayChange(index, 'title', e.target.value)}
                             variant="outlined"
+                            fullWidth
                         />
+                        <Autocomplete
+                            options={['All', ...courseOptions]}
+                            value={holiday.Course}
+                            onChange={(_, value) => handleHolidayChange(index, 'Course', value)}
+                            renderInput={(params) => (
+                                <TextField {...params} label="Course" variant="outlined" fullWidth />
+                            )}
+                        />
+                        <TextField
+                            select
+                            label="Semester"
+                            value={holiday.Sem}
+                            onChange={(e) => handleHolidayChange(index, 'Sem', e.target.value)}
+                            variant="outlined"
+                            fullWidth
+                        >
+                            <MenuItem value="All">All</MenuItem>
+                            {semesterOptions.map((sem) => (
+                                <MenuItem key={sem} value={sem}>{sem}</MenuItem>
+                            ))}
+                        </TextField>
                         {holidays.length > 1 && (
                             <IconButton onClick={() => handleRemoveHoliday(index)} color="secondary">
                                 <RemoveIcon />

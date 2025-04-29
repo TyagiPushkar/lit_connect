@@ -12,7 +12,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 const LibraryList = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-
     const [transactions, setTransactions] = useState([]);
     const [filteredTransactions, setFilteredTransactions] = useState([]);
     const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -88,9 +87,9 @@ const LibraryList = () => {
                             <TableCell style={{ color: "white" }}>Student ID</TableCell>
                             <TableCell style={{ color: "white" }}>Student Name</TableCell>
                             <TableCell style={{ color: "white" }}>Course</TableCell>
-                            <TableCell style={{ color: "white" }}>Session</TableCell>
+                            <TableCell style={{ color: "white" }}>Sem</TableCell>
                             <TableCell style={{ color: "white" }}>Book Issue</TableCell>
-                            <TableCell style={{ color: "white" }}>Book Return</TableCell>
+                            {/* <TableCell style={{ color: "white" }}>Book Return</TableCell> */}
                             <TableCell style={{ color: "white" }}>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -102,9 +101,9 @@ const LibraryList = () => {
                                     <TableCell>{tx.StudentID}</TableCell>
                                     <TableCell>{tx.CandidateName}</TableCell>
                                     <TableCell>{tx.Course}</TableCell>
-                                    <TableCell>{tx.Session}</TableCell>
+                                    <TableCell>{tx.Sem}</TableCell>
                                     <TableCell>{tx.BookIssue}</TableCell>
-                                    <TableCell>{tx.BookReturn}</TableCell>
+                                    {/* <TableCell>{tx.BookReturn}</TableCell> */}
                                     <TableCell>
                                       
                                         <VisibilityIcon

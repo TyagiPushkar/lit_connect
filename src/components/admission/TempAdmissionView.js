@@ -381,7 +381,7 @@ localStorage.setItem("student_course", course);
         sx={{ backgroundColor: "#CC7A00" }}
         onClick={handleNext}
       >
-        Approve
+        Enroll
       </Button>
     </Box>
   </Box>

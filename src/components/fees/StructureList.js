@@ -20,7 +20,7 @@ const StructureList = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [structures, setStructures] = useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const navigate = useNavigate();
@@ -62,12 +62,12 @@ const StructureList = () => {
         }}
       >
               <h2>Fee Structure List</h2>
-               <Button
+               {/* <Button
           onClick={() => navigate('/fees-payment')}
           style={{ backgroundColor: "#CC7A00", color: "white" }}
         >
            FEES PAYMENT
-        </Button>
+        </Button> */}
         <Button
           onClick={() => setDialogOpen(true)}
           style={{ backgroundColor: "#CC7A00", color: "white" }}

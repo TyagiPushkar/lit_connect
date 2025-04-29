@@ -1,259 +1,295 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead,
-    TableRow, Paper, Typography, CircularProgress, Snackbar, Avatar, Box,
-    Card, CardContent, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button
-} from '@mui/material';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
-
+  Box,
+  Typography,
+  CircularProgress,
+  Paper,
+  Button,
+  Avatar,
+  Card,
+  CardContent,
+  Grid,
+  Dialog,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PaymentDialog from "./PaymentDialog";
+import TransactionDialog from "./TransactionDialog";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 const StudentFeesTransaction = () => {
-    const { studentId } = useParams();
-    const [student, setStudent] = useState(null);
-    const [feeStructure, setFeeStructure] = useState([]);
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '' });
+  const { studentId } = useParams();
+  const [studentData, setStudentData] = useState(null);
+  const [feesData, setFeesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFee, setSelectedFee] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [transactionData, setTransactionData] = useState(null);
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
 
-    const [selectedTransaction, setSelectedTransaction] = useState(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
+  const fetchStudentAndFees = async () => {
+    try {
+      const studentRes = await axios.get(
+        `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
+      );
+      if (studentRes.data.success && studentRes.data.data) {
+        setStudentData(studentRes.data.data);
+      }
 
-    useEffect(() => {
-        fetchStudentData();
-    }, [studentId]);
+      const feesRes = await axios.get(
+        `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`,
+      );
+      if (feesRes.data.success && feesRes.data.data) {
+        setFeesData(feesRes.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      alert("Failed to fetch student or fee data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchTransactionData = async (transactionId) => {
+    try {
+      const res = await axios.get(
+        `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+      );
+      if (res.data.success && res.data.data) {
+        setTransactionData(res.data.data);
+        setTransactionDialogOpen(true);
+      }
+    } catch (err) {
+      console.error("Error fetching transaction data:", err);
+      alert("Failed to fetch transaction data.");
+    }
+  };
 
-    const fetchStudentData = async () => {
-        try {
-            const res = await axios.get(`https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`);
-            if (res.data.success) {
-                setStudent(res.data.data);
-                fetchFeeStructure(res.data.data.Course);
-            } else {
-                setSnackbar({ open: true, message: res.data.message });
-                setLoading(false);
-            }
-        } catch {
-            setSnackbar({ open: true, message: 'Failed to fetch student data.' });
-            setLoading(false);
-        }
-    };
+  useEffect(() => {
+    fetchStudentAndFees();
+  }, [studentId]);
 
-    const fetchFeeStructure = async (course) => {
-        try {
-            const res = await axios.get(`https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`);
-            if (res.data.success) {
-                setFeeStructure(res.data.data);
-                fetchTransactions();
-            } else {
-                setSnackbar({ open: true, message: 'Failed to fetch fee structure.' });
-                setLoading(false);
-            }
-        } catch {
-            setSnackbar({ open: true, message: 'Failed to fetch fee structure.' });
-            setLoading(false);
-        }
-    };
+  const handleOpenDialog = (fee) => {
+    setSelectedFee(fee);
+    setDialogOpen(true);
+  };
 
-    const fetchTransactions = async () => {
-        try {
-            const res = await axios.get(`https://namami-infotech.com/LIT/src/fees/get_transaction_by_stuid.php?stu_id=${studentId}`);
-            if (res.data.success) {
-                setTransactions(res.data.data);
-            } else {
-                setSnackbar({ open: true, message: res.data.message });
-            }
-        } catch {
-            setSnackbar({ open: true, message: 'Failed to fetch transactions.' });
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const handleShowTransaction = (txn) => {
-        setSelectedTransaction(txn);
-        setDialogOpen(true);
-    };
+  if (loading) return <CircularProgress sx={{ mt: 5 }} />;
 
-    const handleSubmitTransaction = (fee) => {
-        alert(`Submit fee for installment: ${fee.installment}`);
-    };
-
-    const handleCloseDialog = () => {
-        setDialogOpen(false);
-        setSelectedTransaction(null);
-    };
-
+  if (!studentData) {
     return (
-        <div>
-            {loading ? (
-                <CircularProgress />
-            ) : (
-                <>
-                    {student ? (
-                        <>
-                            <Card sx={{ mb: 3, p: 2, display: 'flex', alignItems: 'center', boxShadow: 3 }}>
-                                <Avatar
-                                    src={`https://namami-infotech.com/LIT/uploads/${student.Photo}`}
-                                    alt="Student Photo"
-                                    sx={{ width: 80, height: 80, mr: 3 }}
-                                />
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography variant="h6" gutterBottom color="primary">
-                                        {student.CandidateName} ({student.StudentID})
-                                    </Typography>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Typography variant="body2" fontWeight="bold">Course</Typography>
-                                            <Typography variant="body1">{student.Course}</Typography>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Typography variant="body2" fontWeight="bold">Session</Typography>
-                                            <Typography variant="body1">{student.Session}</Typography>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Typography variant="body2" fontWeight="bold">Contact</Typography>
-                                            <Typography variant="body1">{student.StudentContactNo}</Typography>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Typography variant="body2" fontWeight="bold">Email</Typography>
-                                            <Typography variant="body1">{student.Email || '-'}</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
-
-                            <Typography variant="h6" gutterBottom>Fee Structure</Typography>
-                            {feeStructure.length > 0 ? (
-                                <TableContainer component={Paper} style={{ marginBottom: '1rem' }}>
-                                    <Table>
-                                        <TableHead style={{ backgroundColor: '#CC7A00' }}>
-                                            <TableRow>
-                                                <TableCell style={{ color: 'white' }}>Installment</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Tuition Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Exam Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Hostel Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Admission Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Prospectus Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Due Date</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Action</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {feeStructure.map((fee, index) => {
-                                                const matchingTxn = transactions.find(txn => txn.installment === fee.installment);
-                                                return (
-                                                    <TableRow key={index}>
-                                                        <TableCell>{fee.installment}</TableCell>
-                                                        <TableCell>{fee.tution_fees}</TableCell>
-                                                        <TableCell>{fee.exam_fees}</TableCell>
-                                                        <TableCell>{fee.hostel_fees}</TableCell>
-                                                        <TableCell>{fee.admission_fees}</TableCell>
-                                                        <TableCell>{fee.prospectus_fees}</TableCell>
-                                                        <TableCell>{fee.due_date || '-'}</TableCell>
-                                                        <TableCell>
-                                                            {matchingTxn ? (
-                                                                <Button variant="outlined" onClick={() => handleShowTransaction(matchingTxn)}>
-                                                                    Show
-                                                                </Button>
-                                                            ) : (
-                                                                <Button variant="contained" color="success" onClick={() => handleSubmitTransaction(fee)}>
-                                                                    Submit
-                                                                </Button>
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            ) : (
-                                <Typography>No fee structure found for this course.</Typography>
-                            )}
-
-                            <Typography variant="h6" gutterBottom>Fee Transactions</Typography>
-                            {transactions.length > 0 ? (
-                                <TableContainer component={Paper}>
-                                    <Table>
-                                        <TableHead style={{ backgroundColor: '#CC7A00' }}>
-                                            <TableRow>
-                                                <TableCell style={{ color: 'white' }}>Installment</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Tuition Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Exam Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Hostel Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Admission Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Prospectus Fees</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Mode</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Mode ID</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Total</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Paid</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Balance</TableCell>
-                                                <TableCell style={{ color: 'white' }}>Date</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {transactions.map((txn, idx) => (
-                                                <TableRow key={idx}>
-                                                    <TableCell>{txn.installment}</TableCell>
-                                                    <TableCell>{txn.tuition_fees}</TableCell>
-                                                    <TableCell>{txn.exam_fees}</TableCell>
-                                                    <TableCell>{txn.hostel_fees}</TableCell>
-                                                    <TableCell>{txn.admission_fees}</TableCell>
-                                                    <TableCell>{txn.prospectus_fees}</TableCell>
-                                                    <TableCell>{txn.mode}</TableCell>
-                                                    <TableCell>{txn.mode_id}</TableCell>
-                                                    <TableCell>{txn.total_amount}</TableCell>
-                                                    <TableCell>{txn.deposit_amount}</TableCell>
-                                                    <TableCell>{txn.balance_amount}</TableCell>
-                                                    <TableCell>{txn.date_time}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            ) : (
-                                <Typography>No fee transactions found for this student.</Typography>
-                            )}
-                        </>
-                    ) : (
-                        <Typography>No student data found.</Typography>
-                    )}
-                </>
-            )}
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ open: false, message: '' })}
-                message={snackbar.message}
-            />
-
-            <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-                <DialogTitle>Transaction Details</DialogTitle>
-                <DialogContent dividers>
-                    {selectedTransaction && (
-                        <>
-                            <Typography>Installment: {selectedTransaction.installment}</Typography>
-                            <Typography>Tuition Fees: {selectedTransaction.tuition_fees}</Typography>
-                            <Typography>Exam Fees: {selectedTransaction.exam_fees}</Typography>
-                            <Typography>Hostel Fees: {selectedTransaction.hostel_fees}</Typography>
-                            <Typography>Admission Fees: {selectedTransaction.admission_fees}</Typography>
-                            <Typography>Prospectus Fees: {selectedTransaction.prospectus_fees}</Typography>
-                            <Typography>Mode: {selectedTransaction.mode}</Typography>
-                            <Typography>Mode ID: {selectedTransaction.mode_id}</Typography>
-                            <Typography>Total: {selectedTransaction.total_amount}</Typography>
-                            <Typography>Paid: {selectedTransaction.deposit_amount}</Typography>
-                            <Typography>Balance: {selectedTransaction.balance_amount}</Typography>
-                            <Typography>Date: {selectedTransaction.date_time}</Typography>
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Close</Button>
-                </DialogActions>
-            </Dialog>
-        </div>
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <Typography variant="h6" color="error">
+          Student not found.
+        </Typography>
+      </Box>
     );
+  }
+
+  return (
+    <Box sx={{ p: 2, backgroundColor: "#fff", minHeight: "100vh" }}>
+      {/* Student Info */}
+      <Paper
+        sx={{
+          p: 4,
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: 4,
+          position: "relative",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <Button
+          onClick={() => window.history.back()}
+          sx={{ position: "absolute", top: 5, left: -6 }}
+        >
+          <ArrowBackIcon />
+        </Button>
+
+        <Avatar
+          src={studentData.Photo}
+          alt={studentData.CandidateName}
+          sx={{ width: 120, height: 120, borderRadius: "8px", marginLeft: 3 }}
+        />
+
+        <Box sx={{ flex: 1, marginLeft: 3 }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            color="#CC7A00"
+            gutterBottom
+          >
+            {studentData.CandidateName}
+          </Typography>
+
+          <Typography variant="subtitle1" color="textSecondary">
+            <strong>Course:</strong> {studentData.Course}
+          </Typography><Typography variant="subtitle1" color="textSecondary">
+            <strong>Student Id:</strong> {studentId}
+          </Typography>
+        </Box>
+      </Paper>
+
+      {/* Fee Installments */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
+        <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
+          Fee Installments
+        </Typography>
+
+        <Grid container spacing={2}>
+          {feesData
+            .filter((fee) => {
+              return (
+                Number(fee.tution_fees) !== 0 ||
+                Number(fee.exam_fees) !== 0 ||
+                Number(fee.hostel_fees) !== 0 ||
+                Number(fee.admission_fees) !== 0 ||
+                Number(fee.prospectus_fees) !== 0 ||
+                Number(fee.Scholarship) !== 0
+              );
+            })
+            .map((fee) => {
+              const total =
+                Number(fee.tution_fees) +
+                Number(fee.exam_fees) +
+                Number(fee.hostel_fees) +
+                Number(fee.admission_fees) +
+                Number(fee.prospectus_fees) -
+                Number(fee.Scholarship || 0);
+
+              return (
+                <Grid item xs={12} sm={6} md={3} key={fee.id}>
+                  <Card
+                    sx={{
+                      backgroundColor: "#fefefe",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      {/* Top Section */}
+                      <Box display="flex" alignItems="center" gap={1} mb={1}>
+                        <PaymentsIcon color="primary" />
+                        <Typography fontWeight={600}>
+                          Installment {fee.installment} – ₹{total}{" "}
+                          {fee.Paid ? "(Paid)" : "(Due)"}
+                        </Typography>
+                      </Box>
+
+                      {/* Accordion for details */}
+                      <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Typography variant="body2">View Details</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          {fee.tution_fees != 0 && (
+                            <Typography variant="body2">
+                              <strong>Tuition:</strong> ₹{fee.tution_fees}
+                            </Typography>
+                          )}
+                          {fee.exam_fees != 0 && (
+                            <Typography variant="body2">
+                              <strong>Exam:</strong> ₹{fee.exam_fees}
+                            </Typography>
+                          )}
+                          {fee.hostel_fees != 0 && (
+                            <Typography variant="body2">
+                              <strong>Hostel:</strong> ₹{fee.hostel_fees}
+                            </Typography>
+                          )}
+                          {fee.admission_fees != 0 && (
+                            <Typography variant="body2">
+                              <strong>Admission:</strong> ₹{fee.admission_fees}
+                            </Typography>
+                          )}
+                          {fee.prospectus_fees != 0 && (
+                            <Typography variant="body2">
+                              <strong>Prospectus:</strong> ₹
+                              {fee.prospectus_fees}
+                            </Typography>
+                          )}
+                          {fee.Scholarship != 0 && (
+                            <Typography variant="body2">
+                              <strong>Scholarship:</strong> ₹{fee.Scholarship}
+                            </Typography>
+                          )}
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            gap={1}
+                            mt={1}
+                          >
+                            <ScheduleIcon fontSize="small" color="action" />
+                            <Typography variant="body2">
+                              <strong>Due Date:</strong> {fee.due_date}
+                            </Typography>
+                          </Box>
+                        </AccordionDetails>
+                      </Accordion>
+                    </CardContent>
+
+                    {/* Bottom Section */}
+                    <Box p={2}>
+                      {Number(fee.Paid) > 0 ? (
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          sx={{ color: "green", borderColor: "green" }}
+                          onClick={() => fetchTransactionData(fee.Paid)}
+                        >
+                          Paid
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          onClick={() => handleOpenDialog(fee)}
+                          sx={{ color: "white", backgroundColor: "#CC7A00" }}
+                        >
+                          Pay
+                        </Button>
+                      )}
+                    </Box>
+                  </Card>
+                </Grid>
+              );
+            })}
+        </Grid>
+      </Paper>
+      {transactionData && (
+              <TransactionDialog
+                  student={studentData}
+          open={transactionDialogOpen}
+          transactionData={transactionData}
+          onClose={() => setTransactionDialogOpen(false)}
+        />
+      )}
+
+      {/* Payment Dialog */}
+      {selectedFee && (
+        <PaymentDialog
+          open={dialogOpen}
+          feeData={selectedFee}
+          onClose={(shouldRefresh) => {
+            setDialogOpen(false);
+            setSelectedFee(null);
+            if (shouldRefresh) fetchStudentAndFees(); // Refresh after payment
+          }}
+          student={studentData}
+        />
+      )}
+    </Box>
+  );
 };
 
 export default StudentFeesTransaction;

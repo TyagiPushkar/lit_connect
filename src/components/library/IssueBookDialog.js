@@ -1,36 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import {
     Button, Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Snackbar, Autocomplete, CircularProgress
+    Snackbar, Checkbox, FormControlLabel, CircularProgress,
+    TextField, MenuItem, Select, InputLabel, FormControl, IconButton
 } from '@mui/material';
+import { LibraryBooks } from '@mui/icons-material';  // Book Icon
 import axios from 'axios';
 
-const IssueBookDialog = ({ open, onClose, onSuccess }) => {
+const IssueBookDialog = ({ open, onClose, onSuccess, course, StudentId }) => {
     const [books, setBooks] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
-    const [selectedBook, setSelectedBook] = useState(null);
-    const [studentId, setStudentId] = useState('');
-    const [issueDate, setIssueDate] = useState('');
-    const [returnDate, setReturnDate] = useState('');
+    const [selectedBooks, setSelectedBooks] = useState([]);
+    const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);  // Set default to today's date
+    const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0]);  // Set default to today's date
     const [snackbar, setSnackbar] = useState({ open: false, message: '' });
     const [loading, setLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortSemester, setSortSemester] = useState('');
 
     useEffect(() => {
         if (open) fetchBooks();
-    }, [open]);
+    }, [open, course]);
+
+    useEffect(() => {
+        // Filter books based on search query and sort semester
+        let updatedBooks = [...books];
+        if (searchQuery) {
+            updatedBooks = updatedBooks.filter((book) =>
+                book.book_title.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        if (sortSemester) {
+            updatedBooks = updatedBooks.filter((book) => book.semester === sortSemester);
+        }
+        setFilteredBooks(updatedBooks);
+    }, [searchQuery, sortSemester, books]);
 
     const fetchBooks = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('https://namami-infotech.com/LIT/src/library/list_book.php');
+            const res = await axios.get(`https://namami-infotech.com/LIT/src/library/get_sem_books.php?course=${course}`);
             if (res.data.success) {
-                const availableBooks = res.data.data.filter(book => book.Status === 'Available');
-                setBooks(availableBooks);
-                setFilteredBooks([]);
+                setBooks(res.data.data);
             } else {
-                setSnackbar({ open: true, message: 'No matching books found.' });
+                setSnackbar({ open: true, message: 'No books found for this course.' });
                 setBooks([]);
-                setFilteredBooks([]);
             }
         } catch (err) {
             setSnackbar({ open: true, message: 'Error fetching books.' });
@@ -38,42 +52,60 @@ const IssueBookDialog = ({ open, onClose, onSuccess }) => {
         setLoading(false);
     };
 
-    const handleInputChange = (event, value) => {
-        if (value.length >= 3) {
-            const filtered = books.filter(book =>
-                book.Title.toLowerCase().includes(value.toLowerCase()) ||
-                book.Author.toLowerCase().includes(value.toLowerCase()) ||
-                book.Publisher.toLowerCase().includes(value.toLowerCase())
-            );
-            setFilteredBooks(filtered);
+    const handleCheckboxChange = async (event, book) => {
+        if (event.target.checked) {
+            const encodedTitle = encodeURIComponent(book.book_title);  // URL encode the book title
+            try {
+                const res = await axios.get(`https://namami-infotech.com/LIT/src/library/get_available_books.php?title=${encodedTitle}`);
+                if (res.data.success && res.data.data.Status === 'Available') {
+                    setSelectedBooks((prevSelectedBooks) => {
+                        const updatedSelectedBooks = [...prevSelectedBooks, res.data.data];
+                        console.log('Selected Books (after adding):', updatedSelectedBooks);
+                        return updatedSelectedBooks;
+                    });
+                } else {
+                    setSnackbar({ open: true, message: `${book.book_title} is not available.` });
+                }
+            } catch (err) {
+                setSnackbar({ open: true, message: 'Error checking availability.' });
+            }
         } else {
-            setFilteredBooks([]);
+            setSelectedBooks((prevSelectedBooks) =>
+                prevSelectedBooks.filter((selectedBook) => selectedBook.BookId !== book.BookId)
+            );
+            console.log('Selected Books (after removal):', selectedBooks);
         }
     };
 
     const handleIssue = async () => {
-        if (!studentId || !selectedBook || !issueDate || !returnDate) {
-            setSnackbar({ open: true, message: 'Please fill all fields.' });
+        if (!StudentId || selectedBooks.length === 0) {
+            setSnackbar({ open: true, message: 'Please select books and ensure Student ID is available.' });
             return;
         }
 
+        // Construct the payload as expected by the API
+        const payload = {
+            StudentId: StudentId,
+            IssueDate: issueDate,
+            ReturnDate: returnDate || issueDate,  // Default ReturnDate to IssueDate if not set
+            BookIds: selectedBooks.map((book) => book.BookId)  // Extract BookIds from selectedBooks
+        };
+
+        console.log('Payload being sent:', payload);  // Log to verify the format
+
         try {
-            const payload = {
-                StudentId: studentId,
-                BookId: selectedBook.BookId,
-                IssueDate: issueDate,
-                ReturnDate: returnDate,
-            };
             const res = await axios.post('https://namami-infotech.com/LIT/src/library/issue_book.php', payload);
+            setLoading(true)
             if (res.data.success) {
-                setSnackbar({ open: true, message: 'Book issued successfully!' });
+                setSnackbar({ open: true, message: 'Books issued successfully!' });
                 onSuccess();
+                setLoading(false)
                 onClose();
             } else {
                 setSnackbar({ open: true, message: res.data.message });
             }
         } catch (error) {
-            setSnackbar({ open: true, message: 'Error issuing book.' });
+            setSnackbar({ open: true, message: 'Error issuing books.' });
         }
     };
 
@@ -82,60 +114,59 @@ const IssueBookDialog = ({ open, onClose, onSuccess }) => {
             <Dialog open={open} onClose={onClose} fullWidth>
                 <DialogTitle>Issue Book</DialogTitle>
                 <DialogContent>
-                    <TextField
-                        label="Student ID"
-                        value={studentId}
-                        onChange={(e) => setStudentId(e.target.value)}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <Autocomplete
-                        options={filteredBooks}
-                        getOptionLabel={(option) => `${option.Title} by ${option.Author}`}
-                        onInputChange={handleInputChange}
-                        onChange={(event, newValue) => setSelectedBook(newValue)}
-                        filterOptions={(x) => x}
-                        loading={loading}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Search Book (min 3 chars)"
-                                margin="normal"
-                                fullWidth
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {loading && <CircularProgress color="inherit" size={20} />}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
-                                }}
+                    {/* Search and Sort Controls */}
+                    <div style={{ marginBottom: '16px' }}>
+                        <TextField
+                            label="Search Books"
+                            variant="outlined"
+                            fullWidth
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ marginBottom: '16px' }}
+                        />
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel>Sort by Semester</InputLabel>
+                            <Select
+                                value={sortSemester}
+                                onChange={(e) => setSortSemester(e.target.value)}
+                                label="Sort by Semester"
+                            >
+                                <MenuItem value=""><em>All</em></MenuItem>
+                                <MenuItem value="1st SEM">1st SEM</MenuItem>
+                                <MenuItem value="2nd SEM">2nd SEM</MenuItem>
+                                <MenuItem value="3rd SEM">3rd SEM</MenuItem>
+                                <MenuItem value="4th SEM">4th SEM</MenuItem>
+                                <MenuItem value="5th SEM">5th SEM</MenuItem>
+                                <MenuItem value="6th SEM">6th SEM</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </div>
+
+                    {/* Loading state or Books list */}
+                    {loading ? (
+                        <CircularProgress />
+                    ) : (
+                        filteredBooks.map((book, index) => (
+                            <FormControlLabel
+                                key={index}
+                                control={
+                                    <Checkbox
+                                        onChange={(event) => handleCheckboxChange(event, book)}
+                                    />
+                                }
+                                label={
+                                    <>
+                                        <LibraryBooks style={{ marginRight: 8 }} />
+                                        {book.book_title} (Semester: {book.semester})
+                                    </>
+                                }
                             />
-                        )}
-                    />
-                    <TextField
-                        label="Issue Date"
-                        type="date"
-                        value={issueDate}
-                        onChange={(e) => setIssueDate(e.target.value)}
-                        fullWidth
-                        margin="normal"
-                        InputLabelProps={{ shrink: true }}
-                    />
-                    <TextField
-                        label="Return Date"
-                        type="date"
-                        value={returnDate}
-                        onChange={(e) => setReturnDate(e.target.value)}
-                        fullWidth
-                        margin="normal"
-                        InputLabelProps={{ shrink: true }}
-                    />
+                        ))
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleIssue} variant="contained" color="primary">Issue</Button>
+                    <Button onClick={handleIssue} variant="contained" color="primary">{loading ? "Loading" : "Issue"}</Button>
                 </DialogActions>
             </Dialog>
 

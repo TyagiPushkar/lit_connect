@@ -74,12 +74,11 @@ const AddFeeStructureDialog = ({ open, onClose, onSuccess }) => {
                     <TextField
                         label="Due Date"
                         name="due_date"
-                        type="date"
+                        type="text"
                         value={formData.due_date}
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
-                        InputLabelProps={{ shrink: true }}
                     />
                 </DialogContent>
                 <DialogActions>

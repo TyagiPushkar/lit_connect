@@ -33,9 +33,58 @@ const FeesPaymentList = () => {
         try {
             const response = await axios.get('https://namami-infotech.com/LIT/src/students/get_student.php');
             if (response.data.success) {
-                const sorted = response.data.data.sort((a, b) => b.TransactionId - a.TransactionId);
-                setTransactions(sorted);
-                setFilteredTransactions(sorted);
+                const students = response.data.data;
+                const enriched = await Promise.all(students.map(async student => {
+                    try {
+                        const feeRes = await axios.get(`https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`);
+                        if (feeRes.data.success) {
+                            const structure = feeRes.data.data;
+
+                            let totalAmount = 0;
+                            let totalPaid = 0;
+
+                            structure.forEach(inst => {
+                                const {
+                                    tution_fees = 0,
+                                    exam_fees = 0,
+                                    hostel_fees = 0,
+                                    admission_fees = 0,
+                                    prospectus_fees = 0,
+                                    Total_variable = 0,
+                                    Scholarship = 0,
+                                    Paid = 0
+                                } = inst;
+
+                                const installmentTotal = (
+                                    +tution_fees +
+                                    +exam_fees +
+                                    +hostel_fees +
+                                    +admission_fees +
+                                    +prospectus_fees +
+                                    (+Total_variable || 0) -
+                                    (+Scholarship || 0)
+                                );
+                                totalAmount += installmentTotal;
+
+                                if (+Paid > 0) totalPaid += installmentTotal;
+                            });
+
+                            return {
+                                ...student,
+                                totalAmount: Math.round(totalAmount),
+                                totalPaid: Math.round(totalPaid),
+                                balance: Math.round(totalAmount - totalPaid)
+                            };
+                        } else {
+                            return { ...student, totalAmount: 0, totalPaid: 0, balance: 0 };
+                        }
+                    } catch {
+                        return { ...student, totalAmount: 0, totalPaid: 0, balance: 0 };
+                    }
+                }));
+
+                setTransactions(enriched);
+                setFilteredTransactions(enriched);
             } else {
                 setSnackbarMessage(response.data.message);
                 setOpenSnackbar(true);
@@ -88,8 +137,8 @@ const FeesPaymentList = () => {
                             <TableCell style={{ color: "white" }}>Student ID</TableCell>
                             <TableCell style={{ color: "white" }}>Student Name</TableCell>
                             <TableCell style={{ color: "white" }}>Course</TableCell>
-                            <TableCell style={{ color: "white" }}>Session</TableCell>
-                            
+                            <TableCell style={{ color: "white" }}>Total Amount</TableCell>
+                            <TableCell style={{ color: "white" }}>Paid / Balance</TableCell>
                             <TableCell style={{ color: "white" }}>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -101,15 +150,14 @@ const FeesPaymentList = () => {
                                     <TableCell>{tx.StudentID}</TableCell>
                                     <TableCell>{tx.CandidateName}</TableCell>
                                     <TableCell>{tx.Course}</TableCell>
-                                    <TableCell>{tx.Session}</TableCell>
-                                   
+                                    <TableCell>{tx.totalAmount}</TableCell>
+                                    <TableCell>{tx.totalPaid} / {tx.balance}</TableCell>
                                     <TableCell>
-                                      
                                         <VisibilityIcon
-                                                                                        color="primary"
-                                                                                        sx={{ cursor: 'pointer' }}
-                                                                                        onClick={() => handleViewClick(tx.StudentID)}
-                                                                                    />
+                                            color="primary"
+                                            sx={{ cursor: 'pointer' }}
+                                            onClick={() => handleViewClick(tx.StudentID)}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))}

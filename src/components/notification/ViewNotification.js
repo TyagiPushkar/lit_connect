@@ -33,7 +33,7 @@ function ViewNotifications() {
 
     return (
         <div>
-            {user && user.role === "HR" ? <Button variant="contained" color="primary" onClick={handleOpenDialog} sx={{ mb: 2 }} style={{ backgroundColor: "#CC7A00" }}>
+            {user && user.role === "Teacher" ? <Button variant="contained" color="primary" onClick={handleOpenDialog} sx={{ mb: 2 }} style={{ backgroundColor: "#CC7A00" }}>
                 Add Notification
             </Button> : null}
 

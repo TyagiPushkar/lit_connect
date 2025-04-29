@@ -3,133 +3,143 @@ import {
   Box,
   Typography,
   CircularProgress,
-  List,
-  ListItem,
   Paper,
   Button,
-  Checkbox,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Avatar,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import MenuBookIcon from "@mui/icons-material/MenuBook"; // Import the icon
+import { Book } from "@mui/icons-material";
+import IssueBookDialog from "./IssueBookDialog";
+import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const StudentBooksView = () => {
   const { studentId } = useParams();
   const [studentData, setStudentData] = useState(null);
-  const [booksData, setBooksData] = useState([]);
-  const [availableBooks, setAvailableBooks] = useState({});
-  const [selectedBooks, setSelectedBooks] = useState([]);
+  const [issuedBooks, setIssuedBooks] = useState([]);
+  const [returnedBooks, setReturnedBooks] = useState([]);
+  const [bookDetails, setBookDetails] = useState([]);
+  const [returnedBookDetails, setReturnedBookDetails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openIssueDialog, setOpenIssueDialog] = useState(false); // Dialog state
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
 
-  useEffect(() => {
-    const fetchStudentAndBooks = async () => {
-      try {
-        // Fetch student details
-        const studentRes = await axios.get(
-          `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`
+  const fetchStudentAndBooks = async () => {
+    try {
+      const studentRes = await axios.get(
+        `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
+      );
+
+      if (studentRes.data.success && studentRes.data.data) {
+        const student = studentRes.data.data;
+        setStudentData(student);
+
+        const issuedRes = await axios.get(
+          `https://namami-infotech.com/LIT/src/library/get_library_transaction.php?StudentId=${studentId}`,
         );
 
-        if (studentRes.data.success && studentRes.data.data) {
-          const student = studentRes.data.data;
-          setStudentData(student);
-          const course = student.Course;
+        if (issuedRes.data.success && issuedRes.data.data) {
+          setIssuedBooks(issuedRes.data.data);
 
-          // Fetch books based on the student's course
-          const booksRes = await axios.get(
-            `https://namami-infotech.com/LIT/src/library/get_sem_books.php?course=${course}`
-          );
-
-          if (booksRes.data.success && booksRes.data.data.length) {
-            setBooksData(booksRes.data.data);
-
-            // Check the availability of each book
-            const availabilityChecks = booksRes.data.data.map(async (book) => {
-              const encodedTitle = encodeURIComponent(book.book_title);
-              const availRes = await axios.get(
-                `https://namami-infotech.com/LIT/src/library/get_available_books.php?title=${encodedTitle}`
+          const bookDetailsRes = await Promise.all(
+            issuedRes.data.data.map(async (transaction) => {
+              const bookRes = await axios.get(
+                `https://namami-infotech.com/LIT/src/library/get_book.php?BookId=${transaction.BookId}`,
               );
-
-              // Log the availability response to debug
-              console.log("Availability check for:", book.book_title, availRes.data);
-
-              return {
-                title: book.book_title.toLowerCase().trim(),
-                available: availRes.data.success && availRes.data.data.length > 0,
-                bookId: availRes.data.success && availRes.data.data.length > 0 ? availRes.data.data[0].BookId : null,
-              };
-            });
-
-            const availabilityResults = await Promise.all(availabilityChecks);
-
-            // Map the availability data
-            const availabilityMap = {};
-            availabilityResults.forEach((result) => {
-              availabilityMap[result.title] = {
-                available: result.available,
-                bookId: result.bookId,
-              };
-            });
-
-            setAvailableBooks(availabilityMap);
-          }
-        } else {
-          alert("Student not found.");
+              return bookRes.data.success ? bookRes.data.data[0] : null;
+            }),
+          );
+          setBookDetails(bookDetailsRes.filter((book) => book != null));
         }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        alert("An error occurred while fetching student/book data.");
-      } finally {
-        setLoading(false);
+
+        const returnedRes = await axios.get(
+          `https://namami-infotech.com/LIT/src/library/get_library_history.php?StudentId=${studentId}`,
+        );
+
+        if (returnedRes.data.success && returnedRes.data.data) {
+          setReturnedBooks(returnedRes.data.data);
+
+          const returnedBookDetailsRes = await Promise.all(
+            returnedRes.data.data.map(async (transaction) => {
+              const bookRes = await axios.get(
+                `https://namami-infotech.com/LIT/src/library/get_book.php?BookId=${transaction.BookId}`,
+              );
+              return bookRes.data.success ? bookRes.data.data[0] : null;
+            }),
+          );
+          setReturnedBookDetails(
+            returnedBookDetailsRes.filter((book) => book != null),
+          );
+        }
       }
-    };
-
-    fetchStudentAndBooks();
-  }, [studentId]);
-
-  const handleCheckboxChange = (checked, bookId) => {
-    if (!bookId) return; // Ignore null BookId
-    if (checked) {
-      setSelectedBooks((prev) => [...prev, bookId]);
-    } else {
-      setSelectedBooks((prev) => prev.filter((id) => id !== bookId));
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      alert("An error occurred while fetching student/book data.");
+    } finally {
+      setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchStudentAndBooks();
+  }, [studentId]);
+  const handleOpenIssueDialog = () => {
+    setOpenIssueDialog(true);
+  };
 
-  const handleIssueBooks = async () => {
-    if (selectedBooks.length === 0) {
-      alert("No books selected to issue.");
+  const handleCloseIssueDialog = () => {
+    setOpenIssueDialog(false);
+  };
+  const handleBookIssued = () => {
+    // You can refresh or update the issued books list after a successful book issue
+    fetchStudentAndBooks();
+  };
+  const handleCheckboxChange = (transactionId) => {
+    setSelectedTransactions((prevSelected) =>
+      prevSelected.includes(transactionId)
+        ? prevSelected.filter((id) => id !== transactionId)
+        : [...prevSelected, transactionId],
+    );
+  };
+
+  const handleReturnSelectedBooks = async () => {
+    if (selectedTransactions.length === 0) {
+      alert("Please select at least one book to return.");
       return;
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const confirmReturn = window.confirm(
+      `Are you sure you want to return ${selectedTransactions.length} book(s)?`,
+    );
+
+    if (!confirmReturn) return;
 
     try {
-      const res = await axios.post("https://namami-infotech.com/LIT/src/library/issue_book.php", {
-        StudentId: studentData.StudentId,
-        BookIds: selectedBooks,
-        IssueDate: today,
-      });
+      const response = await axios.post(
+        "https://namami-infotech.com/LIT/src/library/return_book.php", // Assuming you create this API
+        {
+          StudentId: studentId,
+          TransactionIds: selectedTransactions,
+        },
+      );
 
-      if (res.data.success) {
-        const failedBooks = res.data.data.filter((item) => !item.success);
-        if (failedBooks.length === 0) {
-          alert("All books issued successfully!");
-        } else {
-          const failedTitles = failedBooks
-            .map((item) => `BookId: ${item.BookId} (${item.message})`)
-            .join("\n");
-          alert(`Some books failed to issue:\n${failedTitles}`);
-        }
-        setSelectedBooks([]); // Clear after issuing
+      if (response.data.success) {
+        alert("Selected books returned successfully!");
+        setSelectedTransactions([]); // Clear selection
+        fetchStudentAndBooks(); // Refresh
       } else {
-        alert("Book issue failed. Please try again.");
+        alert("Failed to return books.");
       }
-    } catch (err) {
-      console.error("Issue error:", err);
-      alert("Error issuing books.");
+      fetchStudentAndBooks()
+    } catch (error) {
+      console.error("Error returning selected books:", error);
+      alert("An error occurred while returning the books.");
     }
   };
 
@@ -148,84 +158,206 @@ const StudentBooksView = () => {
   return (
     <Box sx={{ p: 2, backgroundColor: "#fff", minHeight: "100vh" }}>
       {/* Student Info */}
-      <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
-        <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
-          Student Information
-        </Typography>
-        <Typography variant="subtitle1">
-          <strong>Name:</strong> {studentData.CandidateName}
-        </Typography>
-        <Typography variant="subtitle1">
-          <strong>Course:</strong> {studentData.Course}
-        </Typography>
-        <Typography variant="subtitle1">
-          <strong>Enrollment Year:</strong> {studentData.enrollment_year}
-        </Typography>
+      <Paper
+        sx={{
+          p: 4,
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: 4,
+          position: "relative",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          border: "1px solid #ddd",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        {/* Go Back Button */}
+        <Button
+          onClick={() => window.history.back()}
+          sx={{ position: "absolute", top: 5, left: -6 }}
+        >
+          <ArrowBackIcon />
+        </Button>
+
+        {/* Student Photo */}
+        <Avatar
+          src={studentData.Photo}
+          alt={studentData.CandidateName}
+          sx={{ width: 120, height: 120, borderRadius: "8px", marginLeft: 3 }}
+        />
+
+        {/* Student Info */}
+        <Box sx={{ flex: 1, marginLeft: 3 }}>
+          {/* Student Name */}
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            color="#CC7A00"
+            gutterBottom
+          >
+            {studentData.CandidateName}
+          </Typography>
+
+          <Typography
+            variant="subtitle1"
+            color="textSecondary"
+            sx={{ marginBottom: 2 }}
+          >
+            <strong>Course:</strong> {studentData.Course}
+          </Typography>
+
+          {/* Enrollment Year */}
+        </Box>
+        
+        {/* Issue New Book Button */}
+        <Button
+          onClick={handleOpenIssueDialog}
+          variant="contained"
+          sx={{
+            position: "absolute",
+            top: 16,
+            right: 36,
+            backgroundColor: "#CC7A00",
+            "&:hover": {
+              backgroundColor: "#CC7A00",
+            },
+          }}
+        >
+          <AddIcon /> Issue Book
+        </Button>
       </Paper>
 
-      {/* Books List */}
-      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
+      <IssueBookDialog
+        open={openIssueDialog}
+        course={studentData.Course}
+        StudentId={studentId}
+        onClose={handleCloseIssueDialog}
+        onSuccess={handleBookIssued}
+      />
+      {/* Issued Books */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
         <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
-          Books for {studentData.Course}
+          Issued Books
         </Typography>
 
-        {booksData.length ? (
-          Object.entries(
-            booksData.reduce((acc, book) => {
-              acc[book.semester] = acc[book.semester] || [];
-              acc[book.semester].push(book);
-              return acc;
-            }, {})
-          ).map(([semester, books], idx) => (
-            <Accordion key={idx} sx={{ mb: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" fontWeight={600}>
-                  Semester: {semester}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <List>
-                  {books.map((book, index) => {
-                    const normalizedTitle = book.book_title.toLowerCase().trim();
-                    const availability = availableBooks[normalizedTitle] || {};
+        <Grid container spacing={3}>
+          {issuedBooks.map((transaction) => {
+            const book = bookDetails.find(
+              (b) => b.BookId === transaction.BookId,
+            );
+            if (!book) return null;
 
-                    // Debug log for availability check
-                    console.log(`Book Title: ${book.book_title}, Availability:`, availability);
+            const isSelected = selectedTransactions.includes(
+              transaction.TransactionId,
+            );
 
-                    return (
-                      <ListItem key={index} sx={{ display: "flex", alignItems: "center" }}>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <Typography variant="body2">
-                            <strong>Book Title:</strong> {book.book_title}
-                          </Typography>
-                        </Box>
-                        <Checkbox
-                          disabled={availability.available}
-                          checked={selectedBooks.includes(availability.bookId)}
-                          title={availability.bookId ? `BookId: ${availability.bookId}` : "Issued"}
-                          onChange={(e) => handleCheckboxChange(e.target.checked, availability.bookId)}
-                        />
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              </AccordionDetails>
-            </Accordion>
-          ))
-        ) : (
-          <Typography>No books found for this course.</Typography>
+            return (
+              <Grid item xs={12} sm={6} md={6} key={transaction.TransactionId}>
+                <Card
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "row",
+                    backgroundColor: isSelected ? "#e0f7fa" : "white",
+                  }}
+                >
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() =>
+                      handleCheckboxChange(transaction.TransactionId)
+                    }
+                    style={{ marginLeft: 16 }}
+                  />
+
+                  <IconButton sx={{ marginLeft: 2 }}>
+                    <MenuBookIcon fontSize="large" />
+                  </IconButton>
+                  <CardContent sx={{ flex: 1 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      {book.Title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Author:</strong> {book.Author}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Publisher:</strong> {book.Publisher}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Issued on</strong> {transaction.CreatedAt}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+
+        {selectedTransactions.length > 0 && (
+          <Box sx={{ textAlign: "center", mt: 3 }}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleReturnSelectedBooks}
+            >
+              Return Selected Books
+            </Button>
+          </Box>
         )}
       </Paper>
 
-      {/* Buttons */}
-      <Box sx={{ mt: 4, textAlign: "center", display: "flex", justifyContent: "center", gap: 2 }}>
-        <Button variant="contained" sx={{ backgroundColor: "#CC7A00" }} onClick={handleIssueBooks}>
-          Issue Books
-        </Button>
-        <Button variant="outlined" onClick={() => window.history.back()}>
-          Go Back
-        </Button>
-      </Box>
+      {/* Returned Books */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
+        <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
+          Returned Books
+        </Typography>
+
+        {returnedBookDetails.length ? (
+          <Grid container spacing={3}>
+            {returnedBookDetails.map((book, index) => {
+              const transaction = returnedBooks[index];
+              return (
+                <Grid item xs={12} sm={6} md={4} key={book.BookId}>
+                  <Card
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <IconButton sx={{ marginLeft: 2 }}>
+                      <MenuBookIcon fontSize="large" />
+                    </IconButton>
+                    <CardContent sx={{ flex: 1 }}>
+                      <Typography variant="h6" fontWeight={600}>
+                        {book.Title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Issue Date:</strong>{" "}
+                        {new Date(transaction.IssueDate).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Status:</strong> {transaction.Status}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Return on</strong>{" "}
+                        transaction.UpdatedAt
+                          
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        ) : (
+          <Typography>No books have been returned by this student.</Typography>
+        )}
+      </Paper>
+
+      {/* Button */}
     </Box>
   );
 };

@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { AuthProvider } from './components/auth/AuthContext';
-
 import Login from './pages/Login';
 import theme from './styles/theme';
 import Employee from './pages/Employee';
@@ -23,6 +22,7 @@ import FeesStructure from './pages/FeesStructure';
 import FeesPayment from './pages/FeesPayment';
 import StudentFees from './pages/StudentFees';
 import StuLibrary from './pages/StuLibrary';
+import LibraryDash from './pages/LibraryDash';
 
 function App() {
    useEffect(() => {
@@ -55,6 +55,7 @@ function App() {
             <Route path="/profile" element={<PrivateRoute element={EmpProfile} />} />
             <Route path="/report" element={<PrivateRoute element={VisitReport} />} />
             <Route path="/library" element={<PrivateRoute element={Library} />} />
+             <Route path="/library-dashboard" element={<PrivateRoute element={LibraryDash} />} />
             <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} />} />
             <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} />} />
             <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} />} />

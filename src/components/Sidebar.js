@@ -15,6 +15,8 @@ import SummarizeIcon from '@mui/icons-material/Summarize';
 import AddHomeWorkIcon from '@mui/icons-material/AddHomeWork';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import HRSmileLogo from "../assets/images (1).png";
+import MenuBookIcon from "@mui/icons-material/MenuBook"; // Import the icon
+
 // import ChecklistIcon from '@mui/icons-material/Checklist';
 // import MenuIcon from '@mui/icons-material/Menu';
 function Sidebar() {
@@ -28,7 +30,9 @@ function Sidebar() {
         10: { path: '/policy', name: 'Policy', icon: <Policy /> },
         8: { path: '/holiday', name: 'Holiday', icon: <HolidayVillage /> },
         12: { path: '/library', name: 'Library', icon: <LibraryBooksIcon /> },
-        17: { path: '/fee-structure', name: 'Fees', icon: <AppsIcon /> },
+        22: { path: '/library-dashboard', name: 'Book List', icon: <MenuBookIcon /> },
+        17: { path: '/fee-structure', name: 'Fees Structure', icon: <AppsIcon /> },
+        23: { path: '/fees-payment', name: 'Fees Payment', icon: <AppsIcon /> },
         18:  { path: '/teachers', name: 'Teachers', icon: <Person /> },
     };
 
