@@ -47,7 +47,7 @@ function Sidebar() {
     const allowedRoutes = userModules.map(moduleId => moduleMapping[moduleId]).filter(Boolean);
 
     // HR-specific routes
-    if (user?.role === 'HR') {
+    if (user?.role === 'Teacher') {
         allowedRoutes.push(
            
             { path: '/report', name: 'Report', icon: <SummarizeIcon /> },

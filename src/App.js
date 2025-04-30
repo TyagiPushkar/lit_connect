@@ -23,6 +23,7 @@ import FeesPayment from './pages/FeesPayment';
 import StudentFees from './pages/StudentFees';
 import StuLibrary from './pages/StuLibrary';
 import LibraryDash from './pages/LibraryDash';
+import StudentReport from './pages/StudentReport';
 
 function App() {
    useEffect(() => {
@@ -53,7 +54,7 @@ function App() {
             <Route path="/admissions/view/:activityId" element={<PrivateRoute element={ViewAdmission} />} />
             <Route path="/admissions/finalize" element={<PrivateRoute element={AdmissionFinal} />} />
             <Route path="/profile" element={<PrivateRoute element={EmpProfile} />} />
-            <Route path="/report" element={<PrivateRoute element={VisitReport} />} />
+            <Route path="/report" element={<PrivateRoute element={StudentReport} />} />
             <Route path="/library" element={<PrivateRoute element={Library} />} />
              <Route path="/library-dashboard" element={<PrivateRoute element={LibraryDash} />} />
             <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} />} />
