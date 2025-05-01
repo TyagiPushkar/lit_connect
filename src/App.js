@@ -24,7 +24,9 @@ import StudentFees from './pages/StudentFees';
 import StuLibrary from './pages/StuLibrary';
 import LibraryDash from './pages/LibraryDash';
 import StudentReport from './pages/StudentReport';
-
+import Menus from './pages/Menus';
+import Checkpoints from './pages/Checkpoints';
+import Form from './pages/Form';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -56,11 +58,24 @@ function App() {
             <Route path="/profile" element={<PrivateRoute element={EmpProfile} />} />
             <Route path="/report" element={<PrivateRoute element={StudentReport} />} />
             <Route path="/library" element={<PrivateRoute element={Library} />} />
-             <Route path="/library-dashboard" element={<PrivateRoute element={LibraryDash} />} />
+            <Route path="/library-dashboard" element={<PrivateRoute element={LibraryDash} />} />
             <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} />} />
             <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} />} />
             <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} />} />
             <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} />} />
+
+
+
+
+
+
+            {/* Optional Routes */}
+            <Route path="/menus" element={<PrivateRoute element={Menus} />} />
+            <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />
+
+            <Route path="/checkpoints" element={<PrivateRoute element={Checkpoints} />} />
+            <Route path="/form" element={<PrivateRoute element={Form} />} />
+            <Route path="/add-checkpoint" element={<PrivateRoute element={Checkpoints} />} />
           </Routes>
         </Router>
       </AuthProvider>

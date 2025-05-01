@@ -30,15 +30,15 @@ function Leave() {
             </Box>
             <Box component="main" sx={{ flexGrow: 1, p: 0, ml: drawerWidth }}>
                 <Navbar />
-                <div style={{ marginTop: "20px", marginLeft: "10px" }}>
-                    <Button variant="contained" color="primary" onClick={handleOpenApplyLeaveDialog} style={{ backgroundColor: "#CC7A00" }}>
+                <div style={{ marginTop: "0px", marginLeft: "0px" }}>
+                    {/* <Button variant="contained" color="primary" onClick={handleOpenApplyLeaveDialog} style={{ backgroundColor: "#CC7A00" }}>
                         Apply for Leave
                     </Button>
                     <ApplyLeave
                         open={openApplyLeaveDialog}
                         onClose={handleCloseApplyLeaveDialog}
                         onLeaveApplied={handleLeaveApplied}
-                    />
+                    /> */}
                     {user && user.emp_id && <ViewLeave EmpId={user.emp_id} />}
                 </div>
             </Box>

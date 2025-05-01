@@ -12,6 +12,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
+import ListAssignmentReport from './ListAssignmentReport';
 
 function AssignmentReport() {
     const [course, setCourse] = useState('');
@@ -158,6 +159,7 @@ function AssignmentReport() {
             </Box>
 
             {file && <Typography variant="body2">Selected File: {file.name}</Typography>}
+            <ListAssignmentReport/>
         </Box>
     );
 }

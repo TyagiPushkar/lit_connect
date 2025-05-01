@@ -7,7 +7,7 @@ import {
     InputLabel,
     FormControl,
     Typography,
-    Paper,
+    Grid,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -42,7 +42,7 @@ function InternalExam() {
             Swal.fire({
                 icon: 'warning',
                 title: 'All fields are required!',
-                showConfirmButton: true, // Keep the 'OK' button
+                showConfirmButton: true,
             });
             return;
         }
@@ -60,14 +60,12 @@ function InternalExam() {
             });
             const result = await res.json();
             if (result.success) {
-                // Show success SweetAlert
                 Swal.fire({
                     icon: 'success',
                     title: result.message,
-                    showConfirmButton: true, // User has to click OK to dismiss
+                    showConfirmButton: true,
                 });
 
-                // Clear all fields after success
                 setCourse('');
                 setSem('');
                 setSubject('');
@@ -76,47 +74,43 @@ function InternalExam() {
                 Swal.fire({
                     icon: 'error',
                     title: result.message || 'Upload failed',
-                    showConfirmButton: true, // Keep the 'OK' button
+                    showConfirmButton: true,
                 });
             }
         } catch (err) {
             Swal.fire({
                 icon: 'error',
                 title: 'Network or server error.',
-                showConfirmButton: true, // Keep the 'OK' button
+                showConfirmButton: true,
             });
         }
     };
 
     return (
-        <Box sx={{ p: 1 }}>
-            {/* <Typography variant="h6" mb={2} align="center" color="primary">
-                Internal Exam Upload
-            </Typography> */}
-
-           
-                <Box display="flex" gap={2} mb={2} justifyContent="space-between" alignItems="center">
-                    <FormControl sx={{ minWidth: 150 }}>
+        <Box sx={{ p: 0 }}>
+            <Grid container spacing={ 5} alignItems="center">
+                <Grid item>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel>Course</InputLabel>
                         <Select
                             value={course}
                             label="Course"
                             onChange={(e) => setCourse(e.target.value)}
-                            sx={{ backgroundColor: '#f5f5f5', borderRadius: 1 }}
                         >
                             <MenuItem value="BCA">BCA</MenuItem>
                             <MenuItem value="MCA">MCA</MenuItem>
                             <MenuItem value="BSc">BSc</MenuItem>
                         </Select>
                     </FormControl>
+                </Grid>
 
-                    <FormControl sx={{ minWidth: 150 }}>
+                <Grid item>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel>Semester</InputLabel>
                         <Select
                             value={sem}
                             label="Semester"
                             onChange={(e) => setSem(e.target.value)}
-                            sx={{ backgroundColor: '#f5f5f5', borderRadius: 1 }}
                         >
                             <MenuItem value="1">1</MenuItem>
                             <MenuItem value="2">2</MenuItem>
@@ -124,39 +118,43 @@ function InternalExam() {
                             <MenuItem value="4">4</MenuItem>
                         </Select>
                     </FormControl>
+                </Grid>
 
-                    <FormControl sx={{ minWidth: 200 }}>
+                <Grid item>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel>Subject</InputLabel>
                         <Select
                             value={subject}
                             label="Subject"
                             onChange={(e) => setSubject(e.target.value)}
-                            sx={{ backgroundColor: '#f5f5f5', borderRadius: 1 }}
                         >
                             <MenuItem value="Math">Math</MenuItem>
                             <MenuItem value="English">English</MenuItem>
                             <MenuItem value="Computer">Computer</MenuItem>
                         </Select>
                     </FormControl>
+                </Grid>
 
+                <Grid item>
                     <Button
+                        size="small"
                         variant="outlined"
                         startIcon={<DownloadIcon />}
                         onClick={handleDownloadSample}
-                        sx={{ borderRadius: 1 }}
                     >
-                        Download Excel
+                        Download Sample
                     </Button>
-                </Box>
+                </Grid>
 
-                <Box display="flex" gap={2} mb={2} justifyContent="space-between" alignItems="center">
+                <Grid item>
                     <Button
+                        size="small"
                         variant="contained"
                         component="label"
                         startIcon={<CloudUploadIcon />}
-                        sx={{ borderRadius: 1, backgroundColor:"#CC7A00" }}
+                        sx={{ backgroundColor: "#CC7A00", '&:hover': { backgroundColor: "#b36600" } }}
                     >
-                        Upload Excel File
+                        Upload Excel
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -164,28 +162,32 @@ function InternalExam() {
                             onChange={handleFileChange}
                         />
                     </Button>
+                </Grid>
 
+                <Grid item>
                     <Button
+                        size="small"
                         variant="contained"
-                        color="primary"
-                        onClick={handleUpload}
                         disabled={!file || !course || !sem || !subject}
-                        sx={{
-                            borderRadius: 1,
-                            backgroundColor: '#CC7A00',
-                            '&:hover': {
-                                backgroundColor: '#CC7A00',
-                            },
-                        }}
+                        onClick={handleUpload}
+                        sx={{ backgroundColor: "#CC7A00", '&:hover': { backgroundColor: "#b36600" } }}
                     >
-                        Submit 
+                        Submit
                     </Button>
-                </Box>
+                </Grid>
 
-                <Box mb={2} display="flex" gap={2} flexWrap="wrap">
-                    {file && <Typography variant="body2" mt={1}>{file.name}</Typography>}
-                </Box>
-            <ListInternalExam/>
+                {file && (
+                    <Grid item>
+                        <Typography variant="caption" color="text.secondary">
+                            {file.name}
+                        </Typography>
+                    </Grid>
+                )}
+            </Grid>
+
+            <Box mt={2}>
+                <ListInternalExam />
+            </Box>
         </Box>
     );
 }

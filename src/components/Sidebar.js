@@ -9,14 +9,14 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import LocalAirportIcon from '@mui/icons-material/LocalAirport';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import MapIcon from '@mui/icons-material/Map';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import LaptopIcon from '@mui/icons-material/Laptop';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import MenuIcon from '@mui/icons-material/Menu';
 import SummarizeIcon from '@mui/icons-material/Summarize';
 import AddHomeWorkIcon from '@mui/icons-material/AddHomeWork';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import HRSmileLogo from "../assets/images (1).png";
 import MenuBookIcon from "@mui/icons-material/MenuBook"; // Import the icon
-
+import DynamicFormIcon from '@mui/icons-material/DynamicForm';
 // import ChecklistIcon from '@mui/icons-material/Checklist';
 // import MenuIcon from '@mui/icons-material/Menu';
 function Sidebar() {
@@ -51,8 +51,9 @@ function Sidebar() {
         allowedRoutes.push(
            
             { path: '/report', name: 'Report', icon: <SummarizeIcon /> },
-        //      { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
-        // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
+             { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
+            { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
+        { path: '/form', name: 'Form', icon: <DynamicFormIcon /> },
         );
     }
 

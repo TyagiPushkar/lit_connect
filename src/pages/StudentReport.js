@@ -8,10 +8,13 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    Typography
+    Typography,
+    Paper,
+    Grid
 } from '@mui/material';
 import InternalExam from '../components/report/InternalExam';
 import AssignmentReport from '../components/report/AssignmentReport';
+import { Category } from '@mui/icons-material';
 
 function StudentReport() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -34,41 +37,46 @@ function StudentReport() {
     };
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh' }}>
+        <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f4f6f8' }}>
             {/* Sidebar */}
             <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
                 <Sidebar />
             </Box>
 
             {/* Main Content */}
-            <Box component="main" sx={{ flexGrow: 1 }}>
+            <Box component="main" sx={{ flexGrow: 1, overflowY: 'auto' }}>
                 <Navbar />
 
-                <Box sx={{ p: 2 }}>
-                    <Typography variant="h5" align="center" color="black" mb={2}>
-                        {category} Report
-                    </Typography>
+                <Box sx={{ px: 3, py: 2 }}>
+                    {/* Header & Category Selector */}
+                    <Paper elevation={1} sx={{ p: 2, mb: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
+                        <Grid container alignItems="center" spacing={2} justifyContent="space-between">
+                            <Grid item xs={12} md="auto">
+                                <Typography variant="h6" color="#CC7A00" fontWeight="bold">
+                                    {category} Report Dashboard
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel id="category-label">Report Category</InputLabel>
+                                    <Select
+                                        labelId="category-label"
+                                        value={category}
+                                        label="Report Category"
+                                        onChange={(e) => setCategory(e.target.value)}
+                                    >
+                                        <MenuItem value="Internal Exam">Internal Exam</MenuItem>
+                                        <MenuItem value="CBT">CBT</MenuItem>
+                                        <MenuItem value="Class Test">Class Test</MenuItem>
+                                        <MenuItem value="Assignment">Assignment</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        </Grid>
+                    </Paper>
 
-                    {/* Dropdown */}
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                        <FormControl sx={{ minWidth: 300 }}>
-                            <InputLabel id="category-label">Category</InputLabel>
-                            <Select
-                                labelId="category-label"
-                                value={category}
-                                label="Category"
-                                onChange={(e) => setCategory(e.target.value)}
-                            >
-                                <MenuItem value="Internal Exam">Internal Exam</MenuItem>
-                                <MenuItem value="CBT">CBT</MenuItem>
-                                <MenuItem value="Class Test">Class Test</MenuItem>
-                                <MenuItem value="Assignment">Assignment</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Box>
-
-                    {/* Report Component Rendered Here */}
-                    <Box>
+                    {/* Dynamic Report Component */}
+                    <Box elevation={1} sx={{ p: 0, borderRadius: 2 }}>
                         {renderComponent()}
                     </Box>
                 </Box>

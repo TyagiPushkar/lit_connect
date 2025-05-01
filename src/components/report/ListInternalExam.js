@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Button, TextField, CircularProgress, Paper,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    TablePagination, FormControl, InputLabel, Select, MenuItem
+    TablePagination, FormControl, InputLabel, Select, MenuItem, Grid
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axios from 'axios';
@@ -53,50 +53,65 @@ function ListInternalExam({ setView }) {
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box display="flex" justifyContent="space-between" flexWrap="wrap" alignItems="center" mb={2} gap={2}>
-                {/* <Button startIcon={<ArrowBackIcon />} variant="outlined" onClick={() => setView('dashboard')}>
-                    Back
-                </Button> */}
-                <FormControl sx={{ minWidth: 150 }}>
-                    <InputLabel>Course</InputLabel>
-                    <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
-                        <MenuItem value="BCA">BCA</MenuItem>
-                        <MenuItem value="MCA">MCA</MenuItem>
-                        <MenuItem value="BSc">BSc</MenuItem>
-                    </Select>
-                </FormControl>
-                <FormControl sx={{ minWidth: 150 }}>
-                    <InputLabel>Semester</InputLabel>
-                    <Select value={sem} onChange={(e) => setSem(e.target.value)} label="Semester">
-                        <MenuItem value="1">1</MenuItem>
-                        <MenuItem value="2">2</MenuItem>
-                        <MenuItem value="3">3</MenuItem>
-                        <MenuItem value="4">4</MenuItem>
-                    </Select>
-                </FormControl>
-                <FormControl sx={{ minWidth: 150 }}>
-                    <InputLabel>Subject</InputLabel>
-                    <Select value={subject} onChange={(e) => setSubject(e.target.value)} label="Subject">
-                        <MenuItem value="Math">Math</MenuItem>
-                        <MenuItem value="English">English</MenuItem>
-                        <MenuItem value="Computer">Computer</MenuItem>
-                    </Select>
-                </FormControl>
-                <TextField
-                    label="Search by Student ID"
-                    variant="outlined"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+        <Box sx={{ p: 0 }}>
+            {/* Header Section */}
+            <Box elevation={1} sx={{ p: 0, borderRadius: 2, mb: 1 }}>
+                <Typography variant="h6" color="#CC7A00" gutterBottom>
+                    Internal Exam Report
+                </Typography>
+
+                <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Course</InputLabel>
+                            <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
+                                <MenuItem value="BCA">BCA</MenuItem>
+                                <MenuItem value="MCA">MCA</MenuItem>
+                                <MenuItem value="BSc">BSc</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Semester</InputLabel>
+                            <Select value={sem} onChange={(e) => setSem(e.target.value)} label="Semester">
+                                <MenuItem value="1">1</MenuItem>
+                                <MenuItem value="2">2</MenuItem>
+                                <MenuItem value="3">3</MenuItem>
+                                <MenuItem value="4">4</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Subject</InputLabel>
+                            <Select value={subject} onChange={(e) => setSubject(e.target.value)} label="Subject">
+                                <MenuItem value="Math">Math</MenuItem>
+                                <MenuItem value="English">English</MenuItem>
+                                <MenuItem value="Computer">Computer</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <TextField
+                            label="Search by Student ID"
+                            variant="outlined"
+                            fullWidth
+                            size="small"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </Grid>
+                </Grid>
             </Box>
 
+            {/* Table Section */}
             {loading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+                <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
                     <CircularProgress />
                 </Box>
             ) : (
-                <Paper sx={{ borderRadius: '16px' }}>
+                <Paper elevation={2} sx={{ borderRadius: 2, p:0 }}>
                     <TableContainer>
                         <Table>
                             <TableHead sx={{ backgroundColor: '#CC7A00' }}>
