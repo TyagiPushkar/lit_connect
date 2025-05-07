@@ -18,7 +18,7 @@ const LibraryList = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     useEffect(() => {
         fetchLibraryTransactions();

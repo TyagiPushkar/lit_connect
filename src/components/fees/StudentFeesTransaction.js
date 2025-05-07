@@ -93,7 +93,7 @@ const StudentFeesTransaction = () => {
   }
 
   return (
-    <Box sx={{ p: 2, backgroundColor: "#fff", minHeight: "100vh" }}>
+    <Box sx={{ p: 2, backgroundColor: "#fff" }}>
       {/* Student Info */}
       <Paper
         sx={{

@@ -27,6 +27,9 @@ import StudentReport from './pages/StudentReport';
 import Menus from './pages/Menus';
 import Checkpoints from './pages/Checkpoints';
 import Form from './pages/Form';
+import Certificate from './pages/Certificate';
+import Students from './pages/Students';
+import StudentInfo from './pages/StudentInfo';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -63,12 +66,9 @@ function App() {
             <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} />} />
             <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} />} />
             <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} />} />
-
-
-
-
-
-
+            <Route path="/certificate" element={<PrivateRoute element={Certificate} />} />
+            <Route path="/students" element={<PrivateRoute element={Students} />} />
+            <Route path="/student/:studentId" element={<PrivateRoute element={StudentInfo} />} />
             {/* Optional Routes */}
             <Route path="/menus" element={<PrivateRoute element={Menus} />} />
             <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />

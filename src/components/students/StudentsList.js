@@ -2,19 +2,16 @@ import React, { useState, useEffect } from 'react';
 import {
     Button, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Snackbar, TablePagination,
-    TableFooter, TextField,CircularProgress, Box
+    TableFooter, TextField
 } from '@mui/material';
-
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
-const FeesPaymentList = () => {
+const StudentsList = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-const [loading, setLoading] = useState(true);
-
     const [transactions, setTransactions] = useState([]);
     const [filteredTransactions, setFilteredTransactions] = useState([]);
     const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -32,25 +29,21 @@ const [loading, setLoading] = useState(true);
     }, [transactions, searchQuery]);
 
     const fetchLibraryTransactions = async () => {
-    setLoading(true);
-    try {
-        const response = await axios.get('https://namami-infotech.com/LIT/src/students/get_student.php');
-        if (response.data.success) {
-            setTransactions(response.data.data);
-            setFilteredTransactions(response.data.data);
-        } else {
-            setSnackbarMessage(response.data.message);
+        try {
+            const response = await axios.get('https://namami-infotech.com/LIT/src/students/get_student.php');
+            if (response.data.success) {
+                const sorted = response.data.data.sort((a, b) => b.TransactionId - a.TransactionId);
+                setTransactions(sorted);
+                setFilteredTransactions(sorted);
+            } else {
+                setSnackbarMessage(response.data.message);
+                setOpenSnackbar(true);
+            }
+        } catch (error) {
+            setSnackbarMessage('Error fetching library transactions.');
             setOpenSnackbar(true);
         }
-    } catch (error) {
-        setSnackbarMessage('Error fetching student list.');
-        setOpenSnackbar(true);
-    } finally {
-        setLoading(false);
-    }
-};
-
-
+    };
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -71,25 +64,13 @@ const [loading, setLoading] = useState(true);
     };
 
     const handleViewClick = (studentId) => {
-        navigate(`/fees/${studentId}`);
+        navigate(`/student/${studentId}`);
     };
-if (loading) {
-    return (
-        <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="60vh"
-        >
-            <CircularProgress size={60} thickness={5} />
-        </Box>
-    );
-}
 
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
-                <h2>Student Fees</h2>
+                <h2>Students</h2>
                 <TextField
                     label="Search by Student ID or Name"
                     variant="outlined"
@@ -106,7 +87,7 @@ if (loading) {
                             <TableCell style={{ color: "white" }}>Student ID</TableCell>
                             <TableCell style={{ color: "white" }}>Student Name</TableCell>
                             <TableCell style={{ color: "white" }}>Course</TableCell>
-                           
+                           <TableCell style={{ color: "white" }}>Semester</TableCell>
                             <TableCell style={{ color: "white" }}>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -118,13 +99,15 @@ if (loading) {
                                     <TableCell>{tx.StudentID}</TableCell>
                                     <TableCell>{tx.CandidateName}</TableCell>
                                     <TableCell>{tx.Course}</TableCell>
-                                  
+                                    <TableCell>{tx.Sem}</TableCell>
+                                   
                                     <TableCell>
+                                      
                                         <VisibilityIcon
-                                            color="primary"
-                                            sx={{ cursor: 'pointer' }}
-                                            onClick={() => handleViewClick(tx.StudentID)}
-                                        />
+                                                                                        color="primary"
+                                                                                        sx={{ cursor: 'pointer' }}
+                                                                                        onClick={() => handleViewClick(tx.StudentID)}
+                                                                                    />
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -154,4 +137,4 @@ if (loading) {
     );
 };
 
-export default FeesPaymentList;
+export default StudentsList;

@@ -17,6 +17,7 @@ import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import HRSmileLogo from "../assets/images (1).png";
 import MenuBookIcon from "@mui/icons-material/MenuBook"; // Import the icon
 import DynamicFormIcon from '@mui/icons-material/DynamicForm';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 // import ChecklistIcon from '@mui/icons-material/Checklist';
 // import MenuIcon from '@mui/icons-material/Menu';
 function Sidebar() {
@@ -39,7 +40,7 @@ function Sidebar() {
     // Default routes visible to everyone
     const defaultRoutes = [
         { path: '/admissions', name: 'Admissions', icon: <AddHomeWorkIcon /> },
-        // { path: '/notification', name: 'Notification', icon: <Notifications /> }
+         { path: '/students', name: 'Students', icon: <Person /> }
 
     ];
 
@@ -51,9 +52,10 @@ function Sidebar() {
         allowedRoutes.push(
            
             { path: '/report', name: 'Report', icon: <SummarizeIcon /> },
-             { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
-            { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
-        { path: '/form', name: 'Form', icon: <DynamicFormIcon /> },
+            { path: '/certificate', name: 'Certificate', icon: <WorkspacePremiumIcon /> },
+            // { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
+           // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
+            { path: '/form', name: 'Admission Form', icon: <DynamicFormIcon /> },
         );
     }
 
@@ -107,7 +109,7 @@ function Sidebar() {
                         <ListItemIcon sx={{ color: 'black', minWidth: 'auto' }}>
                             {route.icon}
                         </ListItemIcon>
-                        <Typography variant="caption" sx={{ mt: 0.5 }}>
+                        <Typography variant="caption" sx={{textAlign: 'center' }}>
                             {route.name}
                         </Typography>
                     </ListItem>

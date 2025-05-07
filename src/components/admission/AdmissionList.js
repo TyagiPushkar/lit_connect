@@ -59,7 +59,6 @@ function AdmissionList() {
     };
 
     if (loading) return <CircularProgress />;
-    if (error) return <Typography color="error">{error}</Typography>;
 const formatDate = (datetime) => {
     const dateObj = new Date(datetime);
     const day = String(dateObj.getDate()).padStart(2, '0');
