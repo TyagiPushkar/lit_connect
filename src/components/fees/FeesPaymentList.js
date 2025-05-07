@@ -106,7 +106,6 @@ if (loading) {
                             <TableCell style={{ color: "white" }}>Student ID</TableCell>
                             <TableCell style={{ color: "white" }}>Student Name</TableCell>
                             <TableCell style={{ color: "white" }}>Course</TableCell>
-                           
                             <TableCell style={{ color: "white" }}>Action</TableCell>
                         </TableRow>
                     </TableHead>

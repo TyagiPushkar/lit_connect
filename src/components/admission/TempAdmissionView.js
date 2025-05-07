@@ -31,10 +31,10 @@ function TempAdmissionView() {
       18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
     ],
     "List of Attached Documents": [31, 33, 35, 37, 38, 39, 40],
-    "Prefrences": [28,29],
+    "Prefrences": [28,29,53],
   };
 
-  const candidateDetailsIds = [3, 5, 6, 7, 8, 9, 10, 11, 12];
+  const candidateDetailsIds = [3, 5, 6, 7, 8, 9, 10, 11, 12, 52];
   const studentPhotoChkId = 4; // Assume 13 is the image URL
 
   useEffect(() => {
@@ -106,8 +106,10 @@ function TempAdmissionView() {
     35: "CollegeLeavingCertificate",
     37: "MarksheetCopy",
     38: "AadharCardCopy",
-    39: "AadharNumber",
-    40: "AadharPhoto",
+    39: "CasteCertificate",
+    40: "BloodGroupCopy",
+    52: "AlternateGaurdiaNumber",
+    53:"Disabled"
     // Add more mappings if required
   };
 

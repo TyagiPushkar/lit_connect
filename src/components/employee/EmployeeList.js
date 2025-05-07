@@ -459,6 +459,7 @@ function EmployeeList() {
                                     <MenuItem value="Employee">Employee</MenuItem>
                                     <MenuItem value="Librarian">Librarian</MenuItem>
                                     <MenuItem value="Accounts">Accounts</MenuItem>
+                                    <MenuItem value="Front Desk">Front Desk</MenuItem>
   </TextField>
                             </Grid>
                             <Grid item xs={12} md={6}>

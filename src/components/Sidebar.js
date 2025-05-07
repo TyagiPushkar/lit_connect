@@ -28,18 +28,19 @@ function Sidebar() {
     const moduleMapping = {
         21: { path: '/attendance', name: 'Attendance', icon: <BarChart /> },
         3: { path: '/leave', name: 'Leave', icon: <Person /> },
-        10: { path: '/policy', name: 'Policy', icon: <Policy /> },
+        // 10: { path: '/policy', name: 'Policy', icon: <Policy /> },
         8: { path: '/holiday', name: 'Holiday', icon: <HolidayVillage /> },
         12: { path: '/library', name: 'Library', icon: <LibraryBooksIcon /> },
         22: { path: '/library-dashboard', name: 'Book List', icon: <MenuBookIcon /> },
         17: { path: '/fee-structure', name: 'Fees Structure', icon: <AppsIcon /> },
         23: { path: '/fees-payment', name: 'Fees Payment', icon: <AppsIcon /> },
-        18:  { path: '/teachers', name: 'Teachers', icon: <Person /> },
+        18: { path: '/teachers', name: 'Teachers', icon: <Person /> },
+        24: { path: '/form', name: 'Admission Form', icon: <DynamicFormIcon /> },
+        25:  { path: '/admissions', name: 'Admissions', icon: <AddHomeWorkIcon /> },
     };
 
     // Default routes visible to everyone
     const defaultRoutes = [
-        { path: '/admissions', name: 'Admissions', icon: <AddHomeWorkIcon /> },
          { path: '/students', name: 'Students', icon: <Person /> }
 
     ];
@@ -55,14 +56,11 @@ function Sidebar() {
             { path: '/certificate', name: 'Certificate', icon: <WorkspacePremiumIcon /> },
             // { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
            // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
-            { path: '/form', name: 'Admission Form', icon: <DynamicFormIcon /> },
+            
         );
     }
 
-    // If module 5 (Visit) exists, also add Maps
-    if (userModules.includes(5)) {
-        allowedRoutes.push({ path: '/maps', name: 'Maps', icon: <MapIcon /> });
-    }
+  
 
     // Combine all available routes
     const routes = [...defaultRoutes, ...allowedRoutes];
