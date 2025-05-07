@@ -61,7 +61,8 @@ function EmployeeList() {
         RM: '',
         Shift: '',
         WeekOff: '',
-        Designation: ''
+        Designation: '',
+        Category:''
     });
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -161,7 +162,8 @@ function EmployeeList() {
             DOB: '', // Initialize DOB
             JoinDate: '', // Initialize JoinDate
             WeekOff: '',
-            Designation:''
+            Designation: '',
+            Category:""
         });
     }
     setOpenForm(true);
@@ -198,6 +200,7 @@ function EmployeeList() {
             JoinDate: formData.JoinDate || '', // Default value if JoinDate is not provided
             WeekOff: formData.WeekOff || 'Sunday',
             Designation: formData.Designation,
+            Category:formData.Category,
             Offices: [
                 {
                     OfficeName: formData.OfficeName,
@@ -447,6 +450,19 @@ function EmployeeList() {
                                 />
                             </Grid>
                            <Grid item xs={12} md={6}>
+  <TextField
+    select
+    fullWidth
+    label="Category"
+    value={formData.Category}
+    onChange={(e) => setFormData({ ...formData, Category: e.target.value })}
+    required
+  >
+                                    <MenuItem value="Teaching">Teaching</MenuItem>
+                                    <MenuItem value="Non Teaching">Non Teaching</MenuItem>
+  </TextField>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
   <TextField
     select
     fullWidth
