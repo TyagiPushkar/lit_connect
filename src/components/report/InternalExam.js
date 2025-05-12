@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -20,6 +20,35 @@ function InternalExam() {
     const [sem, setSem] = useState('');
     const [subject, setSubject] = useState('');
     const [file, setFile] = useState(null);
+    const [subjectsList, setSubjectsList] = useState([]);
+
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            if (!course || !sem) return;
+
+            try {
+                const res = await fetch(`https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
+                const result = await res.json();
+                if (result.success) {
+                    setSubjectsList(result.data || []);
+                } else {
+                    setSubjectsList([]);
+                    Swal.fire({
+                        icon: 'info',
+                        title: result.message || 'No subjects found.',
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to fetch subjects.',
+                });
+            }
+        };
+
+        fetchSubjects();
+    }, [course, sem]);
 
     const handleDownloadSample = () => {
         const sampleData = [
@@ -65,11 +94,11 @@ function InternalExam() {
                     title: result.message,
                     showConfirmButton: true,
                 });
-
                 setCourse('');
                 setSem('');
                 setSubject('');
                 setFile(null);
+                setSubjectsList([]);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -88,49 +117,52 @@ function InternalExam() {
 
     return (
         <Box sx={{ p: 0 }}>
-            <Grid container spacing={ 5} alignItems="center">
+            <Grid container spacing={5} alignItems="center">
                 <Grid item>
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: 180 }}>
                         <InputLabel>Course</InputLabel>
                         <Select
                             value={course}
                             label="Course"
                             onChange={(e) => setCourse(e.target.value)}
                         >
+                            <MenuItem value="BSC.DS">BSC.DS</MenuItem>
+                            <MenuItem value="BSC.CS(H)">BSC.CS(H)</MenuItem>
+                            <MenuItem value="BSC.ITM(H)">BSC.ITM(H)</MenuItem>
                             <MenuItem value="BCA">BCA</MenuItem>
-                            <MenuItem value="MCA">MCA</MenuItem>
-                            <MenuItem value="BSc">BSc</MenuItem>
                         </Select>
                     </FormControl>
                 </Grid>
 
                 <Grid item>
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
                         <InputLabel>Semester</InputLabel>
                         <Select
                             value={sem}
                             label="Semester"
                             onChange={(e) => setSem(e.target.value)}
                         >
-                            <MenuItem value="1">1</MenuItem>
-                            <MenuItem value="2">2</MenuItem>
-                            <MenuItem value="3">3</MenuItem>
-                            <MenuItem value="4">4</MenuItem>
+                            {[1, 2, 3, 4, 5, 6].map((num) => (
+                                <MenuItem key={num} value={num}>{num}</MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 </Grid>
 
                 <Grid item>
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
                         <InputLabel>Subject</InputLabel>
                         <Select
                             value={subject}
                             label="Subject"
                             onChange={(e) => setSubject(e.target.value)}
+                            disabled={subjectsList.length === 0}
                         >
-                            <MenuItem value="Math">Math</MenuItem>
-                            <MenuItem value="English">English</MenuItem>
-                            <MenuItem value="Computer">Computer</MenuItem>
+                            {subjectsList.map((subj, index) => (
+                                <MenuItem key={index} value={subj.Subject}>
+                                    {subj.Subject}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 </Grid>

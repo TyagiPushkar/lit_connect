@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -18,7 +18,30 @@ function AssignmentReport() {
     const [course, setCourse] = useState('');
     const [sem, setSem] = useState('');
     const [month, setMonth] = useState('');
+    const [subject, setSubject] = useState('');
+    const [subjects, setSubjects] = useState([]);
     const [file, setFile] = useState(null);
+
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            if (course && sem) {
+                try {
+                    const res = await fetch(`https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
+                    const data = await res.json();
+                    if (data.success) {
+                        setSubjects(data.data);
+                    } else {
+                        setSubjects([]);
+                    }
+                } catch (err) {
+                    setSubjects([]);
+                }
+            } else {
+                setSubjects([]);
+            }
+        };
+        fetchSubjects();
+    }, [course, sem]);
 
     const handleDownloadSample = () => {
         const sampleData = [
@@ -37,7 +60,7 @@ function AssignmentReport() {
     };
 
     const handleUpload = async () => {
-        if (!course || !sem || !month || !file) {
+        if (!course || !sem || !month || !subject || !file) {
             Swal.fire({
                 icon: 'warning',
                 title: 'All fields are required!',
@@ -50,6 +73,7 @@ function AssignmentReport() {
         formData.append('Course', course);
         formData.append('Sem', sem);
         formData.append('Month', month);
+        formData.append('Subject', subject);
         formData.append('file', file);
 
         try {
@@ -68,7 +92,9 @@ function AssignmentReport() {
                 setCourse('');
                 setSem('');
                 setMonth('');
+                setSubject('');
                 setFile(null);
+                setSubjects([]);
             }
         } catch (err) {
             Swal.fire({
@@ -80,41 +106,38 @@ function AssignmentReport() {
     };
 
     return (
-        <Box sx={{ p: 1 }}>
-            <Box display="flex" gap={2} mb={2} justifyContent="space-between" alignItems="center">
-                <FormControl sx={{ minWidth: 150 }}>
+        <Box sx={{ p: 0 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 1.5,
+                    flexWrap: 'nowrap',
+                    overflowX: 'auto',
+                    pb: 0,
+                }}
+            >
+                <FormControl size="small" sx={{ minWidth: 140 }}>
                     <InputLabel>Course</InputLabel>
-                    <Select
-                        value={course}
-                        label="Course"
-                        onChange={(e) => setCourse(e.target.value)}
-                    >
+                    <Select value={course} label="Course" onChange={(e) => setCourse(e.target.value)}>
+                        <MenuItem value="BSC.DS">BSC.DS</MenuItem>
+                        <MenuItem value="BSC.CS(H)">BSC.CS(H)</MenuItem>
+                        <MenuItem value="BSC.ITM(H)">BSC.ITM(H)</MenuItem>
                         <MenuItem value="BCA">BCA</MenuItem>
-                        <MenuItem value="MCA">MCA</MenuItem>
-                        <MenuItem value="BSc">BSc</MenuItem>
                     </Select>
                 </FormControl>
 
-                <FormControl sx={{ minWidth: 150 }}>
+                <FormControl size="small" sx={{ minWidth: 110 }}>
                     <InputLabel>Semester</InputLabel>
-                    <Select
-                        value={sem}
-                        label="Semester"
-                        onChange={(e) => setSem(e.target.value)}
-                    >
-                        {[1, 2, 3, 4].map((num) => (
-                            <MenuItem key={num} value={num}>{num}</MenuItem>
+                    <Select value={sem} label="Semester" onChange={(e) => setSem(e.target.value)}>
+                        {[1, 2, 3, 4, 5, 6].map((s) => (
+                            <MenuItem key={s} value={s}>{s}</MenuItem>
                         ))}
                     </Select>
                 </FormControl>
 
-                <FormControl sx={{ minWidth: 200 }}>
+                <FormControl size="small" sx={{ minWidth: 140 }}>
                     <InputLabel>Month</InputLabel>
-                    <Select
-                        value={month}
-                        label="Month"
-                        onChange={(e) => setMonth(e.target.value)}
-                    >
+                    <Select value={month} label="Month" onChange={(e) => setMonth(e.target.value)}>
                         {[
                             'January', 'February', 'March', 'April', 'May', 'June',
                             'July', 'August', 'September', 'October', 'November', 'December'
@@ -124,23 +147,40 @@ function AssignmentReport() {
                     </Select>
                 </FormControl>
 
+                <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel>Subject</InputLabel>
+                    <Select
+                        value={subject}
+                        label="Subject"
+                        onChange={(e) => setSubject(e.target.value)}
+                        disabled={subjects.length === 0}
+                    >
+                        {subjects.map((sub) => (
+                            <MenuItem key={sub.SubjectName} value={sub.SubjectName}>
+                                {sub.SubjectName}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
                 <Button
                     variant="outlined"
+                    size="small"
                     startIcon={<DownloadIcon />}
                     onClick={handleDownloadSample}
+                    sx={{ whiteSpace: 'nowrap' }}
                 >
-                    Download Excel
+                    Download
                 </Button>
-            </Box>
 
-            <Box display="flex" gap={2} mb={2} justifyContent="space-between" alignItems="center">
                 <Button
                     variant="contained"
                     component="label"
+                    size="small"
                     startIcon={<CloudUploadIcon />}
-                    style={{ borderRadius: 1, backgroundColor:"#CC7A00"}}
+                    sx={{ backgroundColor: '#CC7A00', whiteSpace: 'nowrap' }}
                 >
-                    Upload Excel File
+                    Upload
                     <input
                         type="file"
                         accept=".xlsx, .xls"
@@ -151,15 +191,24 @@ function AssignmentReport() {
 
                 <Button
                     variant="contained"
+                    size="small"
                     onClick={handleUpload}
-                    disabled={!course || !sem || !month || !file}
+                    disabled={!course || !sem || !month || !subject || !file}
+                    sx={{ backgroundColor: '#CC7A00', whiteSpace: 'nowrap' }}
                 >
                     Submit
                 </Button>
             </Box>
 
-            {file && <Typography variant="body2">Selected File: {file.name}</Typography>}
-            <ListAssignmentReport/>
+            {file && (
+                <Typography variant="body2" mt={1}>
+                    Selected File: {file.name}
+                </Typography>
+            )}
+
+            <Box mt={3}>
+                <ListAssignmentReport />
+            </Box>
         </Box>
     );
 }

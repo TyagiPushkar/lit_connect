@@ -52,9 +52,12 @@ function ListAssignmentReport() {
     };
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 0 }}>
+            <Typography variant="h6" color="#CC7A00" gutterBottom>
+                                Assignment Report
+                            </Typography>
             <Box display="flex" justifyContent="space-between" flexWrap="wrap" alignItems="center" mb={2} gap={2}>
-                <FormControl sx={{ minWidth: 150 }}>
+                <FormControl sx={{ minWidth: 150 }} size='small'>
                     <InputLabel>Course</InputLabel>
                     <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
                         <MenuItem value="BCA">BCA</MenuItem>
@@ -62,7 +65,7 @@ function ListAssignmentReport() {
                         <MenuItem value="BSc">BSc</MenuItem>
                     </Select>
                 </FormControl>
-                <FormControl sx={{ minWidth: 150 }}>
+                <FormControl sx={{ minWidth: 150 }} size='small'>
                     <InputLabel>Semester</InputLabel>
                     <Select value={sem} onChange={(e) => setSem(e.target.value)} label="Semester">
                         <MenuItem value="1">1</MenuItem>
@@ -71,7 +74,7 @@ function ListAssignmentReport() {
                         <MenuItem value="4">4</MenuItem>
                     </Select>
                 </FormControl>
-                <FormControl sx={{ minWidth: 150 }}>
+                <FormControl sx={{ minWidth: 150 }} size='small'>
                     <InputLabel>Month</InputLabel>
                     <Select value={month} onChange={(e) => setMonth(e.target.value)} label="Month">
                         <MenuItem value="January">January</MenuItem>
@@ -93,6 +96,7 @@ function ListAssignmentReport() {
                     variant="outlined"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    size='small'
                 />
             </Box>
 
