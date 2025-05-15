@@ -41,7 +41,7 @@ function Sidebar() {
 
     // Default routes visible to everyone
     const defaultRoutes = [
-         { path: '/students', name: 'Students', icon: <Person /> }
+        //  { path: '/students', name: 'Students', icon: <Person /> }
 
     ];
 
