@@ -60,9 +60,10 @@ function ListAssignmentReport() {
                 <FormControl sx={{ minWidth: 150 }} size='small'>
                     <InputLabel>Course</InputLabel>
                     <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
+                        <MenuItem value="BSC.DS">BSC.DS</MenuItem>
+                        <MenuItem value="BSC.CS(H)">BSC.CS(H)</MenuItem>
+                        <MenuItem value="BSC.ITM(H)">BSC.ITM(H)</MenuItem>
                         <MenuItem value="BCA">BCA</MenuItem>
-                        <MenuItem value="MCA">MCA</MenuItem>
-                        <MenuItem value="BSc">BSc</MenuItem>
                     </Select>
                 </FormControl>
                 <FormControl sx={{ minWidth: 150 }} size='small'>
@@ -72,6 +73,8 @@ function ListAssignmentReport() {
                         <MenuItem value="2">2</MenuItem>
                         <MenuItem value="3">3</MenuItem>
                         <MenuItem value="4">4</MenuItem>
+                        <MenuItem value="5">5</MenuItem>
+                        <MenuItem value="6">6</MenuItem>
                     </Select>
                 </FormControl>
                 <FormControl sx={{ minWidth: 150 }} size='small'>

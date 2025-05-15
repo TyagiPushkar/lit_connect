@@ -147,21 +147,7 @@ function AssignmentReport() {
                     </Select>
                 </FormControl>
 
-                <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <InputLabel>Subject</InputLabel>
-                    <Select
-                        value={subject}
-                        label="Subject"
-                        onChange={(e) => setSubject(e.target.value)}
-                        disabled={subjects.length === 0}
-                    >
-                        {subjects.map((sub) => (
-                            <MenuItem key={sub.SubjectName} value={sub.SubjectName}>
-                                {sub.SubjectName}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+                
 
                 <Button
                     variant="outlined"
@@ -170,7 +156,7 @@ function AssignmentReport() {
                     onClick={handleDownloadSample}
                     sx={{ whiteSpace: 'nowrap' }}
                 >
-                    Download
+                    Download Sample
                 </Button>
 
                 <Button
