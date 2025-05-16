@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import {
     Box, Table, TableBody, TableCell, TableContainer, TableHead,
     TableRow, Paper, TablePagination, Typography, CircularProgress,
-    TextField, FormControl, InputLabel, Select, MenuItem, Button
+    TextField, FormControl, InputLabel, Select, MenuItem, Button,
+    Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 
 function ListBook({ setView, defaultStatusFilter = '' }) {
@@ -14,7 +16,19 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState(defaultStatusFilter); // ✅ initialize with default
+    const [statusFilter, setStatusFilter] = useState(defaultStatusFilter);
+
+    const [openDialog, setOpenDialog] = useState(false);
+    const [newBook, setNewBook] = useState({
+        BookId: '',
+        Title: '',
+        Author: '',
+        Publisher: '',
+        BookCode: '',
+        Price: '',
+        Status: 'Available'
+    });
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     useEffect(() => {
         fetchBooks();
@@ -29,7 +43,6 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
             const response = await axios.get('https://namami-infotech.com/LIT/src/library/list_book.php');
             if (response.data.success) {
                 setBooks(response.data.data);
-                
                 if (defaultStatusFilter) {
                     setStatusFilter(defaultStatusFilter);
                 }
@@ -43,7 +56,6 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
 
     const applyFilters = () => {
         let filtered = books;
-
         if (searchTerm.trim() !== '') {
             filtered = filtered.filter(book =>
                 book.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,11 +63,9 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                 book.Publisher.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
-
         if (statusFilter !== '') {
             filtered = filtered.filter(book => book.Status === statusFilter);
         }
-
         setFilteredBooks(filtered);
         setPage(0);
     };
@@ -67,9 +77,32 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
         setPage(0);
     };
 
+    const handleDialogChange = (e) => {
+        setNewBook(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleAddBook = async () => {
+        try {
+            const res = await axios.post(
+                'https://namami-infotech.com/LIT/src/library/add_book.php',
+                newBook
+            );
+            if (res.data.success) {
+                setSnackbar({ open: true, message: 'Book added successfully', severity: 'success' });
+                setOpenDialog(false);
+                fetchBooks();
+                setNewBook({ BookId: '', Title: '', Author: '', Publisher: '', BookCode: '', Price: '', Status: 'Available' });
+            } else {
+                setSnackbar({ open: true, message: res.data.message || 'Failed to add book', severity: 'error' });
+            }
+        } catch (err) {
+            setSnackbar({ open: true, message: 'API error while adding book', severity: 'error' });
+        }
+    };
+
     return (
         <Box sx={{ padding: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: "space-between", flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
                     variant="outlined"
@@ -96,6 +129,14 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                         <MenuItem value="Issued">Issued</MenuItem>
                     </Select>
                 </FormControl>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenDialog(true)}
+                    sx={{backgroundColor:"#CC7A00"}}
+                >
+                    Add Book
+                </Button>
             </Box>
 
             {loading ? (
@@ -122,7 +163,10 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                                         <TableCell>{book.Title}</TableCell>
                                         <TableCell>{book.Author}</TableCell>
                                         <TableCell>{book.Publisher}</TableCell>
-                                        <TableCell>{book.Status}</TableCell>
+                                        <TableCell>
+  {book.Status === "Issued" ? `Issued (${book.StudentId}(${book.StudentName}))` : "Available"}
+</TableCell>
+
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -139,6 +183,29 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                     />
                 </Paper>
             )}
+
+            {/* Add Book Dialog */}
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth>
+                <DialogTitle>Add New Book</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                    <TextField label="Book ID" name="BookId" value={newBook.BookId} onChange={handleDialogChange} fullWidth />
+                    <TextField label="Title" name="Title" value={newBook.Title} onChange={handleDialogChange} fullWidth required />
+                    <TextField label="Author" name="Author" value={newBook.Author} onChange={handleDialogChange} fullWidth />
+                    <TextField label="Publisher" name="Publisher" value={newBook.Publisher} onChange={handleDialogChange} fullWidth />
+                    <TextField label="Book Code" name="BookCode" value={newBook.BookCode} onChange={handleDialogChange} fullWidth />
+                    <TextField label="Price" name="Price" value={newBook.Price} onChange={handleDialogChange} fullWidth />
+                   
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+                    <Button onClick={handleAddBook} variant="contained" sx={{backgroundColor:"#CC7A00"}}>Add Book</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar Feedback */}
+            <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+            </Snackbar>
         </Box>
     );
 }

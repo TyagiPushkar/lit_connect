@@ -131,7 +131,7 @@ const AttendanceList = () => {
   };
 
   useEffect(() => {
-    if (user.role === "Teacher") {
+    if (user.role === "HR") {
       const fetchEmployees = async () => {
         try {
           const response = await axios.get(
@@ -253,7 +253,7 @@ const AttendanceList = () => {
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        {user.role === "Teacher" && (
+        {user.role === "HR" && (
           <FormControl variant="outlined" sx={{ mb: 0, width: "150px" }}>
             <Autocomplete
               options={employees}
