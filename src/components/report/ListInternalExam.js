@@ -5,6 +5,8 @@ import {
     TablePagination, FormControl, InputLabel, Select, MenuItem, Grid
 } from '@mui/material';
 import axios from 'axios';
+import EditIcon from '@mui/icons-material/Edit';
+import IconButton from '@mui/material/IconButton';
 
 function ListInternalExam({ setView }) {
     const [records, setRecords] = useState([]);
@@ -17,7 +19,9 @@ function ListInternalExam({ setView }) {
     const [subject, setSubject] = useState('');
     const [subjectsList, setSubjectsList] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-
+    const [editId, setEditId] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    
     // Fetch subjects based on Course & Sem
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -74,6 +78,28 @@ function ListInternalExam({ setView }) {
         setPage(0);
     };
 
+    const handleSaveMarks = async (id) => {
+        try {
+            const response = await axios.post('https://namami-infotech.com/LIT/src/report/edit_internal.php', {
+                Id: id,
+                ObtainedMarks: editValue
+            });
+    
+            if (response.data.success) {
+                const updated = records.map(record =>
+                    record.Id === id ? { ...record, ObtainedMarks: editValue } : record
+                );
+                setRecords(updated);
+                setEditId(null);
+            } else {
+                alert(response.data.message || 'Failed to update marks.');
+            }
+        } catch (error) {
+            console.error("Error updating marks:", error);
+            alert('Error updating marks.');
+        }
+    };
+    
     return (
         <Box sx={{ p: 0 }}>
             <Box elevation={1} sx={{ p: 0, borderRadius: 2, mb: 1 }}>
@@ -141,28 +167,53 @@ function ListInternalExam({ setView }) {
                 <Paper elevation={2} sx={{ borderRadius: 2, p: 0 }}>
                     <TableContainer>
                         <Table>
-                            <TableHead sx={{ backgroundColor: '#CC7A00' }}>
-                                <TableRow>
-                                    <TableCell sx={{ color: '#fff' }}>Student ID</TableCell>
-                                    <TableCell sx={{ color: '#fff' }}>Course</TableCell>
-                                    <TableCell sx={{ color: '#fff' }}>Semester</TableCell>
-                                    <TableCell sx={{ color: '#fff' }}>Subject</TableCell>
-                                    <TableCell sx={{ color: '#fff' }}>Max Marks</TableCell>
-                                    <TableCell sx={{ color: '#fff' }}>Obtained Marks</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredRecords.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
-                                    <TableRow key={idx}>
-                                        <TableCell>{row.StudId}</TableCell>
-                                        <TableCell>{row.Course}</TableCell>
-                                        <TableCell>{row.Sem}</TableCell>
-                                        <TableCell>{row.Subject}</TableCell>
-                                        <TableCell>{row.MaxMarks}</TableCell>
-                                        <TableCell>{row.ObtainedMarks}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
+                        <TableHead sx={{ backgroundColor: '#CC7A00' }}>
+    <TableRow>
+        <TableCell sx={{ color: '#fff' }}>Actions</TableCell>
+        <TableCell sx={{ color: '#fff' }}>Student ID</TableCell>
+        <TableCell sx={{ color: '#fff' }}>Course</TableCell>
+        <TableCell sx={{ color: '#fff' }}>Semester</TableCell>
+        <TableCell sx={{ color: '#fff' }}>Subject</TableCell>
+        <TableCell sx={{ color: '#fff' }}>Max Marks</TableCell>
+        <TableCell sx={{ color: '#fff' }}>Obtained Marks</TableCell>
+    </TableRow>
+</TableHead>
+<TableBody>
+    {filteredRecords.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
+        <TableRow key={idx}>
+            <TableCell>
+                <IconButton onClick={() => {
+                    setEditId(row.Id);
+                    setEditValue(row.ObtainedMarks);
+                }}>
+                    <EditIcon />
+                </IconButton>
+            </TableCell>
+            <TableCell>{row.StudId}</TableCell>
+            <TableCell>{row.Course}</TableCell>
+            <TableCell>{row.Sem}</TableCell>
+            <TableCell>{row.Subject}</TableCell>
+            <TableCell>{row.MaxMarks}</TableCell>
+            <TableCell>
+                {editId === row.Id ? (
+                    <TextField
+                        value={editValue}
+                        size="small"
+                        type="number"
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => handleSaveMarks(row.Id)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveMarks(row.Id);
+                        }}
+                    />
+                ) : (
+                    row.ObtainedMarks
+                )}
+            </TableCell>
+        </TableRow>
+    ))}
+</TableBody>
+
                         </Table>
                     </TableContainer>
                     <TablePagination

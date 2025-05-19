@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Button,
@@ -18,30 +18,7 @@ function AssignmentReport() {
     const [course, setCourse] = useState('');
     const [sem, setSem] = useState('');
     const [month, setMonth] = useState('');
-    const [subject, setSubject] = useState('');
-    const [subjects, setSubjects] = useState([]);
     const [file, setFile] = useState(null);
-
-    useEffect(() => {
-        const fetchSubjects = async () => {
-            if (course && sem) {
-                try {
-                    const res = await fetch(`https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
-                    const data = await res.json();
-                    if (data.success) {
-                        setSubjects(data.data);
-                    } else {
-                        setSubjects([]);
-                    }
-                } catch (err) {
-                    setSubjects([]);
-                }
-            } else {
-                setSubjects([]);
-            }
-        };
-        fetchSubjects();
-    }, [course, sem]);
 
     const handleDownloadSample = () => {
         const sampleData = [
@@ -60,7 +37,7 @@ function AssignmentReport() {
     };
 
     const handleUpload = async () => {
-        if (!course || !sem || !month || !subject || !file) {
+        if (!course || !sem || !month || !file) {
             Swal.fire({
                 icon: 'warning',
                 title: 'All fields are required!',
@@ -73,7 +50,6 @@ function AssignmentReport() {
         formData.append('Course', course);
         formData.append('Sem', sem);
         formData.append('Month', month);
-        formData.append('Subject', subject);
         formData.append('file', file);
 
         try {
@@ -92,9 +68,7 @@ function AssignmentReport() {
                 setCourse('');
                 setSem('');
                 setMonth('');
-                setSubject('');
                 setFile(null);
-                setSubjects([]);
             }
         } catch (err) {
             Swal.fire({
@@ -147,8 +121,6 @@ function AssignmentReport() {
                     </Select>
                 </FormControl>
 
-                
-
                 <Button
                     variant="outlined"
                     size="small"
@@ -179,7 +151,7 @@ function AssignmentReport() {
                     variant="contained"
                     size="small"
                     onClick={handleUpload}
-                    disabled={!course || !sem || !month || !subject || !file}
+                    disabled={!course || !sem || !month || !file}
                     sx={{ backgroundColor: '#CC7A00', whiteSpace: 'nowrap' }}
                 >
                     Submit

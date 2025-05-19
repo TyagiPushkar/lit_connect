@@ -15,6 +15,8 @@ import {
 import InternalExam from '../components/report/InternalExam';
 import AssignmentReport from '../components/report/AssignmentReport';
 import { Category } from '@mui/icons-material';
+import CBT from '../components/report/CBT';
+import ClassTest from '../components/report/ClassTest';
 
 function StudentReport() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -26,9 +28,9 @@ function StudentReport() {
             case 'Internal Exam':
                 return <InternalExam />;
             case 'CBT':
-                return <Typography mt={2}>CBT Report Coming Soon</Typography>;
+                return <CBT/>;
             case 'Class Test':
-                return <Typography mt={2}>Class Test Report Coming Soon</Typography>;
+                return <ClassTest/>;
             case 'Assignment':
                 return <AssignmentReport />;
             default:
