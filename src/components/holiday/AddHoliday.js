@@ -74,12 +74,13 @@ function AddHoliday({ open, onClose, onHolidayAdded }) {
                             variant="outlined"
                             fullWidth
                         />
+                        <div style={{  display: 'flex', gap: 20, alignItems: 'center' }}>
                         <Autocomplete
                             options={['All', ...courseOptions]}
                             value={holiday.Course}
                             onChange={(_, value) => handleHolidayChange(index, 'Course', value)}
                             renderInput={(params) => (
-                                <TextField {...params} label="Course" variant="outlined" fullWidth />
+                                <TextField {...params} label="Course" variant="outlined" sx={{width:"200px"}} />
                             )}
                         />
                         <TextField
@@ -88,13 +89,14 @@ function AddHoliday({ open, onClose, onHolidayAdded }) {
                             value={holiday.Sem}
                             onChange={(e) => handleHolidayChange(index, 'Sem', e.target.value)}
                             variant="outlined"
-                            fullWidth
+                            sx={{width:"200px"}}
                         >
                             <MenuItem value="All">All</MenuItem>
                             {semesterOptions.map((sem) => (
                                 <MenuItem key={sem} value={sem}>{sem}</MenuItem>
                             ))}
                         </TextField>
+                        </div>
                         {holidays.length > 1 && (
                             <IconButton onClick={() => handleRemoveHoliday(index)} color="secondary">
                                 <RemoveIcon />

@@ -192,7 +192,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                     <TextField label="Title" name="Title" value={newBook.Title} onChange={handleDialogChange} fullWidth required />
                     <TextField label="Author" name="Author" value={newBook.Author} onChange={handleDialogChange} fullWidth />
                     <TextField label="Publisher" name="Publisher" value={newBook.Publisher} onChange={handleDialogChange} fullWidth />
-                    <TextField label="Book Code" name="BookCode" value={newBook.BookCode} onChange={handleDialogChange} fullWidth />
+                    {/* <TextField label="Book Code" name="BookCode" value={newBook.BookCode} onChange={handleDialogChange} fullWidth /> */}
                     <TextField label="Price" name="Price" value={newBook.Price} onChange={handleDialogChange} fullWidth />
                    
                 </DialogContent>

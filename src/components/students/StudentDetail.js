@@ -7,16 +7,19 @@ import {
   Paper,
   Avatar,
   Divider,
-  Button
+  Button,
+  TextField,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import logo from "../../assets/images (1).png";
 import StudentFeesTransaction from "../fees/StudentFeesTransaction";
 
 function StudentDetail() {
-  const { studentId } = useParams(); 
+  const { studentId } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -27,8 +30,9 @@ function StudentDetail() {
           `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`
         );
         const json = await res.json();
-        if (json.success) {
+        if (json.success && json.data) {
           setStudent(json.data);
+          setFormData(json.data); // prefill form data
         } else {
           setError("Student not found.");
         }
@@ -42,6 +46,33 @@ function StudentDetail() {
     fetchStudent();
   }, [studentId]);
 
+  const handleChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch(
+        `https://namami-infotech.com/LIT/src/students/edit_student.php`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, Id: student.Id }),
+        }
+      );
+      const json = await response.json();
+      if (json.success) {
+        setStudent(formData);
+        setEditMode(false);
+        alert("Student details updated successfully.");
+      } else {
+        alert(json.message || "Update failed.");
+      }
+    } catch (err) {
+      alert("Error saving student details.");
+    }
+  };
+
   if (loading) return <CircularProgress sx={{ mt: 5 }} />;
   if (error)
     return (
@@ -50,42 +81,45 @@ function StudentDetail() {
       </Typography>
     );
 
-  const fieldGroups = [
-    {
-      title: "Personal Information",
-      fields: [
-        { label: "Candidate Name", key: "CandidateName" },
-        { label: "Guardian Name", key: "GuardianName" },
-        { label: "DOB", key: "DOB" },
-        { label: "Gender", key: "Gender" },
-        { label: "Email", key: "EmailId" },
-        { label: "Blood Group", key: "BloodGroup" },
-        { label: "Religion Category", key: "ReligionCategory" },
-        { label: "Student Contact", key: "StudentContactNo" },
-        { label: "Guardian Contact", key: "GuardianContactNo" },
-      ],
-    },
-    {
-      title: "Academic Information",
-      fields: [
-        { label: "Course", key: "Course" },
-        { label: "Council Name", key: "Council12Name" },
-        { label: "Year 12th Passing", key: "Year12Passing" },
-        { label: "Stream", key: "Stream12" },
-        { label: "Board 10th", key: "Board10University" },
-        { label: "Year 10th Passing", key: "Year10Passing" },
-        { label: "10th %", key: "Percentage10" },
-        { label: "12th %", key: "Percentage12" },
-      ],
-    },
-    {
-      title: "Address Details",
-      fields: [
-        { label: "Permanent Address", key: "PermanentAddress" },
-        { label: "Present Address", key: "PresentAddress" },
-      ],
-    },
-  ];
+    const fieldGroups = [
+      {
+        title: "Personal Information",
+        fields: [
+          { label: "Candidate Name", key: "CandidateName" },
+          { label: "Guardian Name", key: "GuardianName" },
+          { label: "DOB", key: "DOB" },
+          { label: "Gender", key: "Gender" },
+          { label: "Email", key: "EmailId" },
+          { label: "Blood Group", key: "BloodGroup" },
+          { label: "Religion Category", key: "ReligionCategory" },
+          { label: "Student Contact", key: "StudentContactNo" },
+          { label: "Guardian Contact", key: "GuardianContactNo" },
+          { label: "Student ID", key: "StudentID", editable: false },
+        ],
+      },
+      {
+        title: "Academic Information",
+        fields: [
+          { label: "Course", key: "Course" },
+          { label: "Council Name", key: "Council12Name" },
+          { label: "Year 12th Passing", key: "Year12Passing" },
+          { label: "Stream", key: "Stream12" },
+          { label: "Board 10th", key: "Board10University" },
+          { label: "Year 10th Passing", key: "Year10Passing" },
+          { label: "10th %", key: "Percentage10" },
+          { label: "12th %", key: "Percentage12" },
+          { label: "Submission Date", key: "SubmissionDate", editable: false },
+        ],
+      },
+      {
+        title: "Address Details",
+        fields: [
+          { label: "Permanent Address", key: "PermanentAddress" },
+          { label: "Present Address", key: "PresentAddress" },
+        ],
+      },
+    ];
+    
 
   return (
     <Box sx={{ p: 2, background: "#fff", pb: 6 }}>
@@ -104,29 +138,24 @@ function StudentDetail() {
         </Box>
         <Avatar src={logo} alt="Logo" variant="rounded" sx={{ width: 80, height: 80 }} />
       </Box>
-<StudentFeesTransaction/>
+
+      <StudentFeesTransaction />
+
+      {/* Actions */}
+      <Box sx={{ mb: 2, textAlign: "right" }}>
+        {!editMode ? (
+          <Button variant="contained" onClick={() => setEditMode(true)} sx={{ backgroundColor: "#CC7A00" }}>
+            Edit
+          </Button>
+        ) : (
+          <Button variant="contained" onClick={handleSave} sx={{ backgroundColor: "#2e7d32" }}>
+            Save
+          </Button>
+        )}
+      </Box>
+
       {/* Content */}
       <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
-        {/* Student Image */}
-        {/* {student.Photo && (
-          <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-            <Box
-              component="img"
-              src={student.Photo}
-              alt="Student"
-              sx={{
-                width: "180px",
-                height: "180px",
-                objectFit: "cover",
-                borderRadius: 3,
-                border: "1px solid #ccc",
-                boxShadow: 2,
-              }}
-            />
-          </Box>
-        )} */}
-
-        {/* Sections */}
         {fieldGroups.map((group, idx) => (
           <Box key={idx} sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ color: "#CC7A00", fontWeight: 700, mb: 1 }}>
@@ -139,14 +168,22 @@ function StudentDetail() {
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                     {f.label}
                   </Typography>
-                  <Typography variant="body1">{student[f.key] || "—"}</Typography>
+                  {!editMode ? (
+                    <Typography variant="body1">{student[f.key] || "—"}</Typography>
+                  ) : (
+                    <TextField
+                      size="small"
+                      fullWidth
+                      value={formData[f.key] || ""}
+                      onChange={(e) => handleChange(f.key, e.target.value)}
+                    />
+                  )}
                 </Grid>
               ))}
             </Grid>
           </Box>
         ))}
       </Paper>
-      
     </Box>
   );
 }

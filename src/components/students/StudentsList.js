@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import {
     Button, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Snackbar, TablePagination,
-    TableFooter, TextField
+    TableFooter, TextField,
+    Autocomplete
 } from '@mui/material';
+import {
+    Dialog, DialogTitle, DialogContent, DialogActions,
+    InputLabel, MenuItem, Select, FormControl
+} from '@mui/material';
+
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import VariableFeeManager from './VariableFeeManager';
 
 const StudentsList = () => {
     const { user } = useAuth();
@@ -19,6 +26,10 @@ const StudentsList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [openDialog, setOpenDialog] = useState(false);
+const [selectedStudent, setSelectedStudent] = useState('');
+const [particular, setParticular] = useState('');
+const [amount, setAmount] = useState('');
 
     useEffect(() => {
         fetchLibraryTransactions();
@@ -66,7 +77,37 @@ const StudentsList = () => {
     const handleViewClick = (studentId) => {
         navigate(`/student/${studentId}`);
     };
-
+    const handleSubmit = async () => {
+        if (!selectedStudent || !particular || !amount) {
+            setSnackbarMessage("All fields are required.");
+            setOpenSnackbar(true);
+            return;
+        }
+    
+        try {
+            const response = await axios.post('https://namami-infotech.com/LIT/src/fees/variable.php', {
+                student_id: selectedStudent,
+                particular,
+                amount
+            });
+    
+            if (response.data.success) {
+                setSnackbarMessage("Fee added successfully.");
+                setOpenSnackbar(true);
+                setOpenDialog(false);
+                setSelectedStudent('');
+                setParticular('');
+                setAmount('');
+            } else {
+                setSnackbarMessage(response.data.message || "Failed to add fee.");
+                setOpenSnackbar(true);
+            }
+        } catch (error) {
+            setSnackbarMessage("API error: " + error.message);
+            setOpenSnackbar(true);
+        }
+    };
+    
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
@@ -104,10 +145,10 @@ const StudentsList = () => {
                                     <TableCell>
                                       
                                         <VisibilityIcon
-                                                                                        color="primary"
-                                                                                        sx={{ cursor: 'pointer' }}
-                                                                                        onClick={() => handleViewClick(tx.StudentID)}
-                                                                                    />
+                                            color="primary"
+                                            sx={{ cursor: 'pointer' }}
+                                            onClick={() => handleViewClick(tx.StudentID)}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))}

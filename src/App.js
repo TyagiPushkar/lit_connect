@@ -30,6 +30,7 @@ import Form from './pages/Form';
 import Certificate from './pages/Certificate';
 import Students from './pages/Students';
 import StudentInfo from './pages/StudentInfo';
+import Variable from './pages/Variable';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -48,7 +49,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Login />} />
-            <Route path="/teachers" element={<PrivateRoute element={Employee} />} />
+            <Route path="/teachers" element={<PrivateRoute element={Employee} requiredRole="HR" />} />
             <Route path="/teachers/:empId" element={<PrivateRoute element={EmployeeProfile} requiredRole="HR" />} />
             <Route path="/holiday" element={<PrivateRoute element={Holiday} />} />
             <Route path="/policy" element={<PrivateRoute element={Policy} />} />
@@ -59,23 +60,24 @@ function App() {
             <Route path="/admissions/view/:activityId" element={<PrivateRoute element={ViewAdmission} />} />
             <Route path="/admissions/finalize" element={<PrivateRoute element={AdmissionFinal} />} />
             <Route path="/profile" element={<PrivateRoute element={EmpProfile} />} />
-            <Route path="/report" element={<PrivateRoute element={StudentReport} />} />
-            <Route path="/library" element={<PrivateRoute element={Library} />} />
-            <Route path="/library-dashboard" element={<PrivateRoute element={LibraryDash} />} />
-            <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} />} />
-            <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} />} />
-            <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} />} />
-            <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} />} />
-            <Route path="/certificate" element={<PrivateRoute element={Certificate} />} />
-            <Route path="/students" element={<PrivateRoute element={Students} />} />
-            <Route path="/student/:studentId" element={<PrivateRoute element={StudentInfo} />} />
+            <Route path="/report" element={<PrivateRoute element={StudentReport} requiredRole="Teacher" />} />
+            <Route path="/library" element={<PrivateRoute element={Library} requiredRole="Librarian" />} />
+            <Route path="/library-dashboard" element={<PrivateRoute element={LibraryDash} requiredRole="Librarian" />} />
+            <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} requiredRole="Librarian" />} />
+            <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} requiredRole="Accounts" />} />
+            <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} requiredRole="Accounts" />} />
+            <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} requiredRole="Accounts" />} />
+            <Route path="/certificate" element={<PrivateRoute element={Certificate} requiredRole="HR" />} />
+            <Route path="/students" element={<PrivateRoute element={Students} requiredRole="HR" />} />
+            <Route path="/student/:studentId" element={<PrivateRoute element={StudentInfo} requiredRole="HR" />} />
+            <Route path="/variable" element={<PrivateRoute element={Variable} requiredRole="HR" />} />
             {/* Optional Routes */}
-            <Route path="/menus" element={<PrivateRoute element={Menus} />} />
+            {/* <Route path="/menus" element={<PrivateRoute element={Menus} />} />
             <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />
 
             <Route path="/checkpoints" element={<PrivateRoute element={Checkpoints} />} />
             <Route path="/form" element={<PrivateRoute element={Form} />} />
-            <Route path="/add-checkpoint" element={<PrivateRoute element={Checkpoints} />} />
+            <Route path="/add-checkpoint" element={<PrivateRoute element={Checkpoints} />} /> */}
           </Routes>
         </Router>
       </AuthProvider>

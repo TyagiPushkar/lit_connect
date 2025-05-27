@@ -61,18 +61,21 @@ function Sidebar() {
     .filter(Boolean);
   if (user?.role === "HR") {
     allowedRoutes.push(
-      { path: "/teachers", name: "Teachers", icon: <Person /> }
+      { path: "/teachers", name: "Teachers", icon: <Person /> },
+      { path: '/students', name: 'Students', icon: <Person /> },
+      {
+        path: "/certificate",
+        name: "Certificate",
+        icon: <WorkspacePremiumIcon />,
+      },
+      { path: '/variable', name: 'Variable Fees', icon: <AppsIcon /> },
     );
   }
   // HR-specific routes
   if (user?.role === "Teacher") {
     allowedRoutes.push(
       { path: "/report", name: "Report", icon: <SummarizeIcon /> },
-      {
-        path: "/certificate",
-        name: "Certificate",
-        icon: <WorkspacePremiumIcon />,
-      },
+     
       // { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );

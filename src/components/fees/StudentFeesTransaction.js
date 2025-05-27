@@ -23,7 +23,9 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PaymentDialog from "./PaymentDialog";
 import TransactionDialog from "./TransactionDialog";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useAuth } from "../auth/AuthContext";
 const StudentFeesTransaction = () => {
+   const { user } = useAuth();
   const { studentId } = useParams();
   const [studentData, setStudentData] = useState(null);
   const [feesData, setFeesData] = useState([]);
@@ -32,6 +34,8 @@ const StudentFeesTransaction = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
+  const [variableFees, setVariableFees] = useState({});
+  const firstDueInstallment = feesData.find(fee => !fee.Paid);
 
   const fetchStudentAndFees = async () => {
     try {
@@ -54,6 +58,14 @@ const StudentFeesTransaction = () => {
     } finally {
       setLoading(false);
     }
+    const variableRes = await axios.get(
+      `https://namami-infotech.com/LIT/src/fees/variable.php?student_id=${studentId}`
+    );
+    if (variableRes.data.success) {
+      setVariableFees(variableRes.data.data); // array of { particular, amount }
+    }
+    
+    
   };
   const fetchTransactionData = async (transactionId) => {
     try {
@@ -223,6 +235,17 @@ const StudentFeesTransaction = () => {
                               <strong>Scholarship:</strong> ₹{fee.Scholarship}
                             </Typography>
                           )}
+                          {variableFees.length > 0 && (
+      <Box mt={1}>
+        <Typography><strong>Additional Variable Charges:</strong></Typography>
+        {variableFees.map((vf, i) => (
+          <Typography key={i} variant="body2">
+            {vf.particular}: ₹{vf.amount}
+          </Typography>
+        ))}
+      </Box>
+    )}
+
                           <Box
                             display="flex"
                             alignItems="center"
@@ -239,27 +262,39 @@ const StudentFeesTransaction = () => {
                     </CardContent>
 
                     {/* Bottom Section */}
+                    {user && user.role === "Accounts" &&   
                     <Box p={2}>
-                      {Number(fee.Paid) > 0 ? (
-                        <Button
-                          variant="outlined"
-                          fullWidth
-                          sx={{ color: "green", borderColor: "green" }}
-                          onClick={() => fetchTransactionData(fee.Paid)}
-                        >
-                          Paid
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="contained"
-                          fullWidth
-                          onClick={() => handleOpenDialog(fee)}
-                          sx={{ color: "white", backgroundColor: "#CC7A00" }}
-                        >
-                          Pay
-                        </Button>
-                      )}
-                    </Box>
+                    {Number(fee.Paid) > 0 ? (
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ color: "green", borderColor: "green" }}
+                        onClick={() => fetchTransactionData(fee.Paid)}
+                      >
+                        Paid
+                      </Button>
+                    ) : firstDueInstallment?.id === fee.id ? (
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={() => handleOpenDialog(fee)}
+                        sx={{ color: "white", backgroundColor: "#F69320" }}
+                      >
+                        Pay
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        disabled
+                      >
+                        Due
+                      </Button>
+                    )}
+                  </Box>
+                  
+                    }
+                  
                   </Card>
                 </Grid>
               );
