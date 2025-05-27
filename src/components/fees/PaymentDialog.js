@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-const PaymentDialog = ({ open, onClose, feeData, student  }) => {
+const PaymentDialog = ({ open, onClose, feeData, student ,variableFees }) => {
   const [mode, setMode] = useState("Cash");
   const [modeId, setModeId] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
@@ -22,14 +22,22 @@ const PaymentDialog = ({ open, onClose, feeData, student  }) => {
   const [errorMsg, setErrorMsg] = useState("");
 
   if (!feeData) return null;
+const baseTotal =
+Number(feeData.tution_fees) +
+Number(feeData.exam_fees) +
+Number(feeData.hostel_fees) +
+Number(feeData.admission_fees) +
+Number(feeData.prospectus_fees) -
+Number(feeData.Scholarship || 0);
 
-  const total =
-    Number(feeData.tution_fees) +
-    Number(feeData.exam_fees) +
-    Number(feeData.hostel_fees) +
-    Number(feeData.admission_fees) +
-    Number(feeData.prospectus_fees) -
-    Number(feeData.Scholarship || 0);
+// Calculate total variable fees amount if variableFees is an array
+const variableTotal = Array.isArray(variableFees)
+? variableFees.reduce((sum, vf) => sum + Number(vf.amount), 0)
+: 0;
+
+// Add variable fees to base total
+const total = baseTotal + variableTotal;
+
 
   const balance = total - Number(depositAmount || 0);
 

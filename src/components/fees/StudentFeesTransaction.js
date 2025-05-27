@@ -170,32 +170,48 @@ const StudentFeesTransaction = () => {
               );
             })
             .map((fee) => {
-              const total =
-                Number(fee.tution_fees) +
-                Number(fee.exam_fees) +
-                Number(fee.hostel_fees) +
-                Number(fee.admission_fees) +
-                Number(fee.prospectus_fees) -
-                Number(fee.Scholarship || 0);
+              const baseTotal =
+              Number(fee.tution_fees) +
+              Number(fee.exam_fees) +
+              Number(fee.hostel_fees) +
+              Number(fee.admission_fees) +
+              Number(fee.prospectus_fees) -
+              Number(fee.Scholarship || 0);
+        
+            // Sum variable fees amounts
+            const variableTotal = fee.id === firstDueInstallment?.id && Array.isArray(variableFees)
+            ? variableFees.reduce((sum, vf) => sum + Number(vf.amount), 0)
+            : 0;
+          
+        
+            const total = baseTotal + variableTotal;
 
               return (
                 <Grid item xs={12} sm={6} md={3} key={fee.id}>
-                  <Card
-                    sx={{
-                      backgroundColor: "#fefefe",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  >
+                 <Card
+  sx={{
+    backgroundColor: "#fefefe",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    border: `2px solid ${Number(fee.Paid) > 0 ? "green" : "#F69320"}`,
+    borderRadius: 2,
+  }}
+>
+
                     <CardContent sx={{ flexGrow: 1 }}>
                       {/* Top Section */}
                       <Box display="flex" alignItems="center" gap={1} mb={1}>
                         <PaymentsIcon color="primary" />
-                        <Typography fontWeight={600}>
-                          Installment {fee.installment} – ₹{total}{" "}
-                          {fee.Paid ? "(Paid)" : "(Due)"}
-                        </Typography>
+                        <Typography
+  fontWeight={600}
+  color={Number(fee.Paid) > 0 ? "green" : "#F69320"}
+>
+  Installment {fee.installment} – ₹{total}{" "}
+  {Number(fee.Paid) > 0 ? "(Paid)" : "(Due)"}
+</Typography>
+
+
                       </Box>
 
                       {/* Accordion for details */}
@@ -235,16 +251,17 @@ const StudentFeesTransaction = () => {
                               <strong>Scholarship:</strong> ₹{fee.Scholarship}
                             </Typography>
                           )}
-                          {variableFees.length > 0 && (
-      <Box mt={1}>
-        <Typography><strong>Additional Variable Charges:</strong></Typography>
-        {variableFees.map((vf, i) => (
-          <Typography key={i} variant="body2">
-            {vf.particular}: ₹{vf.amount}
-          </Typography>
-        ))}
-      </Box>
-    )}
+                          {fee.id === firstDueInstallment?.id && variableFees.length > 0 && (
+  <Box mt={1}>
+    <Typography><strong>Additional Variable Charges:</strong></Typography>
+    {variableFees.map((vf, i) => (
+      <Typography key={i} variant="body2">
+        {vf.particular}: ₹{vf.amount}
+      </Typography>
+    ))}
+  </Box>
+)}
+
 
                           <Box
                             display="flex"
@@ -315,6 +332,7 @@ const StudentFeesTransaction = () => {
         <PaymentDialog
           open={dialogOpen}
           feeData={selectedFee}
+          variableFees={variableFees} 
           onClose={(shouldRefresh) => {
             setDialogOpen(false);
             setSelectedFee(null);
