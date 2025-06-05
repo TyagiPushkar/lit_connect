@@ -71,6 +71,7 @@ function App() {
             <Route path="/students" element={<PrivateRoute element={Students} requiredRole="HR" />} />
             <Route path="/student/:studentId" element={<PrivateRoute element={StudentInfo} requiredRole="HR" />} />
             <Route path="/variable" element={<PrivateRoute element={Variable} requiredRole="HR" />} />
+            <Route path="/hr-report" element={<PrivateRoute element={VisitReport} requiredRole="HR" />} />
             {/* Optional Routes */}
             {/* <Route path="/menus" element={<PrivateRoute element={Menus} />} />
             <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />

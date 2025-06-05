@@ -145,7 +145,7 @@ const VariableFeeManager = () => {
     <div style={{ padding: 0 }}>
       <div
         style={{
-          marginTop: 30,
+          marginTop: 0,
           display: "flex",
           gap: 20,
           alignItems: "center",
@@ -212,7 +212,7 @@ const VariableFeeManager = () => {
 
       {selectedStudent && (
         <>
-          <div style={{ marginTop: 20, display: "flex", gap: 10 }}></div>
+          <div style={{ marginTop: 10, display: "flex", gap: 10 }}></div>
 
           <h3 style={{ marginTop: 20 }}>Variable Fee List</h3>
           <TableContainer component={Paper}>

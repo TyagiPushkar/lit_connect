@@ -69,6 +69,7 @@ function Sidebar() {
         icon: <WorkspacePremiumIcon />,
       },
       { path: '/variable', name: 'Variable Fees', icon: <AppsIcon /> },
+      { path: '/hr-report', name: 'Reports', icon: <MenuIcon /> },
     );
   }
   // HR-specific routes
@@ -76,7 +77,7 @@ function Sidebar() {
     allowedRoutes.push(
       { path: "/report", name: "Report", icon: <SummarizeIcon /> },
      
-      // { path: '/menus', name: 'Menus', icon: <MenuIcon /> },
+      // { path: '/hr-report', name: 'Menus', icon: <MenuIcon /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );
   }

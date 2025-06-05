@@ -128,45 +128,6 @@ const VisitList = () => {
 
     return (
         <>
-        <Box sx={{ padding: 2 }}>
-            <Typography variant="h5" component="h2" sx={{ marginBottom: 2 }}>
-                Visit Report
-            </Typography>
-
-            {/* Date Range Controls */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <TextField
-                    label="From Date"
-                    type="date"
-                    variant="outlined"
-                    size="small"
-                    value={fromDate}
-                    onChange={(e) => handleDateChange(e, "from")}
-                    sx={{ width: "200px" }}
-                    InputLabelProps={{ shrink: true }}
-                />
-
-                <TextField
-                    label="To Date"
-                    type="date"
-                    variant="outlined"
-                    size="small"
-                    value={toDate}
-                    onChange={(e) => handleDateChange(e, "to")}
-                    sx={{ width: "200px" }}
-                    InputLabelProps={{ shrink: true }}
-                />
-
-                <Button variant="contained" onClick={exportSummaryToCSV} size="small" sx={{ backgroundColor: '#CC7A00' }}>
-                     Summary  <GetAppIcon/>
-                </Button>
-                <Button variant="contained" onClick={exportDetailToCSV} size="small" sx={{ backgroundColor: '#CC7A00' }}>
-                     Detailed  <GetAppIcon/>
-                </Button>
-            </Box>
-
-           
-            </Box>
             <AttendanceReport />
             <SalaryList />
             {/* <SalarySlip/> */}
