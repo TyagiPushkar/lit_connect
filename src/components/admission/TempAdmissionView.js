@@ -31,7 +31,7 @@ function TempAdmissionView() {
       18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
     ],
     "List of Attached Documents": [31, 33, 35, 37, 38, 39, 40],
-    "Prefrences": [28,29,53],
+    "Prefrences": [28,29,53, 54],
   };
 
   const candidateDetailsIds = [3, 5, 6, 7, 8, 9, 10, 11, 12, 52];
@@ -109,7 +109,8 @@ function TempAdmissionView() {
     39: "CasteCertificate",
     40: "BloodGroupCopy",
     52: "AlternateGaurdiaNumber",
-    53:"Disabled"
+    53: "Disabled",
+    54: "RefrenceBy"
     // Add more mappings if required
   };
 
