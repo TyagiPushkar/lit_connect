@@ -22,7 +22,7 @@ function ViewNotifications() {
 
     useEffect(() => {
         fetchNotifications();
-    }); // Empty dependency array means this effect runs once on mount
+    },[user]); // Empty dependency array means this effect runs once on mount
 
     const handleOpenDialog = () => setDialogOpen(true);
     const handleCloseDialog = () => setDialogOpen(false);

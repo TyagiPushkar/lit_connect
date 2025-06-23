@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,33 +13,47 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-const PaymentDialog = ({ open, onClose, feeData, student ,variableFees }) => {
+const PaymentDialog = ({ open, onClose, feeData, student, variableFees }) => {
   const [mode, setMode] = useState("Cash");
   const [modeId, setModeId] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [remainingBalance, setRemainingBalance] = useState(0);
+
+  useEffect(() => {
+    if (feeData?.balance_amount) {
+      // If paying a balance, set deposit amount to the remaining balance by default
+      setDepositAmount(feeData.balance_amount.toString());
+    } else {
+      setDepositAmount("");
+    }
+  }, [feeData]);
 
   if (!feeData) return null;
-const baseTotal =
-Number(feeData.tution_fees) +
-Number(feeData.exam_fees) +
-Number(feeData.hostel_fees) +
-Number(feeData.admission_fees) +
-Number(feeData.prospectus_fees) -
-Number(feeData.Scholarship || 0);
 
-// Calculate total variable fees amount if variableFees is an array
-const variableTotal = Array.isArray(variableFees)
-? variableFees.reduce((sum, vf) => sum + Number(vf.amount), 0)
-: 0;
+  // Calculate base total from fee structure
+  const baseTotal =
+    Number(feeData.tution_fees || 0) +
+    Number(feeData.exam_fees || 0) +
+    Number(feeData.hostel_fees || 0) +
+    Number(feeData.admission_fees || 0) +
+    Number(feeData.prospectus_fees || 0) -
+    Number(feeData.Scholarship || 0);
 
-// Add variable fees to base total
-const total = baseTotal + variableTotal;
+  // Calculate variable fees total
+  const variableTotal = Array.isArray(variableFees)
+    ? variableFees.reduce((sum, vf) => sum + Number(vf.amount || 0), 0)
+    : 0;
 
+  // Determine the total amount to pay
+  const totalAmount = feeData.balance_amount 
+    ? Number(feeData.balance_amount) + variableTotal
+    : baseTotal + variableTotal;
 
-  const balance = total - Number(depositAmount || 0);
+  // Calculate balance after deposit
+  const balance = totalAmount - Number(depositAmount || 0);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -47,21 +61,23 @@ const total = baseTotal + variableTotal;
     setErrorMsg("");
 
     try {
-     const payload = {
-  stu_id: student.StudentID, 
-  course: student.Course, 
-  installment: feeData.installment,
-  tuition_fees: feeData.tution_fees,
-  exam_fees: feeData.exam_fees,
-  hostel_fees: feeData.hostel_fees,
-  admission_fees: feeData.admission_fees,
-  prospectus_fees: feeData.prospectus_fees,
-  mode,
-  mode_id: modeId,
-  total_amount: total,
-  deposit_amount: depositAmount,
-  balance_amount: balance
-};
+      const payload = {
+        stu_id: student.StudentID,
+        course: student.Course,
+        installment: feeData.installment,
+        tuition_fees: feeData.tution_fees,
+        exam_fees: feeData.exam_fees,
+        hostel_fees: feeData.hostel_fees,
+        admission_fees: feeData.admission_fees,
+        prospectus_fees: feeData.prospectus_fees,
+        mode,
+        mode_id: modeId,
+        total_amount: totalAmount,
+        deposit_amount: depositAmount,
+        balance_amount: balance,
+        // Include original transaction ID if this is a partial payment
+        original_transaction_id: feeData.Paid || null
+      };
 
       const res = await axios.post(
         "https://namami-infotech.com/LIT/src/fees/add_fee_transaction.php",
@@ -69,15 +85,15 @@ const total = baseTotal + variableTotal;
       );
 
       if (res.data.success) {
-        setSuccessMsg("Payment recorded successfully.");
+        setSuccessMsg("Payment recorded successfully!");
         setTimeout(() => {
           onClose(true); // Notify parent to refresh
-        }, 1000);
+        }, 1500);
       } else {
-        setErrorMsg(res.data.message || "Payment failed.");
+        setErrorMsg(res.data.message || "Payment failed. Please try again.");
       }
     } catch (err) {
-      setErrorMsg("Error submitting payment.");
+      setErrorMsg("Error processing payment. Please try again.");
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -86,14 +102,32 @@ const total = baseTotal + variableTotal;
 
   return (
     <Dialog open={open} onClose={() => onClose(false)} maxWidth="sm" fullWidth>
-      <DialogTitle>Make Payment - Installment {feeData.installment}</DialogTitle>
+      <DialogTitle>
+        {feeData.balance_amount ? "Pay Remaining Balance" : "Make Payment"} - Installment {feeData.installment}
+      </DialogTitle>
       <DialogContent>
         {successMsg && <Alert severity="success">{successMsg}</Alert>}
         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
-        <Typography variant="subtitle1" mt={2}>
-          <strong>Total Amount:</strong> ₹{total}
-        </Typography>
+        <Box mt={2} mb={3}>
+          <Typography variant="h6" gutterBottom>
+            {feeData.balance_amount ? (
+              <>
+                <strong>Remaining Balance:</strong> ₹{feeData.balance_amount}
+                {variableTotal > 0 && (
+                  <span> + ₹{variableTotal} (variable fees) = ₹{totalAmount}</span>
+                )}
+              </>
+            ) : (
+              <>
+                <strong>Total Amount Due:</strong> ₹{baseTotal}
+                {variableTotal > 0 && (
+                  <span> + ₹{variableTotal} (variable fees) = ₹{totalAmount}</span>
+                )}
+              </>
+            )}
+          </Typography>
+        </Box>
 
         <TextField
           fullWidth
@@ -104,30 +138,44 @@ const total = baseTotal + variableTotal;
           onChange={(e) => setMode(e.target.value)}
         >
           {["Cash", "Online", "UPI", "Cheque"].map((option) => (
-            <MenuItem key={option} value={option}>{option}</MenuItem>
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
           ))}
         </TextField>
 
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Transaction/Reference ID"
-          value={modeId}
-          onChange={(e) => setModeId(e.target.value)}
-        />
+        {mode !== "Cash" && (
+          <TextField
+            fullWidth
+            margin="normal"
+            label={`${mode} Reference/Transaction ID`}
+            value={modeId}
+            onChange={(e) => setModeId(e.target.value)}
+            required
+          />
+        )}
 
         <TextField
           fullWidth
           margin="normal"
           type="number"
-          label="Deposit Amount"
+          label="Amount to Pay"
           value={depositAmount}
-          onChange={(e) => setDepositAmount(e.target.value)}
+          onChange={(e) => {
+            const value = Math.min(Number(e.target.value), totalAmount);
+            setDepositAmount(value.toString());
+          }}
+          inputProps={{
+            min: 0,
+            max: totalAmount,
+            step: "any"
+          }}
+          helperText={`Maximum: ₹${totalAmount}`}
         />
 
         <Box mt={2}>
-          <Typography>
-            <strong>Balance:</strong> ₹{isNaN(balance) ? "-" : balance}
+          <Typography variant="body1">
+            <strong>Remaining Balance After Payment:</strong> ₹{balance > 0 ? balance : 0}
           </Typography>
         </Box>
       </DialogContent>
@@ -138,11 +186,11 @@ const total = baseTotal + variableTotal;
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={!depositAmount || submitting}
+          disabled={!depositAmount || submitting || Number(depositAmount) <= 0}
           variant="contained"
           color="primary"
         >
-          {submitting ? "Submitting..." : "Submit Payment"}
+          {submitting ? "Processing..." : "Submit Payment"}
         </Button>
       </DialogActions>
     </Dialog>
