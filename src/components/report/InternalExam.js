@@ -126,9 +126,9 @@ function InternalExam() {
                             label="Course"
                             onChange={(e) => setCourse(e.target.value)}
                         >
-                            <MenuItem value="BSC.DS">BSC.DS</MenuItem>
-                            <MenuItem value="BSC.CS(H)">BSC.CS(H)</MenuItem>
-                            <MenuItem value="BSC.ITM(H)">BSC.ITM(H)</MenuItem>
+                            <MenuItem value="BSC.DS">BSc. DS</MenuItem>
+                            <MenuItem value="BSC.CS(H)">BSc. CS(H)</MenuItem>
+                            <MenuItem value="BSC.ITM(H)">BSc. ITM(H)</MenuItem>
                             <MenuItem value="BCA">BCA</MenuItem>
                         </Select>
                     </FormControl>

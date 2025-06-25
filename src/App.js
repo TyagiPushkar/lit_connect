@@ -32,6 +32,9 @@ import Students from './pages/Students';
 import StudentInfo from './pages/StudentInfo';
 import Variable from './pages/Variable';
 import Regularise from './pages/Regularise';
+import Notices from './pages/Notices';
+import News from './pages/News';
+import TimeTable from './pages/TimeTable';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -74,6 +77,9 @@ function App() {
             <Route path="/variable" element={<PrivateRoute element={Variable} requiredRole="HR" />} />
             <Route path="/hr-report" element={<PrivateRoute element={VisitReport} requiredRole="HR" />} />
             <Route path="/regularise" element={<PrivateRoute element={Regularise} requiredRole="HR" />} />
+            <Route path="/notices" element={<PrivateRoute element={Notices} requiredRole="HR" />} />
+            <Route path="/news" element={<PrivateRoute element={News} requiredRole="HR" />} />
+            <Route path="/time-table" element={<PrivateRoute element={TimeTable} requiredRole="HR" />} />
             {/* Optional Routes */}
             {/* <Route path="/menus" element={<PrivateRoute element={Menus} />} />
             <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />

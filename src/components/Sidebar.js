@@ -25,6 +25,9 @@ import HRSmileLogo from "../assets/images (1).png";
 import MenuBookIcon from "@mui/icons-material/MenuBook"; // Import the icon
 import DynamicFormIcon from "@mui/icons-material/DynamicForm";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
+import NewspaperIcon from '@mui/icons-material/Newspaper';
+import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 // import ChecklistIcon from '@mui/icons-material/Checklist';
 // import MenuIcon from '@mui/icons-material/Menu';
 function Sidebar() {
@@ -63,6 +66,7 @@ function Sidebar() {
     allowedRoutes.push(
       { path: "/teachers", name: "Teachers", icon: <Person /> },
       { path: '/students', name: 'Students', icon: <Person /> },
+      { path: '/time-table', name: 'Time Table', icon: <CalendarMonthIcon /> },
       {
         path: "/certificate",
         name: "Certificate",
@@ -70,7 +74,10 @@ function Sidebar() {
       },
       { path: '/variable', name: 'Variable Fees', icon: <AppsIcon /> },
       { path: '/hr-report', name: 'Reports', icon: <MenuIcon /> },
+      { path: '/notices', name: 'Notices', icon: <MarkUnreadChatAltIcon /> },
+      { path: '/news', name: 'News', icon: <NewspaperIcon /> },
     );
+
   }
   // HR-specific routes
   if (user?.role === "Teacher") {
