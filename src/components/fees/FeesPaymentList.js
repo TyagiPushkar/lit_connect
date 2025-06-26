@@ -293,9 +293,9 @@ const FeesPaymentList = () => {
   const generateExcelFile = (reportData) => {
     try {
       // Prepare worksheet data
-      const worksheetData = []
+      const worksheetData = [];
   
-      // Add headers
+      // Add headers (matching the DETAIL REPORT.xlsx structure)
       worksheetData.push([
         "Student ID",
         "Student Name",
@@ -305,133 +305,214 @@ const FeesPaymentList = () => {
         "Guardian Contact",
         "Student Contact",
         "Address",
-        "Total Fees",
-        "Total Scholarship",
-        "Net Fees",
-        "Total Paid",
-        "Total Due",
-        "Installment No",
-        "Due Date",
-        "Tuition Fees",
-        "Exam Fees",
-        "Hostel Fees",
-        "Admission Fees",
-        "Prospectus Fees",
-        "Scholarship",
-        "Total Amount",
-        "Status",
-        "Payment Date",
-        "Payment Mode",
-        "Amount Paid",
-        "Balance Amount",
-      ])
+        "COLLEGE FEE (1ST YEAR)",
+        "HOSTEL FEE (1ST YEAR)",
+        "Total Fees (1ST YEAR)",
+        "Scholarship (1ST YEAR)",
+        "Net Fees (1ST YEAR)",
+        "Total Paid (UPTO 4TH INS)",
+        "Total Due (1ST YEAR)",
+        "INS 1 TOTAL AMOUNT",
+        "INS 1 PAID AMOUNT",
+        "INS 1 DUE AMOUNT",
+        "INS 2 TOTAL AMOUNT",
+        "INS 2 PAID AMOUNT",
+        "INS 2 DUE AMOUNT",
+        "INS 3 TOTAL AMOUNT",
+        "INS 3 PAID AMOUNT",
+        "INS 3 DUE AMOUNT",
+        "INS 4 TOTAL AMOUNT",
+        "INS 4 PAID AMOUNT",
+        "INS 4 DUE AMOUNT",
+        "COLLEGE FEE (2ND YEAR)",
+        "HOSTEL FEE (2ND YEAR)",
+        "Total Fees (2ND YEAR)",
+        "Scholarship (2ND YEAR)",
+        "Net Fees (2ND YEAR)",
+        "Total Paid (5 TO 8TH INS)",
+        "Total DUE (2ND YEAR)",
+        "INS 5 TOTAL AMOUNT",
+        "INS 5 PAID AMOUNT",
+        "INS 5 DUE AMOUNT",
+        "INS 6 TOTAL AMOUNT",
+        "INS 6 PAID AMOUNT",
+        "INS 6 DUE AMOUNT",
+        "INS 7 TOTAL AMOUNT",
+        "INS 7 PAID AMOUNT",
+        "INS 7 DUE AMOUNT",
+        "INS 8 TOTAL AMOUNT",
+        "INS 8 PAID AMOUNT",
+        "INS 8 DUE AMOUNT",
+        "COLLEGE FEE (3RD YEAR)",
+        "HOSTEL FEE (3RD YEAR)",
+        "Total Fees (3RD YEAR)",
+        "Scholarship (3RD YEAR)",
+        "Net Fees (3RD YEAR)",
+        "Total Paid (9 TO 12TH INS)",
+        "Total DUE (3RD YEAR)",
+        "INS 9 TOTAL AMOUNT",
+        "INS 9 PAID AMOUNT",
+        "INS 9 DUE AMOUNT",
+        "INS 10 TOTAL AMOUNT",
+        "INS 10 PAID AMOUNT",
+        "INS 10 DUE AMOUNT",
+        "INS 11 TOTAL AMOUNT",
+        "INS 11 PAID AMOUNT",
+        "INS 11 DUE AMOUNT",
+        "INS 12 TOTAL AMOUNT",
+        "INS 12 PAID AMOUNT",
+        "INS 12 DUE AMOUNT"
+      ]);
   
-      // Track merged ranges
-      const merges = []
-  
-      // Add student data
-      for (const student of reportData) {
-        if (student.installments.length === 0) {
-          worksheetData.push([
-            student.studentId,
-            student.studentName,
-            student.course,
-            student.session,
-            student.guardianName,
-            student.guardianContact,
-            student.studentContact,
-            student.address,
-            student.totalFees,
-            student.totalScholarship,
-            student.netFees,
-            student.totalPaid,
-            student.totalDue,
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-          ])
-        } else {
-          const startRow = worksheetData.length
-          student.installments.forEach((installment, index) => {
-            worksheetData.push([
-              student.studentId,
-              student.studentName,
-              student.course,
-              student.session,
-              student.guardianName,
-              student.guardianContact,
-              student.studentContact,
-              student.address,
-              student.totalFees,
-              student.totalScholarship,
-              student.netFees,
-              student.totalPaid,
-              student.totalDue,
-              installment.installmentNo,
-              installment.dueDate,
-              installment.tuitionFees,
-              installment.examFees,
-              installment.hostelFees,
-              installment.admissionFees,
-              installment.prospectusFees,
-              installment.scholarship,
-              installment.totalAmount,
-              installment.status,
-              installment.paymentDate,
-              installment.paymentMode,
-              installment.amountPaid,
-              installment.balanceAmount,
-            ])
-          })
-          const endRow = worksheetData.length - 1
-  
-          // Add merges for student info columns (columns 0-12)
-          for (let col = 0; col < 13; col++) {
-            if (startRow !== endRow) {
-              merges.push({ s: { r: startRow, c: col }, e: { r: endRow, c: col } })
-            }
+      // Process each student
+      reportData.forEach((student) => {
+        // Initialize year-wise data
+        const years = {
+          1: {
+            collegeFee: 0,
+            hostelFee: 0,
+            scholarship: 0,
+            installments: Array(4).fill(null).map(() => ({
+              total: 0,
+              paid: 0,
+              due: 0
+            }))
+          },
+          2: {
+            collegeFee: 0,
+            hostelFee: 0,
+            scholarship: 0,
+            installments: Array(4).fill(null).map(() => ({
+              total: 0,
+              paid: 0,
+              due: 0
+            }))
+          },
+          3: {
+            collegeFee: 0,
+            hostelFee: 0,
+            scholarship: 0,
+            installments: Array(4).fill(null).map(() => ({
+              total: 0,
+              paid: 0,
+              due: 0
+            }))
           }
+        };
+  
+        // Process each installment
+        student.installments.forEach((installment) => {
+          // Determine which year the installment belongs to (1-3)
+          const year = Math.ceil(installment.installmentNo / 4);
+          
+          if (year >= 1 && year <= 3) {
+            // Determine which installment within the year (1-4)
+            const yearInstallment = (installment.installmentNo - 1) % 4;
+            
+            // Update year totals
+            years[year].collegeFee += installment.tuitionFees || 0;
+            years[year].hostelFee += installment.hostelFees || 0;
+            years[year].scholarship += installment.scholarship || 0;
+            
+            // Update installment data
+            years[year].installments[yearInstallment] = {
+              total: installment.totalAmount,
+              paid: installment.amountPaid,
+              due: installment.balanceAmount
+            };
+          }
+        });
+  
+        // Calculate totals for each year
+        for (const year of [1, 2, 3]) {
+          years[year].totalFees = years[year].collegeFee + years[year].hostelFee;
+          years[year].netFees = years[year].totalFees - years[year].scholarship;
+          
+          // Calculate total paid and due for the year
+          years[year].totalPaid = years[year].installments.reduce((sum, ins) => sum + (ins?.paid || 0), 0);
+          years[year].totalDue = years[year].installments.reduce((sum, ins) => sum + (ins?.due || 0), 0);
         }
-      }
+  
+        // Create row data matching the DETAIL REPORT.xlsx structure
+        const row = [
+          student.studentId,
+          student.studentName,
+          student.course,
+          student.session,
+          student.guardianName,
+          student.guardianContact,
+          student.studentContact,
+          student.address,
+          // Year 1 data
+          years[1].collegeFee,
+          years[1].hostelFee,
+          years[1].totalFees,
+          years[1].scholarship,
+          years[1].netFees,
+          years[1].totalPaid,
+          years[1].totalDue,
+          // Year 1 installments
+          ...years[1].installments.flatMap(ins => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
+          // Year 2 data
+          years[2].collegeFee,
+          years[2].hostelFee,
+          years[2].totalFees,
+          years[2].scholarship,
+          years[2].netFees,
+          years[2].totalPaid,
+          years[2].totalDue,
+          // Year 2 installments
+          ...years[2].installments.flatMap(ins => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
+          // Year 3 data
+          years[3].collegeFee,
+          years[3].hostelFee,
+          years[3].totalFees,
+          years[3].scholarship,
+          years[3].netFees,
+          years[3].totalPaid,
+          years[3].totalDue,
+          // Year 3 installments
+          ...years[3].installments.flatMap(ins => [ins?.total || 0, ins?.paid || 0, ins?.due || 0])
+        ];
+  
+        worksheetData.push(row);
+      });
   
       // Create workbook and worksheet
-      const wb = XLSX.utils.book_new()
-      const ws = XLSX.utils.aoa_to_sheet(worksheetData)
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
   
-      // Apply merges
-      ws["!merges"] = merges
-  
-      // Auto-size columns
-      const colWidths = worksheetData[0].map((_, colIndex) => {
-        const maxLength = Math.max(
-          ...worksheetData.map((row) => (row[colIndex] ? row[colIndex].toString().length : 0))
-        )
-        return { wch: Math.min(Math.max(maxLength, 10), 50) }
-      })
-      ws["!cols"] = colWidths
+      // Set column widths
+      const colWidths = [
+        { wch: 10 },  // Student ID
+        { wch: 25 },  // Student Name
+        { wch: 15 },  // Course
+        { wch: 10 },  // Session
+        { wch: 25 },  // Guardian Name
+        { wch: 15 },  // Guardian Contact
+        { wch: 15 },  // Student Contact
+        { wch: 50 },  // Address
+        // Year 1 columns
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        // Installments (12 columns x 3 years)
+        ...Array(36).fill({ wch: 12 }),
+        // Year 2 and 3 columns (same as year 1)
+        ...Array(14).fill({ wch: 15 }),
+        ...Array(36).fill({ wch: 12 })
+      ];
+      ws['!cols'] = colWidths;
   
       // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, "Fees Report")
+      XLSX.utils.book_append_sheet(wb, ws, "Fees Report");
   
       // Generate Excel file and download
-      const date = new Date().toISOString().split("T")[0]
-      XLSX.writeFile(wb, `Fees_Report_${date}.xlsx`)
+      const date = new Date().toISOString().split("T")[0];
+      XLSX.writeFile(wb, `Fees_Report_${date}.xlsx`);
     } catch (error) {
-      setSnackbarMessage("Error generating Excel file: " + error.message)
-      setOpenSnackbar(true)
+      setSnackbarMessage("Error generating Excel file: " + error.message);
+      setOpenSnackbar(true);
     }
-  }
+  };
 
   const handleCloseDownloadDialog = () => {
     if (!isDownloading) {
