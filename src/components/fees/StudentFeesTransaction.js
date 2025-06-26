@@ -44,7 +44,6 @@ const StudentFeesTransaction = () => {
     try {
       setLoading(true);
       
-      // Fetch student data
       const studentRes = await axios.get(
         `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
       );
@@ -52,7 +51,6 @@ const StudentFeesTransaction = () => {
         setStudentData(studentRes.data.data);
       }
 
-      // Fetch fee structure
       const feesRes = await axios.get(
         `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`,
       );
@@ -61,7 +59,6 @@ const StudentFeesTransaction = () => {
         const fees = feesRes.data.data;
         setFeesData(fees);
 
-        // Fetch transaction status for all paid fees
         const statusMap = {};
         const transactionPromises = fees
           .filter(fee => fee.Paid)
@@ -77,7 +74,7 @@ const StudentFeesTransaction = () => {
               }
             } catch (err) {
               console.error("Error fetching transaction:", err);
-              statusMap[fee.id] = "fully_paid"; // Default to fully paid if error
+              statusMap[fee.id] = "fully_paid";
             }
           });
 
@@ -85,7 +82,6 @@ const StudentFeesTransaction = () => {
         setTransactionStatus(statusMap);
       }
 
-      // Fetch variable fees
       const variableRes = await axios.get(
         `https://namami-infotech.com/LIT/src/fees/variable.php?student_id=${studentId}`
       );
@@ -139,42 +135,17 @@ const StudentFeesTransaction = () => {
   return (
     <Box sx={{ p: 2, backgroundColor: "#fff" }}>
       {/* Student Info */}
-      <Paper
-        sx={{
-          p: 4,
-          mb: 3,
-          borderRadius: 3,
-          boxShadow: 4,
-          position: "relative",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: "#f9f9f9",
-        }}
-      >
-        <Button
-          onClick={() => window.history.back()}
-          sx={{ position: "absolute", top: 5, left: -6 }}
-        >
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4, position: "relative", display: "flex", flexDirection: "row", alignItems: "center", backgroundColor: "#f9f9f9" }}>
+        <Button onClick={() => window.history.back()} sx={{ position: "absolute", top: 5, left: -6 }}>
           <ArrowBackIcon />
         </Button>
 
-        <Avatar
-          src={studentData.Photo}
-          alt={studentData.CandidateName}
-          sx={{ width: 120, height: 120, borderRadius: "8px", marginLeft: 3 }}
-        />
+        <Avatar src={studentData.Photo} alt={studentData.CandidateName} sx={{ width: 120, height: 120, borderRadius: "8px", marginLeft: 3 }} />
 
         <Box sx={{ flex: 1, marginLeft: 3 }}>
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            color="#CC7A00"
-            gutterBottom
-          >
+          <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
             {studentData.CandidateName}
           </Typography>
-
           <Typography variant="subtitle1" color="textSecondary">
             <strong>Course:</strong> {studentData.Course}
           </Typography>
@@ -222,32 +193,12 @@ const StudentFeesTransaction = () => {
 
               return (
                 <Grid item xs={12} sm={6} md={3} key={fee.id}>
-                  <Card
-                    sx={{
-                      backgroundColor: "#fefefe",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      border: `2px solid ${
-                        paymentStatus === "fully_paid" ? "green" : 
-                        paymentStatus === "partially_paid" ? "orange" : "#F69320"
-                      }`,
-                      borderRadius: 2,
-                    }}
-                  >
+                  <Card sx={{ backgroundColor: "#fefefe", height: "100%", display: "flex", flexDirection: "column", border: `2px solid ${paymentStatus === "fully_paid" ? "green" : paymentStatus === "partially_paid" ? "orange" : "#F69320"}`, borderRadius: 2 }}>
                     <CardContent sx={{ flexGrow: 1 }}>
                       <Box display="flex" alignItems="center" gap={1} mb={1}>
                         <PaymentsIcon color="primary" />
-                        <Typography
-                          fontWeight={600}
-                          color={
-                            paymentStatus === "fully_paid" ? "green" : 
-                            paymentStatus === "partially_paid" ? "orange" : "#F69320"
-                          }
-                        >
-                          Installment {fee.installment} – ₹{total}{" "}
-                          {paymentStatus === "fully_paid" ? "(Paid)" : 
-                           paymentStatus === "partially_paid" ? "(Partially Paid)" : "(Due)"}
+                        <Typography fontWeight={600} color={paymentStatus === "fully_paid" ? "green" : paymentStatus === "partially_paid" ? "orange" : "#F69320"}>
+                          Installment {fee.installment} – ₹{total} {paymentStatus === "fully_paid" ? "(Paid)" : paymentStatus === "partially_paid" ? "(Partially Paid)" : "(Due)"}
                         </Typography>
                       </Box>
 
@@ -256,52 +207,23 @@ const StudentFeesTransaction = () => {
                           <Typography variant="body2">View Details</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                          {fee.tution_fees != 0 && (
-                            <Typography variant="body2">
-                              <strong>Tuition:</strong> ₹{fee.tution_fees}
-                            </Typography>
-                          )}
-                          {fee.exam_fees != 0 && (
-                            <Typography variant="body2">
-                              <strong>Exam:</strong> ₹{fee.exam_fees}
-                            </Typography>
-                          )}
-                          {fee.hostel_fees != 0 && (
-                            <Typography variant="body2">
-                              <strong>Hostel:</strong> ₹{fee.hostel_fees}
-                            </Typography>
-                          )}
-                          {fee.admission_fees != 0 && (
-                            <Typography variant="body2">
-                              <strong>Admission:</strong> ₹{fee.admission_fees}
-                            </Typography>
-                          )}
-                          {fee.prospectus_fees != 0 && (
-                            <Typography variant="body2">
-                              <strong>Prospectus:</strong> ₹{fee.prospectus_fees}
-                            </Typography>
-                          )}
-                          {fee.Scholarship != 0 && (
-                            <Typography variant="body2">
-                              <strong>Scholarship:</strong> ₹{fee.Scholarship}
-                            </Typography>
-                          )}
+                          {fee.tution_fees != 0 && <Typography variant="body2"><strong>Tuition:</strong> ₹{fee.tution_fees}</Typography>}
+                          {fee.exam_fees != 0 && <Typography variant="body2"><strong>Exam:</strong> ₹{fee.exam_fees}</Typography>}
+                          {fee.hostel_fees != 0 && <Typography variant="body2"><strong>Hostel:</strong> ₹{fee.hostel_fees}</Typography>}
+                          {fee.admission_fees != 0 && <Typography variant="body2"><strong>Admission:</strong> ₹{fee.admission_fees}</Typography>}
+                          {fee.prospectus_fees != 0 && <Typography variant="body2"><strong>Prospectus:</strong> ₹{fee.prospectus_fees}</Typography>}
+                          {fee.Scholarship != 0 && <Typography variant="body2"><strong>Scholarship:</strong> ₹{fee.Scholarship}</Typography>}
                           {fee.id === firstDueInstallment?.id && variableFees.length > 0 && (
                             <Box mt={1}>
                               <Typography><strong>Additional Variable Charges:</strong></Typography>
                               {variableFees.map((vf, i) => (
-                                <Typography key={i} variant="body2">
-                                  {vf.particular}: ₹{vf.amount}
-                                </Typography>
+                                <Typography key={i} variant="body2">{vf.particular}: ₹{vf.amount}</Typography>
                               ))}
                             </Box>
                           )}
-
                           <Box display="flex" alignItems="center" gap={1} mt={1}>
                             <ScheduleIcon fontSize="small" color="action" />
-                            <Typography variant="body2">
-                              <strong>Due Date:</strong> {fee.due_date}
-                            </Typography>
+                            <Typography variant="body2"><strong>Due Date:</strong> {fee.due_date}</Typography>
                           </Box>
                         </AccordionDetails>
                       </Accordion>
@@ -310,61 +232,35 @@ const StudentFeesTransaction = () => {
                     {user && user.role === "Accounts" &&   
                     <Box p={2}>
                       {paymentStatus === "fully_paid" ? (
-                        <Button
-                          variant="outlined"
-                          fullWidth
-                          sx={{ color: "green", borderColor: "green" }}
-                          onClick={() => fetchTransactionData(fee.Paid)}
-                        >
+                        <Button variant="outlined" fullWidth sx={{ color: "green", borderColor: "green" }} onClick={() => fetchTransactionData(fee.Paid)}>
                           View Receipt
                         </Button>
-                        ) : paymentStatus === "partially_paid" ? (
-                            <>
-                        <Button
-      variant="outlined"
-      fullWidth
-      sx={{ color: "orange", borderColor: "orange" }}
-      onClick={() => {
-        fetchTransactionData(fee.Paid);
-      }}
-    >
-      View Transaction
-    </Button>
-    <Button
-      variant="outlined"
-      fullWidth
-      sx={{ color: "orange", borderColor: "orange", mt: 1 }}
-      onClick={() => {
-        setSelectedFee({
-          ...fee,
-          balance_amount: transactionData?.balance_amount || 0
-        });
-        setDialogOpen(true);
-      }}
-    >
-      Pay Balance 
-    </Button>
-                              </>
+                      ) : paymentStatus === "partially_paid" ? (
+                        <>
+                          <Button variant="outlined" fullWidth sx={{ color: "orange", borderColor: "orange" }} onClick={() => fetchTransactionData(fee.Paid)}>
+                            View Transaction
+                          </Button>
+                          <Button variant="outlined" fullWidth sx={{ color: "orange", borderColor: "orange", mt: 1 }} onClick={async () => {
+                            const res = await axios.get(`https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${fee.Paid}`);
+                            if (res.data.success && res.data.data) {
+                              setSelectedFee({
+                                ...fee,
+                                balance_amount: res.data.data.balance_amount
+                              });
+                              setDialogOpen(true);
+                            }
+                          }}>
+                            Pay Balance (₹{transactionData?.balance_amount || "..."})
+                          </Button>
+                        </>
                       ) : firstDueInstallment?.id === fee.id ? (
-                        <Button
-                          variant="contained"
-                          fullWidth
-                          onClick={() => handleOpenDialog(fee)}
-                          sx={{ color: "white", backgroundColor: "#F69320" }}
-                        >
+                        <Button variant="contained" fullWidth onClick={() => handleOpenDialog(fee)} sx={{ color: "white", backgroundColor: "#F69320" }}>
                           Pay Now
                         </Button>
                       ) : (
-                        <Button
-                          variant="outlined"
-                          fullWidth
-                          disabled
-                        >
-                          Due
-                        </Button>
+                        <Button variant="outlined" fullWidth disabled>Due</Button>
                       )}
-                    </Box>
-                    }
+                    </Box>}
                   </Card>
                 </Grid>
               );
@@ -389,6 +285,7 @@ const StudentFeesTransaction = () => {
           open={dialogOpen}
           feeData={selectedFee}
           variableFees={variableFees} 
+          firstDueInstallment={firstDueInstallment}
           onClose={(shouldRefresh) => {
             setDialogOpen(false);
             setSelectedFee(null);

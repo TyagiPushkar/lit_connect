@@ -13,25 +13,13 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-const PaymentDialog = ({ open, onClose, feeData, student, variableFees }) => {
+const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDueInstallment }) => {
   const [mode, setMode] = useState("Cash");
   const [modeId, setModeId] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [remainingBalance, setRemainingBalance] = useState(0);
-
-  useEffect(() => {
-    if (feeData?.balance_amount) {
-      // If paying a balance, set deposit amount to the remaining balance by default
-      setDepositAmount(feeData.balance_amount.toString());
-    } else {
-      setDepositAmount("");
-    }
-  }, [feeData]);
-
-  if (!feeData) return null;
 
   // Calculate base total from fee structure
   const baseTotal =
@@ -42,18 +30,29 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees }) => {
     Number(feeData.prospectus_fees || 0) -
     Number(feeData.Scholarship || 0);
 
-  // Calculate variable fees total
-  const variableTotal = Array.isArray(variableFees)
+  // Calculate variable fees total - only include if this is a new payment (not balance payment)
+  const variableTotal = (!feeData.balance_amount && feeData.id === firstDueInstallment?.id && Array.isArray(variableFees))
     ? variableFees.reduce((sum, vf) => sum + Number(vf.amount || 0), 0)
     : 0;
 
   // Determine the total amount to pay
   const totalAmount = feeData.balance_amount 
-    ? Number(feeData.balance_amount) + variableTotal
-    : baseTotal + variableTotal;
+    ? Number(feeData.balance_amount)  // Use just the balance amount if it exists
+    : baseTotal + variableTotal;      // Otherwise use full amount + variables
 
-  // Calculate balance after deposit
+  // Calculate balance after payment
   const balance = totalAmount - Number(depositAmount || 0);
+
+  // Initialize deposit amount
+  useEffect(() => {
+    if (feeData?.balance_amount) {
+      // For balance payments, default to the full remaining balance
+      setDepositAmount(feeData.balance_amount.toString());
+    } else {
+      // For new payments, default to the full amount
+      setDepositAmount((baseTotal + variableTotal).toString());
+    }
+  }, [feeData, baseTotal, variableTotal]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -75,7 +74,6 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees }) => {
         total_amount: totalAmount,
         deposit_amount: depositAmount,
         balance_amount: balance,
-        // Include original transaction ID if this is a partial payment
         original_transaction_id: feeData.Paid || null
       };
 
@@ -114,9 +112,6 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees }) => {
             {feeData.balance_amount ? (
               <>
                 <strong>Remaining Balance:</strong> ₹{feeData.balance_amount}
-                {variableTotal > 0 && (
-                  <span> + ₹{variableTotal} (variable fees) = ₹{totalAmount}</span>
-                )}
               </>
             ) : (
               <>
@@ -175,7 +170,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees }) => {
 
         <Box mt={2}>
           <Typography variant="body1">
-            <strong>Remaining Balance After Payment:</strong> ₹{balance > 0 ? balance : 0}
+            <strong>Remaining Balance After Payment:</strong> ₹{Math.max(balance, 0)}
           </Typography>
         </Box>
       </DialogContent>
