@@ -277,6 +277,10 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
              <Box display="flex" justifyContent="space-between">
   <strong>Payment Date:</strong>{" "}
   <span>{formatDateTime(transactionData.payment_date)}</span>
+              </Box>
+              <Box display="flex" justifyContent="space-between">
+  <strong>Remark:</strong>{" "}
+  <span>{(transactionData.Remark)}</span>
 </Box>
 
               {(() => {

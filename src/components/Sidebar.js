@@ -79,6 +79,14 @@ function Sidebar() {
     );
 
   }
+  if (user?.role === "Accounts") {
+    allowedRoutes.push(
+      { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
+
+      // { path: '/hr-report', name: 'Menus', icon: <MenuIcon /> },
+      // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
+    );
+  }
   // HR-specific routes
   if (user?.role === "Teacher") {
     allowedRoutes.push(
