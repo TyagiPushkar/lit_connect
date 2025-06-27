@@ -22,6 +22,8 @@ import axios from "axios"
 import PaymentsIcon from "@mui/icons-material/Payments"
 import ScheduleIcon from "@mui/icons-material/Schedule"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import TransactionDialog from "./TransactionDialog"
+import PaymentDialog from "./PaymentDialog"
 import { useParams } from "react-router-dom"
 
 const StudentFeesTransaction = () => {
@@ -495,6 +497,35 @@ const StudentFeesTransaction = () => {
             })}
         </Grid>
       </Paper>
+
+      {/* Transaction Dialog */}
+      {transactionData && (
+        <TransactionDialog
+          student={studentData}
+          open={transactionDialogOpen}
+          transactionData={transactionData}
+          onClose={() => {
+            setTransactionDialogOpen(false)
+            setTransactionData(null)
+          }}
+        />
+      )}
+
+      {/* Payment Dialog */}
+      {selectedFee && (
+        <PaymentDialog
+          open={dialogOpen}
+          feeData={selectedFee}
+          variableFees={variableFees}
+          firstDueInstallment={firstDueInstallment}
+          onClose={(shouldRefresh) => {
+            setDialogOpen(false)
+            setSelectedFee(null)
+            if (shouldRefresh) fetchStudentAndFees()
+          }}
+          student={studentData}
+        />
+      )}
 
       {/* Edit Dialog */}
       {editDialogOpen && (
