@@ -83,6 +83,7 @@ function Sidebar() {
     allowedRoutes.push(
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
+      { path: "/fees-summary", name: "Fees Summary", icon: <SummarizeIcon /> },
       // { path: '/hr-report', name: 'Menus', icon: <MenuIcon /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );

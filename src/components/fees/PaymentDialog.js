@@ -128,7 +128,14 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
             )}
           </Typography>
         </Box>
-
+        <TextField
+type="date"
+  fullWidth
+  margin="normal"
+  label="Payment Date"
+  value={paymentDate}
+  onChange={(e) => setPaymentDate(e.target.value)}
+/>
         <TextField
           fullWidth
           margin="normal"
@@ -182,14 +189,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
   multiline
   rows={2}
 />
-<TextField
-type="date"
-  fullWidth
-  margin="normal"
-  label="Payment Date"
-  value={paymentDate}
-  onChange={(e) => setPaymentDate(e.target.value)}
-/>
+
         <Box mt={2}>
           <Typography variant="body1">
             <strong>Remaining Balance After Payment:</strong> ₹{Math.max(balance, 0)}
