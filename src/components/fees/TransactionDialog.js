@@ -237,6 +237,10 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                 <strong>Payment Mode:</strong>{" "}
                 <span>{transactionData.mode}</span>
               </Box>
+              <Box display="flex" justifyContent="space-between">
+                <strong>Payment Mode:</strong>{" "}
+                <span>{transactionData.mode_id}</span>
+              </Box>
             </Grid>
           </Grid>
 
