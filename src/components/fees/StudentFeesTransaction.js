@@ -40,7 +40,7 @@ const StudentFeesTransaction = () => {
   const [transactionStatus, setTransactionStatus] = useState({});
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-const [editFormData, setEditFormData] = useState(null);
+  const [editFormData, setEditFormData] = useState(null);
   const firstDueInstallment = feesData.find(fee => !fee.Paid);
 
   const fetchStudentAndFees = async () => {
@@ -80,13 +80,9 @@ const [editFormData, setEditFormData] = useState(null);
                     };
                   }
                   statusMap[fee.id].transactions.push(res.data.data);
-                  if (res.data.data.balance_amount > 0) {
-                    statusMap[fee.id].status = "partially_paid";
-                  }
                 }
               } catch (err) {
                 console.error("Error fetching transaction:", err);
-                // Default to fully paid if there's an error
                 if (!statusMap[fee.id]) {
                   statusMap[fee.id] = {
                     transactions: [],
@@ -98,6 +94,22 @@ const [editFormData, setEditFormData] = useState(null);
           });
   
         await Promise.all(transactionPromises);
+        
+        // Sort transactions by date and determine final status
+        Object.keys(statusMap).forEach(feeId => {
+          if (statusMap[feeId].transactions.length > 0) {
+            // Sort transactions by payment_date (most recent first)
+            statusMap[feeId].transactions.sort((a, b) => 
+              new Date(b.payment_date) - new Date(a.payment_date)
+            );
+            
+            // Check the most recent transaction's balance
+            const latestTransaction = statusMap[feeId].transactions[0];
+            statusMap[feeId].status = latestTransaction.balance_amount > 0 ? "partially_paid" : "fully_paid";
+            statusMap[feeId].currentBalance = latestTransaction.balance_amount;
+          }
+        });
+        
         setTransactionStatus(statusMap);
       }
   
@@ -114,6 +126,7 @@ const [editFormData, setEditFormData] = useState(null);
       setLoading(false);
     }
   };
+
   const fetchTransactionData = async (transactionId) => {
     try {
       const res = await axios.get(
@@ -178,6 +191,7 @@ const [editFormData, setEditFormData] = useState(null);
       setLoading(false);
     }
   };
+
   if (loading) return <CircularProgress sx={{ mt: 5 }} />;
 
   if (!studentData) {
@@ -210,7 +224,6 @@ const [editFormData, setEditFormData] = useState(null);
           <Typography variant="subtitle1" color="textSecondary">
             <strong>Student Id:</strong> {studentId}
           </Typography>
-         
         </Box>
       </Paper>
 
@@ -246,24 +259,33 @@ const [editFormData, setEditFormData] = useState(null);
                 : 0;
           
               const total = baseTotal + variableTotal;
-              const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== "0";
-              // In the mapping function where you define paymentStatus:
-              const paymentStatus = isPaid ? (transactionStatus[fee.id]?.transactions?.some(t => t.balance_amount > 0)  ? "partially_paid" : "fully_paid") : "unpaid";
+              const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== "";
+              
+              // Improved payment status logic
+              let paymentStatus = "unpaid";
+              let currentBalance = 0;
+              
+              if (isPaid && transactionStatus[fee.id]) {
+                const feeStatus = transactionStatus[fee.id];
+                paymentStatus = feeStatus.status;
+                currentBalance = feeStatus.currentBalance || 0;
+              }
 
               return (
                 <Grid item xs={12} sm={6} md={3} key={fee.id}>
-<Card sx={{ 
-  backgroundColor: "#fefefe", 
-  height: "100%", 
-  display: "flex", 
-  flexDirection: "column", 
-  border: `2px solid ${
-    paymentStatus === "fully_paid" ? "green" : 
-    paymentStatus === "partially_paid" ? "orange" : 
-    "#F69320"
-  }`, 
-  borderRadius: 2 
-}}>                    <CardContent sx={{ flexGrow: 1 }}>
+                  <Card sx={{ 
+                    backgroundColor: "#fefefe", 
+                    height: "100%", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    border: `2px solid ${
+                      paymentStatus === "fully_paid" ? "green" : 
+                      paymentStatus === "partially_paid" ? "orange" : 
+                      "#F69320"
+                    }`, 
+                    borderRadius: 2 
+                  }}>
+                    <CardContent sx={{ flexGrow: 1 }}>
                       <Box display="flex" alignItems="center" gap={1} mb={1}>
                         <PaymentsIcon color="primary" />
                         <Typography fontWeight={600} color={paymentStatus === "fully_paid" ? "green" : paymentStatus === "partially_paid" ? "orange" : "#F69320"}>
@@ -299,83 +321,76 @@ const [editFormData, setEditFormData] = useState(null);
                     </CardContent>
 
                     {user && user.role === "Accounts" && (
-  <Box p={2}>
-    {/* Show transaction receipts if paid or partially paid */}
-    {paymentStatus !== "unpaid" && transactionStatus[fee.id]?.transactions?.length > 0 && (
-      <>
-        {transactionStatus[fee.id].transactions.map((transaction, index) => (
-          <Button 
-            key={index}
-            variant="outlined" 
-            fullWidth 
-            sx={{ 
-              color: transaction.balance_amount > 0 ? "orange" : "green", 
-              borderColor: transaction.balance_amount > 0 ? "orange" : "green",
-              mb: index < transactionStatus[fee.id].transactions.length - 1 ? 1 : 0
-            }} 
-            onClick={() => {
-              setTransactionData({
-                ...transaction,
-                receiptIndex: index + 1,
-                totalReceipts: transactionStatus[fee.id].transactions.length
-              });
-              setTransactionDialogOpen(true);
-            }}
-          >
-            Receipt {index + 1} {transaction.balance_amount > 0 ? "(Partial)" : "(Full)"}
-          </Button>
-        ))}
-      </>
-    )}
+                      <Box p={2}>
+                        {/* Show transaction receipts if paid or partially paid */}
+                        {paymentStatus !== "unpaid" && transactionStatus[fee.id]?.transactions?.length > 0 && (
+                          <>
+                            {transactionStatus[fee.id].transactions.map((transaction, index) => (
+                              <Button 
+                                key={index}
+                                variant="outlined" 
+                                fullWidth 
+                                sx={{ 
+                                  color: transaction.balance_amount > 0 ? "orange" : "green", 
+                                  borderColor: transaction.balance_amount > 0 ? "orange" : "green",
+                                  mb: index < transactionStatus[fee.id].transactions.length - 1 ? 1 : 0
+                                }} 
+                                onClick={() => {
+                                  setTransactionData({
+                                    ...transaction,
+                                    receiptIndex: index + 1,
+                                    totalReceipts: transactionStatus[fee.id].transactions.length
+                                  });
+                                  setTransactionDialogOpen(true);
+                                }}
+                              >
+                                Receipt {index + 1} {transaction.balance_amount > 0 ? "(Partial)" : "(Full)"}
+                              </Button>
+                            ))}
+                          </>
+                        )}
 
-    {/* Show Pay Now or Pay Balance button */}
-    {paymentStatus !== "fully_paid" && (
-      <Button 
-        variant="contained" 
-        fullWidth 
-        sx={{ 
-          color: "white", 
-          backgroundColor: "#F69320",
-          mt: paymentStatus !== "unpaid" ? 1 : 0
-        }}
-        onClick={() => {
-          if (paymentStatus === "partially_paid") {
-            // For partial payments, use the last transaction's balance
-            const lastTransaction = transactionStatus[fee.id]?.transactions?.[
-              transactionStatus[fee.id].transactions.length - 1
-            ];
-            setSelectedFee({
-              ...fee,
-              balance_amount: lastTransaction?.balance_amount || 0
-            });
-          } else {
-            // For new payments
-            setSelectedFee(fee);
-          }
-          setDialogOpen(true);
-        }}
-      >
-        {paymentStatus === "partially_paid" 
-          ? `Pay Balance (₹${
-              transactionStatus[fee.id]?.transactions?.[
-                transactionStatus[fee.id].transactions.length - 1
-              ]?.balance_amount || "..."
-            })` 
-          : "Pay Now"}
-      </Button>
-    )}
+                        {/* Show Pay Now or Pay Balance button - FIXED LOGIC */}
+                        {(paymentStatus === "unpaid" || (paymentStatus === "partially_paid" && currentBalance > 0)) && (
+                          <Button 
+                            variant="contained" 
+                            fullWidth 
+                            sx={{ 
+                              color: "white", 
+                              backgroundColor: "#F69320",
+                              mt: paymentStatus !== "unpaid" ? 1 : 0
+                            }}
+                            onClick={() => {
+                              if (paymentStatus === "partially_paid" && currentBalance > 0) {
+                                // For partial payments with remaining balance
+                                setSelectedFee({
+                                  ...fee,
+                                  balance_amount: currentBalance
+                                });
+                              } else {
+                                // For new payments
+                                setSelectedFee(fee);
+                              }
+                              setDialogOpen(true);
+                            }}
+                          >
+                            {paymentStatus === "partially_paid" && currentBalance > 0
+                              ? `Pay Balance (₹${currentBalance})` 
+                              : "Pay Now"}
+                          </Button>
+                        )}
 
-    {/* Always show Edit button */}
-    <Button 
-      variant="outlined" 
-      fullWidth 
-      sx={{ mt: 1 }}
-      onClick={() => handleEditClick(fee)}
-    >
-      Edit Structure
-    </Button>
-  </Box>
-)}
+                        {/* Always show Edit button */}
+                        <Button 
+                          variant="outlined" 
+                          fullWidth 
+                          sx={{ mt: 1 }}
+                          onClick={() => handleEditClick(fee)}
+                        >
+                          Edit Structure
+                        </Button>
+                      </Box>
+                    )}
                   </Card>
                 </Grid>
               );
@@ -409,94 +424,95 @@ const [editFormData, setEditFormData] = useState(null);
           student={studentData}
         />
       )}
-      {editDialogOpen && (
-  <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>Edit Fee Structure</Typography>
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Tuition Fees"
-            value={editFormData.tution_fees}
-            onChange={(e) => setEditFormData({...editFormData, tution_fees: e.target.value})}
-            type="number"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Exam Fees"
-            value={editFormData.exam_fees}
-            onChange={(e) => setEditFormData({...editFormData, exam_fees: e.target.value})}
-            type="number"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Hostel Fees"
-            value={editFormData.hostel_fees}
-            onChange={(e) => setEditFormData({...editFormData, hostel_fees: e.target.value})}
-            type="number"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Admission Fees"
-            value={editFormData.admission_fees}
-            onChange={(e) => setEditFormData({...editFormData, admission_fees: e.target.value})}
-            type="number"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Prospectus Fees"
-            value={editFormData.prospectus_fees}
-            onChange={(e) => setEditFormData({...editFormData, prospectus_fees: e.target.value})}
-            type="number"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Scholarship"
-            value={editFormData.Scholarship}
-            onChange={(e) => setEditFormData({...editFormData, Scholarship: e.target.value})}
-            type="number"
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Due Date"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={editFormData.due_date}
-            onChange={(e) => setEditFormData({...editFormData, due_date: e.target.value})}
-          />
-        </Grid>
-      </Grid>
 
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button onClick={() => setEditDialogOpen(false)} variant="outlined">
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleEditSubmit} 
-          variant="contained" 
-          color="primary"
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={24} /> : "Save Changes"}
-        </Button>
-      </Box>
-    </Box>
-  </Dialog>
-)}
+      {editDialogOpen && (
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Edit Fee Structure</Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Tuition Fees"
+                  value={editFormData?.tution_fees || ''}
+                  onChange={(e) => setEditFormData({...editFormData, tution_fees: e.target.value})}
+                  type="number"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Exam Fees"
+                  value={editFormData?.exam_fees || ''}
+                  onChange={(e) => setEditFormData({...editFormData, exam_fees: e.target.value})}
+                  type="number"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Hostel Fees"
+                  value={editFormData?.hostel_fees || ''}
+                  onChange={(e) => setEditFormData({...editFormData, hostel_fees: e.target.value})}
+                  type="number"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Admission Fees"
+                  value={editFormData?.admission_fees || ''}
+                  onChange={(e) => setEditFormData({...editFormData, admission_fees: e.target.value})}
+                  type="number"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Prospectus Fees"
+                  value={editFormData?.prospectus_fees || ''}
+                  onChange={(e) => setEditFormData({...editFormData, prospectus_fees: e.target.value})}
+                  type="number"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Scholarship"
+                  value={editFormData?.Scholarship || ''}
+                  onChange={(e) => setEditFormData({...editFormData, Scholarship: e.target.value})}
+                  type="number"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Due Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={editFormData?.due_date || ''}
+                  onChange={(e) => setEditFormData({...editFormData, due_date: e.target.value})}
+                />
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button onClick={() => setEditDialogOpen(false)} variant="outlined">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleEditSubmit} 
+                variant="contained" 
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : "Save Changes"}
+              </Button>
+            </Box>
+          </Box>
+        </Dialog>
+      )}
     </Box>
   );
 };
