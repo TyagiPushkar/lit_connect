@@ -13,6 +13,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  TextField,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useParams } from "react-router-dom";
@@ -38,6 +39,8 @@ const StudentFeesTransaction = () => {
   const [variableFees, setVariableFees] = useState([]);
   const [transactionStatus, setTransactionStatus] = useState({});
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+const [editFormData, setEditFormData] = useState(null);
   const firstDueInstallment = feesData.find(fee => !fee.Paid);
 
   const fetchStudentAndFees = async () => {
@@ -120,6 +123,46 @@ const StudentFeesTransaction = () => {
     setDialogOpen(true);
   };
 
+  const handleEditClick = (fee) => {
+    setEditFormData({
+      id: fee.id,
+      StudentId: studentId,
+      installment: fee.installment,
+      tution_fees: fee.tution_fees,
+      exam_fees: fee.exam_fees,
+      hostel_fees: fee.hostel_fees,
+      admission_fees: fee.admission_fees,
+      prospectus_fees: fee.prospectus_fees,
+      Scholarship: fee.Scholarship,
+      Paid: 0,
+      Total_variable: fee.Total_variable || "0",
+      due_date: fee.due_date
+    });
+    setEditDialogOpen(true);
+  };
+  
+  const handleEditSubmit = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://namami-infotech.com/LIT/src/fees/edit_student_fee_structure.php",
+        editFormData
+      );
+      
+      if (response.data.success) {
+        alert("Fee structure updated successfully!");
+        fetchStudentAndFees();
+        setEditDialogOpen(false);
+      } else {
+        alert(response.data.message || "Failed to update fee structure");
+      }
+    } catch (error) {
+      console.error("Error updating fee structure:", error);
+      alert("An error occurred while updating the fee structure");
+    } finally {
+      setLoading(false);
+    }
+  };
   if (loading) return <CircularProgress sx={{ mt: 5 }} />;
 
   if (!studentData) {
@@ -152,6 +195,7 @@ const StudentFeesTransaction = () => {
           <Typography variant="subtitle1" color="textSecondary">
             <strong>Student Id:</strong> {studentId}
           </Typography>
+         
         </Box>
       </Paper>
 
@@ -230,37 +274,58 @@ const StudentFeesTransaction = () => {
                     </CardContent>
 
                     {user && user.role === "Accounts" &&   
-                    <Box p={2}>
-                      {paymentStatus === "fully_paid" ? (
-                        <Button variant="outlined" fullWidth sx={{ color: "green", borderColor: "green" }} onClick={() => fetchTransactionData(fee.Paid)}>
-                          View Receipt
-                        </Button>
-                      ) : paymentStatus === "partially_paid" ? (
-                        <>
-                          <Button variant="outlined" fullWidth sx={{ color: "orange", borderColor: "orange" }} onClick={() => fetchTransactionData(fee.Paid)}>
-                            View Transaction
-                          </Button>
-                          <Button variant="outlined" fullWidth sx={{ color: "orange", borderColor: "orange", mt: 1 }} onClick={async () => {
-                            const res = await axios.get(`https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${fee.Paid}`);
-                            if (res.data.success && res.data.data) {
-                              setSelectedFee({
-                                ...fee,
-                                balance_amount: res.data.data.balance_amount
-                              });
-                              setDialogOpen(true);
-                            }
-                          }}>
-                            Pay Balance (₹{transactionData?.balance_amount || "..."})
-                          </Button>
-                        </>
-                      ) : firstDueInstallment?.id === fee.id ? (
-                        <Button variant="contained" fullWidth onClick={() => handleOpenDialog(fee)} sx={{ color: "white", backgroundColor: "#F69320" }}>
-                          Pay Now
-                        </Button>
-                      ) : (
-                        <Button variant="outlined" fullWidth disabled>Due</Button>
-                      )}
-                    </Box>}
+  <Box p={2}>
+    {paymentStatus === "fully_paid" ? (
+      <Button variant="outlined" fullWidth sx={{ color: "green", borderColor: "green" }} onClick={() => fetchTransactionData(fee.Paid)}>
+        View Receipt
+      </Button>
+    ) : paymentStatus === "partially_paid" ? (
+      <>
+        <Button variant="outlined" fullWidth sx={{ color: "orange", borderColor: "orange" }} onClick={() => fetchTransactionData(fee.Paid)}>
+          View Transaction
+        </Button>
+        <Button variant="outlined" fullWidth sx={{ color: "orange", borderColor: "orange", mt: 1 }} onClick={async () => {
+          const res = await axios.get(`https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${fee.Paid}`);
+          if (res.data.success && res.data.data) {
+            setSelectedFee({
+              ...fee,
+              balance_amount: res.data.data.balance_amount
+            });
+            setDialogOpen(true);
+          }
+        }}>
+          Pay Balance (₹{transactionData?.balance_amount || "..."})
+        </Button>
+      </>
+    ) : firstDueInstallment?.id === fee.id ? (
+      <>
+        <Button variant="contained" fullWidth onClick={() => handleOpenDialog(fee)} sx={{ color: "white", backgroundColor: "#F69320" }}>
+          Pay Now
+        </Button>
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          sx={{ mt: 1 }}
+          onClick={() => handleEditClick(fee)}
+        >
+          Edit Structure
+        </Button>
+      </>
+    ) : (
+      <>
+        <Button variant="outlined" fullWidth disabled>Due</Button>
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          sx={{ mt: 1 }}
+          onClick={() => handleEditClick(fee)}
+        >
+          Edit Structure
+        </Button>
+      </>
+    )}
+  </Box>
+}
                   </Card>
                 </Grid>
               );
@@ -294,6 +359,94 @@ const StudentFeesTransaction = () => {
           student={studentData}
         />
       )}
+      {editDialogOpen && (
+  <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>Edit Fee Structure</Typography>
+      
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Tuition Fees"
+            value={editFormData.tution_fees}
+            onChange={(e) => setEditFormData({...editFormData, tution_fees: e.target.value})}
+            type="number"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Exam Fees"
+            value={editFormData.exam_fees}
+            onChange={(e) => setEditFormData({...editFormData, exam_fees: e.target.value})}
+            type="number"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Hostel Fees"
+            value={editFormData.hostel_fees}
+            onChange={(e) => setEditFormData({...editFormData, hostel_fees: e.target.value})}
+            type="number"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Admission Fees"
+            value={editFormData.admission_fees}
+            onChange={(e) => setEditFormData({...editFormData, admission_fees: e.target.value})}
+            type="number"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Prospectus Fees"
+            value={editFormData.prospectus_fees}
+            onChange={(e) => setEditFormData({...editFormData, prospectus_fees: e.target.value})}
+            type="number"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Scholarship"
+            value={editFormData.Scholarship}
+            onChange={(e) => setEditFormData({...editFormData, Scholarship: e.target.value})}
+            type="number"
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Due Date"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            value={editFormData.due_date}
+            onChange={(e) => setEditFormData({...editFormData, due_date: e.target.value})}
+          />
+        </Grid>
+      </Grid>
+
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Button onClick={() => setEditDialogOpen(false)} variant="outlined">
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleEditSubmit} 
+          variant="contained" 
+          color="primary"
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={24} /> : "Save Changes"}
+        </Button>
+      </Box>
+    </Box>
+  </Dialog>
+)}
     </Box>
   );
 };
