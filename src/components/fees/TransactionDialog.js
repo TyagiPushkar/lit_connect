@@ -182,14 +182,19 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
 
         <DialogContent dividers>
           <Box my={2}>
-            <Typography
-              variant="h6"
-              align="center"
-              fontWeight={700}
-              gutterBottom
-            >
-              Fee Payment Receipt
-            </Typography>
+<Typography
+  variant="h6"
+  align="center"
+  fontWeight={700}
+  gutterBottom
+>
+  Fee Payment Receipt
+  {transactionData.receiptIndex && (
+    <Typography variant="subtitle2">
+      (Receipt {transactionData.receiptIndex} of {transactionData.totalReceipts})
+    </Typography>
+  )}
+</Typography>
           </Box>
 
           <Divider sx={{ mb: 2 }} />
