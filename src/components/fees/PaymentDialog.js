@@ -135,7 +135,24 @@ type="date"
   label="Payment Date"
   value={paymentDate}
   onChange={(e) => setPaymentDate(e.target.value)}
-/>
+        />
+         <TextField
+          fullWidth
+          margin="normal"
+          type="number"
+          label="Amount to Pay"
+          value={depositAmount}
+          onChange={(e) => {
+            const value = Math.min(Number(e.target.value), totalAmount);
+            setDepositAmount(value.toString());
+          }}
+          inputProps={{
+            min: 0,
+            max: totalAmount,
+            step: "any"
+          }}
+          helperText={`Maximum: ₹${totalAmount}`}
+        />
         <TextField
           fullWidth
           margin="normal"
@@ -162,23 +179,7 @@ type="date"
           />
         )}
 
-        <TextField
-          fullWidth
-          margin="normal"
-          type="number"
-          label="Amount to Pay"
-          value={depositAmount}
-          onChange={(e) => {
-            const value = Math.min(Number(e.target.value), totalAmount);
-            setDepositAmount(value.toString());
-          }}
-          inputProps={{
-            min: 0,
-            max: totalAmount,
-            step: "any"
-          }}
-          helperText={`Maximum: ₹${totalAmount}`}
-        />
+       
 
 <TextField
   fullWidth

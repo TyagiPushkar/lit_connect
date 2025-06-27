@@ -77,10 +77,10 @@ const FeesTransaction = () => {
               <TableCell style={{ color: "white" }}>Course</TableCell>
               <TableCell style={{ color: "white" }}>Installment</TableCell>
               <TableCell style={{ color: "white" }}>Tuition Fees</TableCell>
-              <TableCell style={{ color: "white" }}>Exam Fees</TableCell>
+              {/* <TableCell style={{ color: "white" }}>Exam Fees</TableCell> */}
               <TableCell style={{ color: "white" }}>Hostel Fees</TableCell>
-              <TableCell style={{ color: "white" }}>Admission Fees</TableCell>
-              <TableCell style={{ color: "white" }}>Prospectus Fees</TableCell>
+              {/* <TableCell style={{ color: "white" }}>Admission Fees</TableCell> */}
+              {/* <TableCell style={{ color: "white" }}>Prospectus Fees</TableCell> */}
                           <TableCell style={{ color: "white" }}>Mode</TableCell>
                           <TableCell style={{ color: "white" }}>Mode Id</TableCell>
                           <TableCell style={{ color: "white" }}>Total Amount</TableCell>
@@ -99,10 +99,10 @@ const FeesTransaction = () => {
                   <TableCell>{row.course}</TableCell>
                   <TableCell>{row.installment}</TableCell>
                   <TableCell>{row.tuition_fees}</TableCell>
-                  <TableCell>{row.exam_fees}</TableCell>
+                  {/* <TableCell>{row.exam_fees}</TableCell> */}
                   <TableCell>{row.hostel_fees}</TableCell>
-                  <TableCell>{row.admission_fees}</TableCell>
-                  <TableCell>{row.prospectus_fees}</TableCell>
+                  {/* <TableCell>{row.admission_fees}</TableCell> */}
+                  {/* <TableCell>{row.prospectus_fees}</TableCell> */}
                       <TableCell>{row.mode}</TableCell>
                       <TableCell>{row.mode_id}</TableCell>
                       <TableCell>{row.total_amount}</TableCell>
