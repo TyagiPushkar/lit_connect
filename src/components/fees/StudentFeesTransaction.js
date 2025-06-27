@@ -412,21 +412,7 @@ const StudentFeesTransaction = () => {
                           </Box>
 
                           {/* Show payment summary for paid/partially paid installments */}
-                          {paymentStatus !== "unpaid" && transactionStatus[fee.id] && (
-                            <Box mt={2} sx={{ backgroundColor: "#f5f5f5", p: 1, borderRadius: 1 }}>
-                              <Typography variant="body2">
-                                <strong>Total Amount:</strong> ₹{transactionStatus[fee.id].totalAmount}
-                              </Typography>
-                              <Typography variant="body2">
-                                <strong>Total Paid:</strong> ₹{transactionStatus[fee.id].totalPaid}
-                              </Typography>
-                              {remainingBalance > 0 && (
-                                <Typography variant="body2" color="orange">
-                                  <strong>Remaining Balance:</strong> ₹{remainingBalance}
-                                </Typography>
-                              )}
-                            </Box>
-                          )}
+                          
                         </AccordionDetails>
                       </Accordion>
                     </CardContent>

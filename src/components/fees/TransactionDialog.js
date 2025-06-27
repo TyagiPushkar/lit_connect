@@ -226,9 +226,7 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
               <Box display="flex" justifyContent="space-between">
                 <strong>Course:</strong> <span>{transactionData.course}</span>
               </Box>
-              <Box display="flex" justifyContent="space-between">
-                <strong>Semester:</strong> <span>{student.Sem}</span>
-              </Box>
+              
               <Box display="flex" justifyContent="space-between">
                 <strong>Installment:</strong>{" "}
                 <span>{transactionData.installment}</span>
@@ -283,15 +281,6 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                   <span>₹{transactionData.prospectus_fees}</span>
                 </Box>
               )}
-             <Box display="flex" justifyContent="space-between">
-  <strong>Payment Date:</strong>{" "}
-  <span>{formatDateTime(transactionData.payment_date)}</span>
-              </Box>
-              <Box display="flex" justifyContent="space-between">
-  <strong>Remark:</strong>{" "}
-  <span>{(transactionData.Remark)}</span>
-</Box>
-
               {(() => {
                 const breakdownTotal = getBreakdownTotal(transactionData);
                 const scholarship = breakdownTotal - total;
@@ -301,6 +290,16 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                   </Box>
                 ) : null;
               })()}
+             <Box display="flex" justifyContent="space-between">
+  <strong>Payment Date:</strong>{" "}
+  <span>{formatDateTime(transactionData.payment_date)}</span>
+              </Box>
+              <Box display="flex" justifyContent="space-between">
+  <strong>Remark:</strong>{" "}
+  <span>{(transactionData.Remark)}</span>
+</Box>
+
+              
             </Grid>
 
             <Grid item xs={6}>
@@ -324,7 +323,7 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
               <span>{transactionData.date_time}</span>
             </Box> */}
               <Box mt={2} display="flex" justifyContent="space-between">
-                <strong>In Words:</strong> <span>{numberToWords(total)}</span>
+                <strong>In Words:</strong> <span>{numberToWords(transactionData.deposit_amount)}</span>
               </Box>
 
               {/* Scholarship Display */}
