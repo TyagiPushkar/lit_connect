@@ -23,19 +23,23 @@ import {
   DialogActions,
   LinearProgress,
   Typography,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  ButtonGroup,
 } from "@mui/material"
 import axios from "axios"
-import { useAuth } from "../auth/AuthContext"
-import { useNavigate } from "react-router-dom"
 import VisibilityIcon from "@mui/icons-material/Visibility"
 import DownloadIcon from "@mui/icons-material/Download"
+import FilterListIcon from "@mui/icons-material/FilterList"
 import * as XLSX from "xlsx"
 
 const FeesPaymentList = () => {
-  const { user } = useAuth()
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-
   const [transactions, setTransactions] = useState([])
   const [filteredTransactions, setFilteredTransactions] = useState([])
   const [openSnackbar, setOpenSnackbar] = useState(false)
@@ -45,9 +49,33 @@ const FeesPaymentList = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [selectedSession, setSelectedSession] = useState("")
   const [distinctSessions, setDistinctSessions] = useState([])
+  const [distinctCourses, setDistinctCourses] = useState([])
 
-  const [downloadProgress, setDownloadProgress] = useState(0)
+  // Download report states
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
+  const [reportType, setReportType] = useState("") // "filtered" or "full"
+  const [reportFilters, setReportFilters] = useState({
+    course: "",
+    session: "",
+    installments: [],
+  })
+  const [installmentOptions, setInstallmentOptions] = useState([
+    { id: 1, label: "Installment 1" },
+    { id: 2, label: "Installment 2" },
+    { id: 3, label: "Installment 3" },
+    { id: 4, label: "Installment 4" },
+    { id: 5, label: "Installment 5" },
+    { id: 6, label: "Installment 6" },
+    { id: 7, label: "Installment 7" },
+    { id: 8, label: "Installment 8" },
+    { id: 9, label: "Installment 9" },
+    { id: 10, label: "Installment 10" },
+    { id: 11, label: "Installment 11" },
+    { id: 12, label: "Installment 12" },
+  ])
+
+  // Download progress
+  const [downloadProgress, setDownloadProgress] = useState(0)
   const [processedStudents, setProcessedStudents] = useState(0)
   const [totalStudents, setTotalStudents] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -67,12 +95,17 @@ const FeesPaymentList = () => {
       if (response.data.success) {
         setTransactions(response.data.data)
         setFilteredTransactions(response.data.data)
+
+        // Extract distinct sessions and courses
+        const sessions = [...new Set(response.data.data.map((item) => item.Session).filter(Boolean))]
+        const courses = [...new Set(response.data.data.map((item) => item.Course).filter(Boolean))]
+
+        setDistinctSessions(sessions)
+        setDistinctCourses(courses)
       } else {
         setSnackbarMessage(response.data.message)
         setOpenSnackbar(true)
       }
-      const sessions = [...new Set(response.data.data.map((item) => item.Session).filter(Boolean))]
-      setDistinctSessions(sessions)
     } catch (error) {
       setSnackbarMessage("Error fetching student list.")
       setOpenSnackbar(true)
@@ -88,7 +121,8 @@ const FeesPaymentList = () => {
     const filtered = transactions.filter((tx) => {
       const matchesQuery =
         (tx.StudentID && tx.StudentID.toLowerCase().includes(lower)) ||
-        (tx.CandidateName && tx.CandidateName.toLowerCase().includes(lower))
+        (tx.CandidateName && tx.CandidateName.toLowerCase().includes(lower)) ||
+        (tx.StudentContactNo && tx.StudentContactNo.toLowerCase().includes(lower))
 
       const matchesSession = session ? tx.Session === session : true
       return matchesQuery && matchesSession
@@ -111,11 +145,46 @@ const FeesPaymentList = () => {
   }
 
   const handleViewClick = (studentId) => {
-    navigate(`/fees/${studentId}`)
+    // Navigate to student details - you'll need to implement this based on your routing
+    console.log(`Navigate to /fees/${studentId}`)
+  }
+
+  const openFilteredReportDialog = () => {
+    setReportType("filtered")
+    setReportFilters({
+      course: "",
+      session: "",
+      installments: [],
+    })
+    setDownloadDialogOpen(true)
+  }
+
+  const openFullReportDialog = () => {
+    setReportType("full")
+    setDownloadDialogOpen(true)
+  }
+
+  const handleReportFilterChange = (field, value) => {
+    setReportFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const handleInstallmentToggle = (installmentId) => {
+    setReportFilters((prev) => {
+      const newInstallments = prev.installments.includes(installmentId)
+        ? prev.installments.filter((id) => id !== installmentId)
+        : [...prev.installments, installmentId]
+
+      return {
+        ...prev,
+        installments: newInstallments,
+      }
+    })
   }
 
   const downloadFeesReport = async () => {
-    setDownloadDialogOpen(true)
     setDownloadProgress(0)
     setProcessedStudents(0)
     setIsDownloading(true)
@@ -128,11 +197,23 @@ const FeesPaymentList = () => {
         throw new Error("Failed to fetch student data")
       }
 
-      const allStudents = studentsResponse.data.data
+      let allStudents = studentsResponse.data.data
+
+      // Apply filters only for filtered report type
+      if (reportType === "filtered") {
+        if (reportFilters.course) {
+          allStudents = allStudents.filter((student) => student.Course === reportFilters.course)
+        }
+
+        if (reportFilters.session) {
+          allStudents = allStudents.filter((student) => student.Session === reportFilters.session)
+        }
+      }
+
       setTotalStudents(allStudents.length)
       const reportData = []
-      const BATCH_SIZE = 5 // Process 5 students at a time
-      const DELAY_BETWEEN_BATCHES = 1000 // 1 second between batches
+      const BATCH_SIZE = 5
+      const DELAY_BETWEEN_BATCHES = 1000
 
       // Process students in batches
       for (let i = 0; i < allStudents.length; i += BATCH_SIZE) {
@@ -145,7 +226,21 @@ const FeesPaymentList = () => {
         // Add successful results to report data
         batchResults.forEach((result) => {
           if (result.status === "fulfilled" && result.value) {
-            reportData.push(result.value)
+            // Apply installment filter only for filtered report type
+            if (reportType === "filtered" && reportFilters.installments.length > 0) {
+              const filteredInstallments = result.value.installments.filter((inst) =>
+                reportFilters.installments.includes(inst.installmentNo),
+              )
+
+              if (filteredInstallments.length > 0) {
+                reportData.push({
+                  ...result.value,
+                  installments: filteredInstallments,
+                })
+              }
+            } else {
+              reportData.push(result.value)
+            }
           }
         })
 
@@ -162,10 +257,11 @@ const FeesPaymentList = () => {
       // Generate Excel only if we have data
       if (reportData.length > 0) {
         generateExcelFile(reportData)
-        setSnackbarMessage(`Report generated successfully with ${reportData.length} students!`)
+        const reportTypeText = reportType === "filtered" ? "filtered" : "full"
+        setSnackbarMessage(`${reportTypeText} report generated successfully with ${reportData.length} students!`)
         setOpenSnackbar(true)
       } else {
-        throw new Error("No student data available for report")
+        throw new Error("No student data available for report with current filters")
       }
     } catch (error) {
       setSnackbarMessage("Error generating report: " + error.message)
@@ -179,57 +275,57 @@ const FeesPaymentList = () => {
   const processStudent = async (student) => {
     try {
       // Fetch fee structure
-      let feeStructure = [];
+      let feeStructure = []
       try {
         const feeResponse = await axios.get(
           `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
-          { timeout: 10000 }
-        );
+          { timeout: 10000 },
+        )
         if (feeResponse.data.success) {
-          feeStructure = feeResponse.data.data;
+          feeStructure = feeResponse.data.data
         }
       } catch (error) {
-        console.error(`Error fetching fee structure for ${student.StudentID}:`, error);
-        return null;
+        console.error(`Error fetching fee structure for ${student.StudentID}:`, error)
+        return null
       }
-  
+
       // Process installments
-      const installments = [];
-      let totalPaid = 0;
-      let totalDue = 0;
-  
+      const installments = []
+      let totalPaid = 0
+      let totalDue = 0
+
       for (const installment of feeStructure) {
         try {
-          let transactionDetails = null;
+          let transactionDetails = null
           if (installment.Paid && installment.Paid !== "0") {
             const transactionResponse = await axios.get(
               `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${installment.Paid}`,
-              { timeout: 10000 }
-            );
+              { timeout: 10000 },
+            )
             if (transactionResponse.data.success) {
-              transactionDetails = transactionResponse.data.data;
+              transactionDetails = transactionResponse.data.data
             }
           }
-  
-          const installmentTotal = 
+
+          const installmentTotal =
             (installment.tution_fees || 0) +
             (installment.exam_fees || 0) +
             (installment.hostel_fees || 0) +
             (installment.admission_fees || 0) +
             (installment.prospectus_fees || 0) -
-            (installment.Scholarship || 0);
-  
-          const isPaid = installment.Paid && installment.Paid !== "0";
-          const amountPaid = transactionDetails?.deposit_amount || 0;
-          const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal;
-  
+            (installment.Scholarship || 0)
+
+          const isPaid = installment.Paid && installment.Paid !== "0"
+          const amountPaid = transactionDetails?.deposit_amount || 0
+          const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal
+
           if (isPaid) {
-            totalPaid += amountPaid;
-            totalDue += balanceAmount;
+            totalPaid += amountPaid
+            totalDue += balanceAmount
           } else {
-            totalDue += installmentTotal;
+            totalDue += installmentTotal
           }
-  
+
           installments.push({
             installmentNo: installment.installment,
             dueDate: installment.due_date,
@@ -244,15 +340,14 @@ const FeesPaymentList = () => {
             paymentDate: transactionDetails?.date_time || "",
             paymentMode: transactionDetails?.mode || "",
             amountPaid: amountPaid,
-            balanceAmount: balanceAmount
-          });
-  
+            balanceAmount: balanceAmount,
+          })
         } catch (error) {
-          console.error(`Error processing installment ${installment.installment} for ${student.StudentID}:`, error);
-          continue;
+          console.error(`Error processing installment ${installment.installment} for ${student.StudentID}:`, error)
+          continue
         }
       }
-  
+
       // Calculate totals
       const totalFees = feeStructure.reduce(
         (sum, item) =>
@@ -262,12 +357,12 @@ const FeesPaymentList = () => {
           (item.hostel_fees || 0) +
           (item.admission_fees || 0) +
           (item.prospectus_fees || 0),
-        0
-      );
-  
-      const totalScholarship = feeStructure.reduce((sum, item) => sum + (item.Scholarship || 0), 0);
-      const netFees = totalFees - totalScholarship;
-  
+        0,
+      )
+
+      const totalScholarship = feeStructure.reduce((sum, item) => sum + (item.Scholarship || 0), 0)
+      const netFees = totalFees - totalScholarship
+
       return {
         studentId: student.StudentID,
         studentName: student.CandidateName,
@@ -282,19 +377,19 @@ const FeesPaymentList = () => {
         netFees: netFees,
         totalPaid: totalPaid,
         totalDue: totalDue,
-        installments: installments
-      };
+        installments: installments,
+      }
     } catch (error) {
-      console.error(`Error processing student ${student.StudentID}:`, error);
-      return null;
+      console.error(`Error processing student ${student.StudentID}:`, error)
+      return null
     }
-  };
+  }
 
   const generateExcelFile = (reportData) => {
     try {
       // Prepare worksheet data
-      const worksheetData = [];
-  
+      const worksheetData = []
+
       // Add headers (matching the DETAIL REPORT.xlsx structure)
       worksheetData.push([
         "Student ID",
@@ -361,9 +456,9 @@ const FeesPaymentList = () => {
         "INS 11 DUE AMOUNT",
         "INS 12 TOTAL AMOUNT",
         "INS 12 PAID AMOUNT",
-        "INS 12 DUE AMOUNT"
-      ]);
-  
+        "INS 12 DUE AMOUNT",
+      ])
+
       // Process each student
       reportData.forEach((student) => {
         // Initialize year-wise data
@@ -372,67 +467,73 @@ const FeesPaymentList = () => {
             collegeFee: 0,
             hostelFee: 0,
             scholarship: 0,
-            installments: Array(4).fill(null).map(() => ({
-              total: 0,
-              paid: 0,
-              due: 0
-            }))
+            installments: Array(4)
+              .fill(null)
+              .map(() => ({
+                total: 0,
+                paid: 0,
+                due: 0,
+              })),
           },
           2: {
             collegeFee: 0,
             hostelFee: 0,
             scholarship: 0,
-            installments: Array(4).fill(null).map(() => ({
-              total: 0,
-              paid: 0,
-              due: 0
-            }))
+            installments: Array(4)
+              .fill(null)
+              .map(() => ({
+                total: 0,
+                paid: 0,
+                due: 0,
+              })),
           },
           3: {
             collegeFee: 0,
             hostelFee: 0,
             scholarship: 0,
-            installments: Array(4).fill(null).map(() => ({
-              total: 0,
-              paid: 0,
-              due: 0
-            }))
-          }
-        };
-  
+            installments: Array(4)
+              .fill(null)
+              .map(() => ({
+                total: 0,
+                paid: 0,
+                due: 0,
+              })),
+          },
+        }
+
         // Process each installment
         student.installments.forEach((installment) => {
           // Determine which year the installment belongs to (1-3)
-          const year = Math.ceil(installment.installmentNo / 4);
-          
+          const year = Math.ceil(installment.installmentNo / 4)
+
           if (year >= 1 && year <= 3) {
             // Determine which installment within the year (1-4)
-            const yearInstallment = (installment.installmentNo - 1) % 4;
-            
+            const yearInstallment = (installment.installmentNo - 1) % 4
+
             // Update year totals
-            years[year].collegeFee += installment.tuitionFees || 0;
-            years[year].hostelFee += installment.hostelFees || 0;
-            years[year].scholarship += installment.scholarship || 0;
-            
+            years[year].collegeFee += installment.tuitionFees || 0
+            years[year].hostelFee += installment.hostelFees || 0
+            years[year].scholarship += installment.scholarship || 0
+
             // Update installment data
             years[year].installments[yearInstallment] = {
               total: installment.totalAmount,
               paid: installment.amountPaid,
-              due: installment.balanceAmount
-            };
+              due: installment.balanceAmount,
+            }
           }
-        });
-  
+        })
+
         // Calculate totals for each year
         for (const year of [1, 2, 3]) {
-          years[year].totalFees = years[year].collegeFee + years[year].hostelFee;
-          years[year].netFees = years[year].totalFees - years[year].scholarship;
-          
+          years[year].totalFees = years[year].collegeFee + years[year].hostelFee
+          years[year].netFees = years[year].totalFees - years[year].scholarship
+
           // Calculate total paid and due for the year
-          years[year].totalPaid = years[year].installments.reduce((sum, ins) => sum + (ins?.paid || 0), 0);
-          years[year].totalDue = years[year].installments.reduce((sum, ins) => sum + (ins?.due || 0), 0);
+          years[year].totalPaid = years[year].installments.reduce((sum, ins) => sum + (ins?.paid || 0), 0)
+          years[year].totalDue = years[year].installments.reduce((sum, ins) => sum + (ins?.due || 0), 0)
         }
-  
+
         // Create row data matching the DETAIL REPORT.xlsx structure
         const row = [
           student.studentId,
@@ -452,7 +553,7 @@ const FeesPaymentList = () => {
           years[1].totalPaid,
           years[1].totalDue,
           // Year 1 installments
-          ...years[1].installments.flatMap(ins => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
+          ...years[1].installments.flatMap((ins) => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
           // Year 2 data
           years[2].collegeFee,
           years[2].hostelFee,
@@ -462,7 +563,7 @@ const FeesPaymentList = () => {
           years[2].totalPaid,
           years[2].totalDue,
           // Year 2 installments
-          ...years[2].installments.flatMap(ins => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
+          ...years[2].installments.flatMap((ins) => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
           // Year 3 data
           years[3].collegeFee,
           years[3].hostelFee,
@@ -472,47 +573,54 @@ const FeesPaymentList = () => {
           years[3].totalPaid,
           years[3].totalDue,
           // Year 3 installments
-          ...years[3].installments.flatMap(ins => [ins?.total || 0, ins?.paid || 0, ins?.due || 0])
-        ];
-  
-        worksheetData.push(row);
-      });
-  
+          ...years[3].installments.flatMap((ins) => [ins?.total || 0, ins?.paid || 0, ins?.due || 0]),
+        ]
+
+        worksheetData.push(row)
+      })
+
       // Create workbook and worksheet
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-  
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData)
+
       // Set column widths
       const colWidths = [
-        { wch: 10 },  // Student ID
-        { wch: 25 },  // Student Name
-        { wch: 15 },  // Course
-        { wch: 10 },  // Session
-        { wch: 25 },  // Guardian Name
-        { wch: 15 },  // Guardian Contact
-        { wch: 15 },  // Student Contact
-        { wch: 50 },  // Address
+        { wch: 10 }, // Student ID
+        { wch: 25 }, // Student Name
+        { wch: 15 }, // Course
+        { wch: 10 }, // Session
+        { wch: 25 }, // Guardian Name
+        { wch: 15 }, // Guardian Contact
+        { wch: 15 }, // Student Contact
+        { wch: 50 }, // Address
         // Year 1 columns
-        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
         // Installments (12 columns x 3 years)
         ...Array(36).fill({ wch: 12 }),
         // Year 2 and 3 columns (same as year 1)
         ...Array(14).fill({ wch: 15 }),
-        ...Array(36).fill({ wch: 12 })
-      ];
-      ws['!cols'] = colWidths;
-  
+        ...Array(36).fill({ wch: 12 }),
+      ]
+      ws["!cols"] = colWidths
+
       // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, "Fees Report");
-  
+      XLSX.utils.book_append_sheet(wb, ws, "Fees Report")
+
       // Generate Excel file and download
-      const date = new Date().toISOString().split("T")[0];
-      XLSX.writeFile(wb, `Fees_Report_${date}.xlsx`);
+      const date = new Date().toISOString().split("T")[0]
+      const reportTypeText = reportType === "filtered" ? "Filtered" : "Full"
+      XLSX.writeFile(wb, `${reportTypeText}_Fees_Report_${date}.xlsx`)
     } catch (error) {
-      setSnackbarMessage("Error generating Excel file: " + error.message);
-      setOpenSnackbar(true);
+      setSnackbarMessage("Error generating Excel file: " + error.message)
+      setOpenSnackbar(true)
     }
-  };
+  }
 
   const handleCloseDownloadDialog = () => {
     if (!isDownloading) {
@@ -553,27 +661,36 @@ const FeesPaymentList = () => {
           />
 
           <TextField
-            label="Search by Student ID or Name"
+            label="Search by Student ID or Name or Contact"
             variant="outlined"
             size="small"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            style={{ minWidth: 250 }}
+            style={{ minWidth: 300 }}
           />
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={downloadFeesReport}
-            disabled={isDownloading}
-            startIcon={<DownloadIcon />}
-            style={{
-              backgroundColor: "#CC7A00",
-              "&:hover": { backgroundColor: "#B8690A" },
-            }}
-          >
-            {isDownloading ? "Generating..." : "Download Report"}
-          </Button>
+          <ButtonGroup variant="contained" disabled={isDownloading}>
+            <Button
+              onClick={openFilteredReportDialog}
+              startIcon={<FilterListIcon />}
+              style={{
+                backgroundColor: "#CC7A00",
+                "&:hover": { backgroundColor: "#B8690A" },
+              }}
+            >
+              Filtered Report
+            </Button>
+            <Button
+              onClick={openFullReportDialog}
+              startIcon={<DownloadIcon />}
+              style={{
+                backgroundColor: "#CC7A00",
+                "&:hover": { backgroundColor: "#B8690A" },
+              }}
+            >
+              Full Report
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
 
@@ -583,6 +700,7 @@ const FeesPaymentList = () => {
             <TableRow>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>Student ID</TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>Student Name</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Student Contact No.</TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>Course</TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>Session</TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>Action</TableCell>
@@ -599,6 +717,7 @@ const FeesPaymentList = () => {
               >
                 <TableCell>{tx.StudentID}</TableCell>
                 <TableCell>{tx.CandidateName}</TableCell>
+                <TableCell>{tx.StudentContactNo}</TableCell>
                 <TableCell>{tx.Course}</TableCell>
                 <TableCell>{tx.Session}</TableCell>
                 <TableCell>
@@ -630,7 +749,7 @@ const FeesPaymentList = () => {
         </Table>
       </TableContainer>
 
-      {/* Download Progress Dialog */}
+      {/* Download Report Dialog */}
       <Dialog
         open={downloadDialogOpen}
         onClose={handleCloseDownloadDialog}
@@ -640,28 +759,104 @@ const FeesPaymentList = () => {
       >
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={2}>
-            <DownloadIcon color="primary" />
-            Generating Fees Report
+            {reportType === "filtered" ? <FilterListIcon color="primary" /> : <DownloadIcon color="primary" />}
+            {reportType === "filtered" ? "Generate Filtered Fees Report" : "Generate Full Fees Report"}
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ width: "100%", mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Processing students: {processedStudents} of {totalStudents}
+          {reportType === "filtered" && (
+            <Box sx={{ mt: 2, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Filter Report
+              </Typography>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="course-filter-label">Course</InputLabel>
+                <Select
+                  labelId="course-filter-label"
+                  value={reportFilters.course}
+                  label="Course"
+                  onChange={(e) => handleReportFilterChange("course", e.target.value)}
+                >
+                  <MenuItem value="">All Courses</MenuItem>
+                  {distinctCourses.map((course) => (
+                    <MenuItem key={course} value={course}>
+                      {course}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="session-filter-label">Session</InputLabel>
+                <Select
+                  labelId="session-filter-label"
+                  value={reportFilters.session}
+                  label="Session"
+                  onChange={(e) => handleReportFilterChange("session", e.target.value)}
+                >
+                  <MenuItem value="">All Sessions</MenuItem>
+                  {distinctSessions.map((session) => (
+                    <MenuItem key={session} value={session}>
+                      {session}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Typography variant="subtitle1" gutterBottom>
+                Installments (Leave unchecked for all)
+              </Typography>
+              <FormGroup row sx={{ mb: 2 }}>
+                {installmentOptions.map((option) => (
+                  <FormControlLabel
+                    key={option.id}
+                    control={
+                      <Checkbox
+                        checked={reportFilters.installments.includes(option.id)}
+                        onChange={() => handleInstallmentToggle(option.id)}
+                      />
+                    }
+                    label={option.label}
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+          )}
+
+          {reportType === "full" && (
+            <Box sx={{ mt: 2, mb: 3 }}>
+              <Typography variant="body1" gutterBottom>
+                This will generate a comprehensive report for all students with complete fee details.
+              </Typography>
+            </Box>
+          )}
+
+          {isDownloading && (
+            <Box sx={{ width: "100%", mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Processing students: {processedStudents} of {totalStudents}
+              </Typography>
+              <LinearProgress variant="determinate" value={downloadProgress} sx={{ height: 8, borderRadius: 4 }} />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {Math.round(downloadProgress)}% Complete
+              </Typography>
+            </Box>
+          )}
+
+          {!isDownloading && (
+            <Typography variant="body2" color="text.secondary">
+              Please wait while we generate your fees report. This may take a few minutes depending on the number of
+              students.
             </Typography>
-            <LinearProgress variant="determinate" value={downloadProgress} sx={{ height: 8, borderRadius: 4 }} />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {Math.round(downloadProgress)}% Complete
-            </Typography>
-          </Box>
-          <Typography variant="body2">
-            Please wait while we generate your comprehensive fees report. This may take a few minutes depending on the
-            number of students.
-          </Typography>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDownloadDialog} disabled={isDownloading} color="primary">
-            {isDownloading ? "Processing..." : "Close"}
+          <Button onClick={handleCloseDownloadDialog} disabled={isDownloading}>
+            Cancel
+          </Button>
+          <Button onClick={downloadFeesReport} disabled={isDownloading} variant="contained" color="primary">
+            {isDownloading ? "Generating..." : "Generate Report"}
           </Button>
         </DialogActions>
       </Dialog>

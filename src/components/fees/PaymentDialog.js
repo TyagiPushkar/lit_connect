@@ -20,6 +20,8 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [remarks, setRemarks] = useState("");
+
 
   // Calculate base total from fee structure
   const baseTotal =
@@ -74,7 +76,8 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
         total_amount: totalAmount,
         deposit_amount: depositAmount,
         balance_amount: balance,
-        original_transaction_id: feeData.Paid || null
+        original_transaction_id: feeData.Paid || null,
+        Remark:remarks,
       };
 
       const res = await axios.post(
@@ -167,6 +170,16 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
           }}
           helperText={`Maximum: ₹${totalAmount}`}
         />
+
+<TextField
+  fullWidth
+  margin="normal"
+  label="Remarks (optional)"
+  value={remarks}
+  onChange={(e) => setRemarks(e.target.value)}
+  multiline
+  rows={2}
+/>
 
         <Box mt={2}>
           <Typography variant="body1">

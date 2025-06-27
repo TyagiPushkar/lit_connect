@@ -130,6 +130,30 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
       alert("WhatsApp share is only available on supported devices/browsers.");
     }
   };
+  function formatDateTime(dateTimeString) {
+    const date = new Date(dateTimeString);
+    const options = {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    };
+  
+    const formatter = new Intl.DateTimeFormat("en-US", options);
+    const parts = formatter.formatToParts(date);
+  
+    const day = parts.find(p => p.type === "day")?.value;
+    const month = parts.find(p => p.type === "month")?.value;
+    const year = parts.find(p => p.type === "year")?.value;
+    const hour = parts.find(p => p.type === "hour")?.value;
+    const minute = parts.find(p => p.type === "minute")?.value;
+    const dayPeriod = parts.find(p => p.type === "dayPeriod")?.value;
+  
+    return `${day}-${month}-${year} ${hour}:${minute} ${dayPeriod.toUpperCase()}`;
+  }
+  
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <Box ref={contentRef}>
@@ -250,6 +274,11 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                   <span>₹{transactionData.prospectus_fees}</span>
                 </Box>
               )}
+             <Box display="flex" justifyContent="space-between">
+  <strong>Payment Date:</strong>{" "}
+  <span>{formatDateTime(transactionData.date_time)}</span>
+</Box>
+
               {(() => {
                 const breakdownTotal = getBreakdownTotal(transactionData);
                 const scholarship = breakdownTotal - total;
