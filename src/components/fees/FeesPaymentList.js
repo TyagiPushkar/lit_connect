@@ -52,7 +52,7 @@ const FeesPaymentList = () => {
   const [selectedSession, setSelectedSession] = useState("")
   const [distinctSessions, setDistinctSessions] = useState([])
   const [distinctCourses, setDistinctCourses] = useState([])
-
+const [selectedCourse, setSelectedCourse] = useState("")
   // Download report states
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
   const [reportType, setReportType] = useState("") // "filtered" or "full"
@@ -116,20 +116,21 @@ const FeesPaymentList = () => {
     }
   }
 
-  const handleSearch = (query, session = selectedSession) => {
+  const handleSearch = (query, session = selectedSession, course = selectedCourse) => {
     setSearchQuery(query)
     const lower = query.toLowerCase()
-
+  
     const filtered = transactions.filter((tx) => {
       const matchesQuery =
         (tx.StudentID && tx.StudentID.toLowerCase().includes(lower)) ||
         (tx.CandidateName && tx.CandidateName.toLowerCase().includes(lower)) ||
         (tx.StudentContactNo && tx.StudentContactNo.toLowerCase().includes(lower))
-
+  
       const matchesSession = session ? tx.Session === session : true
-      return matchesQuery && matchesSession
+      const matchesCourse = course ? tx.Course === course : true
+      return matchesQuery && matchesSession && matchesCourse
     })
-
+  
     setFilteredTransactions(filtered)
     setPage(0)
   }
@@ -138,7 +139,10 @@ const FeesPaymentList = () => {
     setSelectedSession(newValue || "")
     handleSearch(searchQuery, newValue || "")
   }
-
+  const handleCourseChange = (event, newValue) => {
+    setSelectedCourse(newValue || "")
+    handleSearch(searchQuery, selectedSession, newValue || "")
+  }
   const handleChangePage = (event, newPage) => setPage(newPage)
 
   const handleChangeRowsPerPage = (event) => {
@@ -663,14 +667,19 @@ const FeesPaymentList = () => {
             isOptionEqualToValue={(option, value) => option === value}
           />
 
-          <TextField
-            label="Search by Student ID or Name or Contact"
-            variant="outlined"
-            size="small"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            style={{ minWidth: 300 }}
-          />
+<Autocomplete
+  options={distinctCourses}
+  value={selectedCourse}
+  onChange={handleCourseChange}
+  renderInput={(params) => (
+    <TextField {...params} label="Filter by Course" variant="outlined" size="small" />
+  )}
+  style={{ minWidth: 200 }}
+  clearOnEscape
+  isOptionEqualToValue={(option, value) => option === value}
+  getOptionLabel={(option) => option || ""}
+/>
+          
 
           <ButtonGroup variant="contained" disabled={isDownloading}>
             <Button
@@ -694,6 +703,14 @@ const FeesPaymentList = () => {
               Full Report
             </Button>
           </ButtonGroup>
+          <TextField
+            label="Search by Student ID or Name or Contact"
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ minWidth: 300 }}
+          />
         </div>
       </div>
 

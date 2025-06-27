@@ -151,7 +151,7 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
     const minute = parts.find(p => p.type === "minute")?.value;
     const dayPeriod = parts.find(p => p.type === "dayPeriod")?.value;
   
-    return `${day}-${month}-${year} ${hour}:${minute} ${dayPeriod.toUpperCase()}`;
+    return `${day}-${month}-${year}`;
   }
   
   return (
@@ -276,7 +276,7 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
               )}
              <Box display="flex" justifyContent="space-between">
   <strong>Payment Date:</strong>{" "}
-  <span>{formatDateTime(transactionData.date_time)}</span>
+  <span>{formatDateTime(transactionData.payment_date)}</span>
 </Box>
 
               {(() => {

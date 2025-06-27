@@ -21,6 +21,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [paymentDate, setPaymentDate] = useState("");
 
 
   // Calculate base total from fee structure
@@ -77,7 +78,8 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
         deposit_amount: depositAmount,
         balance_amount: balance,
         original_transaction_id: feeData.Paid || null,
-        Remark:remarks,
+        Remark: remarks,
+        payment_date: paymentDate
       };
 
       const res = await axios.post(
@@ -180,7 +182,14 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
   multiline
   rows={2}
 />
-
+<TextField
+type="date"
+  fullWidth
+  margin="normal"
+  label="Payment Date"
+  value={paymentDate}
+  onChange={(e) => setPaymentDate(e.target.value)}
+/>
         <Box mt={2}>
           <Typography variant="body1">
             <strong>Remaining Balance After Payment:</strong> ₹{Math.max(balance, 0)}
