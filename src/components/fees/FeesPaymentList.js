@@ -37,8 +37,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility"
 import DownloadIcon from "@mui/icons-material/Download"
 import FilterListIcon from "@mui/icons-material/FilterList"
 import * as XLSX from "xlsx"
+import { useNavigate } from "react-router-dom"
 
 const FeesPaymentList = () => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [transactions, setTransactions] = useState([])
   const [filteredTransactions, setFilteredTransactions] = useState([])
@@ -146,7 +148,8 @@ const FeesPaymentList = () => {
 
   const handleViewClick = (studentId) => {
     // Navigate to student details - you'll need to implement this based on your routing
-    console.log(`Navigate to /fees/${studentId}`)
+    navigate(`/fees/${studentId}`) // 
+    console.log(`fees/${studentId}`)
   }
 
   const openFilteredReportDialog = () => {
