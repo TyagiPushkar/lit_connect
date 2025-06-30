@@ -162,11 +162,11 @@ const FeesSummaryOptimized = () => {
         `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
         { timeout: 10000 },
       )
-
+  
       if (!feeResponse.data.success || !feeResponse.data.data) {
         return null
       }
-
+  
       const feeStructure = feeResponse.data.data
       const studentSummary = {
         firstYear: { netFee: 0, paid: 0, due: 0 },
@@ -176,7 +176,7 @@ const FeesSummaryOptimized = () => {
         totalPaid: 0,
         totalDue: 0,
       }
-
+  
       // Get all unique transaction IDs first
       const transactionIds = new Set()
       feeStructure.forEach((installment) => {
@@ -186,7 +186,7 @@ const FeesSummaryOptimized = () => {
           })
         }
       })
-
+  
       // Fetch all transactions in parallel (MUCH FASTER!)
       const transactionPromises = Array.from(transactionIds).map(async (transactionId) => {
         try {
@@ -200,16 +200,16 @@ const FeesSummaryOptimized = () => {
           return null
         }
       })
-
+  
       const transactionResults = await Promise.allSettled(transactionPromises)
       const transactionMap = new Map()
-
+  
       transactionResults.forEach((result) => {
         if (result.status === "fulfilled" && result.value) {
           transactionMap.set(result.value.id, result.value.data)
         }
       })
-
+  
       // Process installments
       feeStructure.forEach((installment) => {
         const installmentTotal =
@@ -219,20 +219,20 @@ const FeesSummaryOptimized = () => {
           Number(installment.admission_fees || 0) +
           Number(installment.prospectus_fees || 0) -
           Number(installment.Scholarship || 0)
-
+  
         const year = Math.ceil(Number(installment.installment) / 4)
         let yearData = studentSummary.firstYear
-
+  
         if (year === 2) yearData = studentSummary.secondYear
         else if (year === 3) yearData = studentSummary.thirdYear
-
+  
         yearData.netFee += installmentTotal
-
+  
         if (installment.Paid && installment.Paid !== "0") {
           const transactionIds = installment.Paid.split(",").map((id) => id.trim())
           let totalPaid = 0
           let totalBalance = 0
-
+  
           transactionIds.forEach((transactionId) => {
             const transaction = transactionMap.get(transactionId)
             if (transaction) {
@@ -240,14 +240,15 @@ const FeesSummaryOptimized = () => {
               totalBalance += Number(transaction.balance_amount || 0)
             }
           })
-
+  
           yearData.paid += totalPaid
-          yearData.due += totalBalance
+          // Calculate due based on installment total minus what was actually paid
+          yearData.due += Math.max(0, installmentTotal - totalPaid)
         } else {
           yearData.due += installmentTotal
         }
       })
-
+  
       // Calculate totals
       studentSummary.totalNetFee =
         studentSummary.firstYear.netFee + studentSummary.secondYear.netFee + studentSummary.thirdYear.netFee
@@ -255,7 +256,7 @@ const FeesSummaryOptimized = () => {
         studentSummary.firstYear.paid + studentSummary.secondYear.paid + studentSummary.thirdYear.paid
       studentSummary.totalDue =
         studentSummary.firstYear.due + studentSummary.secondYear.due + studentSummary.thirdYear.due
-
+  
       return studentSummary
     } catch (error) {
       console.error(`Error processing student ${student.StudentID}:`, error)
