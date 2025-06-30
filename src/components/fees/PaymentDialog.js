@@ -129,13 +129,15 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
           </Typography>
         </Box>
         <TextField
-type="date"
+  type="date"
   fullWidth
   margin="normal"
   label="Payment Date"
   value={paymentDate}
   onChange={(e) => setPaymentDate(e.target.value)}
-        />
+  InputLabelProps={{ shrink: true }}
+/>
+
          <TextField
           fullWidth
           margin="normal"
