@@ -84,12 +84,12 @@ function App() {
             <Route path="/notices" element={<PrivateRoute element={Notices} requiredRole="HR" />} />
             <Route path="/news" element={<PrivateRoute element={News} requiredRole="HR" />} />
             <Route path="/time-table" element={<PrivateRoute element={TimeTable} requiredRole="HR" />} />
+            <Route path="/form" element={<PrivateRoute element={Form} />} />
             {/* Optional Routes */}
             {/* <Route path="/menus" element={<PrivateRoute element={Menus} />} />
             <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />
 
             <Route path="/checkpoints" element={<PrivateRoute element={Checkpoints} />} />
-            <Route path="/form" element={<PrivateRoute element={Form} />} />
             <Route path="/add-checkpoint" element={<PrivateRoute element={Checkpoints} />} /> */}
           </Routes>
         </Router>
