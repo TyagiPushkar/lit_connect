@@ -375,6 +375,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
         studentName: student.CandidateName,
         course: student.Course,
         session: student.Session,
+        gender: student.Gender,
         guardianName: student.GuardianName,
         guardianContact: student.GuardianContactNo,
         studentContact: student.StudentContactNo,
@@ -403,6 +404,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
         "Student Name",
         "Course",
         "Session",
+        "Gender",
         "Guardian Name",
         "Guardian Contact",
         "Student Contact",
@@ -547,6 +549,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
           student.studentName,
           student.course,
           student.session,
+          student.gender,
           student.guardianName,
           student.guardianContact,
           student.studentContact,
@@ -596,6 +599,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
         { wch: 25 }, // Student Name
         { wch: 15 }, // Course
         { wch: 10 }, // Session
+        { wch: 10 }, // Gender
         { wch: 25 }, // Guardian Name
         { wch: 15 }, // Guardian Contact
         { wch: 15 }, // Student Contact

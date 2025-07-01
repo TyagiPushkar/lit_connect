@@ -37,6 +37,7 @@ import News from './pages/News';
 import TimeTable from './pages/TimeTable';
 import Transaction from './pages/Transactions';
 import FeesSummaryView from './pages/FeesSummaryView';
+import OtherFees from './pages/OtherFees';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -73,6 +74,7 @@ function App() {
             <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} requiredRole="Accounts" />} />
             <Route path="/fees-summary" element={<PrivateRoute element={FeesSummaryView} requiredRole="Accounts" />} />
             <Route path="/transactions" element={<PrivateRoute element={Transaction} requiredRole="Accounts" />} />
+            <Route path="/other-fees" element={<PrivateRoute element={OtherFees} requiredRole="Accounts" />} />
             <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} requiredRole="Accounts" />} />
             <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} requiredRole="Accounts" />} />
             <Route path="/certificate" element={<PrivateRoute element={Certificate} requiredRole="HR" />} />
