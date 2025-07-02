@@ -71,7 +71,7 @@ const OtherFeesTransaction = () => {
     "Semester 4",
     "Semester 5",
     "Semester 6",
-    "Other"
+    "Back Paper",
   ];
 
   useEffect(() => {
