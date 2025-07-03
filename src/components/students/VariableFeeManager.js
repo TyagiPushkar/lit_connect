@@ -244,7 +244,7 @@ const VariableFeeManager = () => {
                       <TableCell>{fee.particular}</TableCell>
                       <TableCell>{fee.amount}</TableCell>
                       <TableCell>
-                        {Number(fee.Paid) === 1 ? "Paid" : "Not Paid"}
+                        {Number(fee.Paid) === 0 ? "Not Paid" : "Paid"}
                       </TableCell>
                     </TableRow>
                   ))
