@@ -33,8 +33,10 @@ import axios from "axios";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { useAuth } from "../auth/AuthContext";
 
 const OtherFeesTransaction = () => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [page, setPage] = useState(0);
@@ -51,7 +53,11 @@ const OtherFeesTransaction = () => {
     particular: "",
     category: "",
     payment_date: new Date().toISOString().split('T')[0],
-    Amount: ""
+    Amount: "",
+    Mode: "",
+    ModeId: "",
+    Remark: "",
+    Added_By: user?.emp_id || ""
   });
 
   // Filter states
@@ -61,17 +67,21 @@ const OtherFeesTransaction = () => {
   const [sessionFilter, setSessionFilter] = useState("");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [modeFilter, setModeFilter] = useState("");
 
   // Static options
-  const particularOptions = ["Exam Fees", "Others"];
-  const categoryOptions = [
+  const particularOptions = ["Exam Fees", "Other"];
+  const examFeeCategories = [
     "Semester 1",
     "Semester 2",
     "Semester 3",
     "Semester 4",
     "Semester 5",
-    "Semester 6",
+    "Semester 6"
+  ];
+  const otherCategories = [
     "Back Paper",
+    "Practical Fees"
   ];
 
   useEffect(() => {
@@ -80,7 +90,7 @@ const OtherFeesTransaction = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [transactions, searchTerm, particularFilter, categoryFilter, sessionFilter, fromDate, toDate]);
+  }, [transactions, searchTerm, particularFilter, categoryFilter, sessionFilter, fromDate, toDate, modeFilter]);
 
   const fetchOtherFeesTransactions = async () => {
     try {
@@ -118,7 +128,7 @@ const OtherFeesTransaction = () => {
 
   const handleOpenDialog = () => {
     setDialogOpen(true);
-    fetchStudents(); // Fetch all students initially
+    fetchStudents();
   };
 
   const handleCloseDialog = () => {
@@ -128,7 +138,11 @@ const OtherFeesTransaction = () => {
       particular: "",
       category: "",
       payment_date: new Date().toISOString().split('T')[0],
-      Amount: ""
+      Amount: "",
+      Mode: "",
+      ModeId: "",
+      Remark: "",
+      Added_By: user?.emp_id || ""
     });
   };
 
@@ -139,7 +153,7 @@ const OtherFeesTransaction = () => {
         formData
       );
       if (response.data.success) {
-        setSnackbarMessage("Other fee transaction added successfully!");
+        setSnackbarMessage("Transaction added successfully!");
         setOpenSnackbar(true);
         fetchOtherFeesTransactions();
         handleCloseDialog();
@@ -171,38 +185,39 @@ const OtherFeesTransaction = () => {
   const applyFilters = () => {
     let filtered = [...transactions];
 
-    // Apply search filter (by ID or name)
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (item) =>
           item.Student_id.toString().toLowerCase().includes(term) ||
           (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
-      );
+)
     }
 
-    // Apply particular filter
     if (particularFilter) {
       filtered = filtered.filter(
         (item) => item.particular && item.particular === particularFilter
       );
     }
 
-    // Apply category filter
     if (categoryFilter) {
       filtered = filtered.filter(
         (item) => item.category && item.category === categoryFilter
       );
     }
 
-    // Apply session filter
     if (sessionFilter) {
       filtered = filtered.filter(
         (item) => item.Session && item.Session === sessionFilter
       );
     }
 
-    // Apply date range filter
+    if (modeFilter) {
+      filtered = filtered.filter(
+        (item) => item.Mode && item.Mode === modeFilter
+      );
+    }
+
     if (fromDate) {
       filtered = filtered.filter(item => {
         if (!item.payment_date) return false;
@@ -215,7 +230,6 @@ const OtherFeesTransaction = () => {
       filtered = filtered.filter(item => {
         if (!item.payment_date) return false;
         const paymentDate = new Date(item.payment_date);
-        // Set to end of day for toDate comparison
         const endOfDay = new Date(toDate);
         endOfDay.setHours(23, 59, 59, 999);
         return paymentDate <= endOfDay;
@@ -223,7 +237,7 @@ const OtherFeesTransaction = () => {
     }
 
     setFilteredTransactions(filtered);
-    setPage(0); // Reset to first page when filters change
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => setPage(newPage);
@@ -237,42 +251,23 @@ const OtherFeesTransaction = () => {
     setParticularFilter("");
     setCategoryFilter("");
     setSessionFilter("");
+    setModeFilter("");
     setFromDate(null);
     setToDate(null);
   };
 
-  // Get unique values for filters from existing data
   const uniqueParticulars = [...new Set(transactions.map(item => item.particular))].filter(Boolean);
   const uniqueCategories = [...new Set(transactions.map(item => item.category))].filter(Boolean);
   const uniqueSessions = [...new Set(transactions.map(item => item.Session))].filter(Boolean);
+  const uniqueModes = [...new Set(transactions.map(item => item.Mode))].filter(Boolean);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 0,
-            marginTop: 3,
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, marginTop: 3 }}>
           <h2>Other Fees Transactions</h2>
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 1, 
-            mb: 2,
-            alignItems: 'center',
-            flexWrap: 'wrap'
-          }}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={handleOpenDialog}
-              sx={{ mr: 2 }}
-            >
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleOpenDialog} sx={{ mr: 2 }}>
               Add Transaction
             </Button>
 
@@ -283,9 +278,7 @@ const OtherFeesTransaction = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
-                startAdornment: (
-                  <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />
-                ),
+                startAdornment: <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />,
                 endAdornment: searchTerm && (
                   <IconButton size="small" onClick={() => setSearchTerm("")}>
                     <ClearIcon fontSize="small" />
@@ -297,11 +290,7 @@ const OtherFeesTransaction = () => {
 
             <FormControl size="small" sx={{ width: 150 }}>
               <InputLabel>Particular</InputLabel>
-              <Select
-                value={particularFilter}
-                label="Particular"
-                onChange={(e) => setParticularFilter(e.target.value)}
-              >
+              <Select value={particularFilter} label="Particular" onChange={(e) => setParticularFilter(e.target.value)}>
                 <MenuItem value="">All Particulars</MenuItem>
                 {particularOptions.map((particular) => (
                   <MenuItem key={particular} value={particular}>{particular}</MenuItem>
@@ -311,13 +300,9 @@ const OtherFeesTransaction = () => {
 
             <FormControl size="small" sx={{ width: 150 }}>
               <InputLabel>Category</InputLabel>
-              <Select
-                value={categoryFilter}
-                label="Category"
-                onChange={(e) => setCategoryFilter(e.target.value)}
-              >
+              <Select value={categoryFilter} label="Category" onChange={(e) => setCategoryFilter(e.target.value)}>
                 <MenuItem value="">All Categories</MenuItem>
-                {categoryOptions.map((category) => (
+                {[...examFeeCategories, ...otherCategories].map((category) => (
                   <MenuItem key={category} value={category}>{category}</MenuItem>
                 ))}
               </Select>
@@ -325,16 +310,20 @@ const OtherFeesTransaction = () => {
             
             <FormControl size="small" sx={{ width: 150 }}>
               <InputLabel>Session</InputLabel>
-              <Select
-                value={sessionFilter}
-                label="Session"
-                onChange={(e) => setSessionFilter(e.target.value)}
-              >
+              <Select value={sessionFilter} label="Session" onChange={(e) => setSessionFilter(e.target.value)}>
                 <MenuItem value="">All Sessions</MenuItem>
                 {uniqueSessions.map((session) => (
-                  <MenuItem key={session} value={session}>
-                    {session}
-                  </MenuItem>
+                  <MenuItem key={session} value={session}>{session}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ width: 150 }}>
+              <InputLabel>Payment Mode</InputLabel>
+              <Select value={modeFilter} label="Payment Mode" onChange={(e) => setModeFilter(e.target.value)}>
+                <MenuItem value="">All Modes</MenuItem>
+                {uniqueModes.map((mode) => (
+                  <MenuItem key={mode} value={mode}>{mode}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -355,15 +344,7 @@ const OtherFeesTransaction = () => {
             />
 
             <Tooltip title="Clear filters">
-              <IconButton 
-                size="small" 
-                onClick={clearFilters}
-                sx={{ 
-                  border: '1px solid rgba(0, 0, 0, 0.23)',
-                  borderRadius: 1,
-                  p: '6px'
-                }}
-              >
+              <IconButton size="small" onClick={clearFilters} sx={{ border: '1px solid rgba(0, 0, 0, 0.23)', borderRadius: 1, p: '6px' }}>
                 <ClearIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -379,24 +360,28 @@ const OtherFeesTransaction = () => {
                 <TableCell style={{ color: "white" }}>Particular</TableCell>
                 <TableCell style={{ color: "white" }}>Category</TableCell>
                 <TableCell style={{ color: "white" }}>Amount</TableCell>
+                <TableCell style={{ color: "white" }}>Payment Mode</TableCell>
+                <TableCell style={{ color: "white" }}>Mode ID</TableCell>
+                <TableCell style={{ color: "white" }}>Remark</TableCell>
                 <TableCell style={{ color: "white" }}>Payment Date</TableCell>
                 <TableCell style={{ color: "white" }}>Session</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredTransactions
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => (
-                  <TableRow key={row.id} hover>
-                    <TableCell>{row.Student_id}</TableCell>
-                    <TableCell>{row.CandidateName}</TableCell>
-                    <TableCell>{row.particular}</TableCell>
-                    <TableCell>{row.category}</TableCell>
-                    <TableCell>{row.Amount}</TableCell>
-                    <TableCell>{row.payment_date}</TableCell>
-                    <TableCell>{row.Session}</TableCell>
-                  </TableRow>
-                ))}
+              {filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                <TableRow key={row.id} hover>
+                  <TableCell>{row.Student_id}</TableCell>
+                  <TableCell>{row.CandidateName}</TableCell>
+                  <TableCell>{row.particular}</TableCell>
+                  <TableCell>{row.category}</TableCell>
+                  <TableCell>{row.Amount}</TableCell>
+                  <TableCell>{row.Mode}</TableCell>
+                  <TableCell>{row.ModeId}</TableCell>
+                  <TableCell>{row.Remark}</TableCell>
+                  <TableCell>{row.payment_date}</TableCell>
+                  <TableCell>{row.Session}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
             <TableFooter>
               <TableRow>
@@ -413,7 +398,6 @@ const OtherFeesTransaction = () => {
           </Table>
         </TableContainer>
 
-        {/* Add Transaction Dialog */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
           <DialogTitle>Add Other Fee Transaction</DialogTitle>
           <DialogContent>
@@ -454,11 +438,45 @@ const OtherFeesTransaction = () => {
               />
 
               <FormControl fullWidth margin="normal" required>
+                <InputLabel>Payment Mode</InputLabel>
+                <Select
+                  name="Mode"
+                  value={formData.Mode}
+                  onChange={handleInputChange}
+                  label="Payment Mode"
+                >
+                  {["Cash", "Online", "UPI", "Cheque"].map((option) => (
+                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {formData.Mode !== "Cash" && (
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  name="ModeId"
+                  label={`${formData.Mode} Reference/Transaction ID`}
+                  value={formData.ModeId}
+                  onChange={handleInputChange}
+                  required
+                  error={formData.Mode !== "Cash" && !formData.ModeId?.trim()}
+                  helperText={formData.Mode !== "Cash" && !formData.ModeId?.trim() ? "This field is required" : ""}
+                />
+              )}
+
+              <FormControl fullWidth margin="normal" required>
                 <InputLabel>Particular</InputLabel>
                 <Select
                   name="particular"
                   value={formData.particular}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      particular: e.target.value,
+                      category: ""
+                    }));
+                  }}
                   label="Particular"
                 >
                   {particularOptions.map((option) => (
@@ -474,12 +492,32 @@ const OtherFeesTransaction = () => {
                   value={formData.category}
                   onChange={handleInputChange}
                   label="Category"
+                  disabled={!formData.particular}
                 >
-                  {categoryOptions.map((option) => (
-                    <MenuItem key={option} value={option}>{option}</MenuItem>
-                  ))}
+                  {formData.particular === "Exam Fees" ? (
+                    examFeeCategories.map((option) => (
+                      <MenuItem key={option} value={option}>{option}</MenuItem>
+                    ))
+                  ) : formData.particular === "Other" ? (
+                    otherCategories.map((option) => (
+                      <MenuItem key={option} value={option}>{option}</MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="">Select Particular first</MenuItem>
+                  )}
                 </Select>
               </FormControl>
+
+              <TextField
+                name="Remark"
+                label="Remark"
+                value={formData.Remark}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                multiline
+                rows={2}
+              />
 
               <DatePicker
                 label="Payment Date"
@@ -516,7 +554,15 @@ const OtherFeesTransaction = () => {
               onClick={handleSubmit} 
               variant="contained" 
               color="primary"
-              disabled={!formData.Student_id || !formData.particular || !formData.category || !formData.payment_date || !formData.Amount}
+              disabled={
+                !formData.Student_id || 
+                !formData.particular || 
+                !formData.category || 
+                !formData.payment_date || 
+                !formData.Amount ||
+                !formData.Mode ||
+                (formData.Mode !== "Cash" && !formData.ModeId?.trim())
+              }
             >
               Submit
             </Button>
