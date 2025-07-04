@@ -401,7 +401,20 @@ const OtherFeesTransaction = () => {
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
           <DialogTitle>Add Other Fee Transaction</DialogTitle>
           <DialogContent>
-            <Box sx={{ mt: 2 }}>
+                      <Box sx={{ mt: 2 }}>
+                      <DatePicker
+                label="Payment Date"
+                value={formData.payment_date}
+                onChange={handleDateChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    margin="normal"
+                    required
+                  />
+                )}
+              />
               <Autocomplete
                 options={students}
                 getOptionLabel={(option) => `${option.StudentID} - ${option.CandidateName}`}
@@ -436,36 +449,7 @@ const OtherFeesTransaction = () => {
                   />
                 )}
               />
-
-              <FormControl fullWidth margin="normal" required>
-                <InputLabel>Payment Mode</InputLabel>
-                <Select
-                  name="Mode"
-                  value={formData.Mode}
-                  onChange={handleInputChange}
-                  label="Payment Mode"
-                >
-                  {["Cash", "Online", "UPI", "Cheque"].map((option) => (
-                    <MenuItem key={option} value={option}>{option}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {formData.Mode !== "Cash" && (
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  name="ModeId"
-                  label={`${formData.Mode} Reference/Transaction ID`}
-                  value={formData.ModeId}
-                  onChange={handleInputChange}
-                  required
-                  error={formData.Mode !== "Cash" && !formData.ModeId?.trim()}
-                  helperText={formData.Mode !== "Cash" && !formData.ModeId?.trim() ? "This field is required" : ""}
-                />
-              )}
-
-              <FormControl fullWidth margin="normal" required>
+<FormControl fullWidth margin="normal" required>
                 <InputLabel>Particular</InputLabel>
                 <Select
                   name="particular"
@@ -507,32 +491,6 @@ const OtherFeesTransaction = () => {
                   )}
                 </Select>
               </FormControl>
-
-              <TextField
-                name="Remark"
-                label="Remark"
-                value={formData.Remark}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                multiline
-                rows={2}
-              />
-
-              <DatePicker
-                label="Payment Date"
-                value={formData.payment_date}
-                onChange={handleDateChange}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    margin="normal"
-                    required
-                  />
-                )}
-              />
-
               <TextField
                 name="Amount"
                 label="Amount"
@@ -546,6 +504,49 @@ const OtherFeesTransaction = () => {
                   step: "0.01"
                 }}
               />
+              <FormControl fullWidth margin="normal" required>
+                <InputLabel>Payment Mode</InputLabel>
+                <Select
+                  name="Mode"
+                  value={formData.Mode}
+                  onChange={handleInputChange}
+                  label="Payment Mode"
+                >
+                  {["Cash", "Online", "UPI", "Cheque"].map((option) => (
+                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {formData.Mode !== "Cash" && (
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  name="ModeId"
+                  label={`${formData.Mode} Reference/Transaction ID`}
+                  value={formData.ModeId}
+                  onChange={handleInputChange}
+                  required
+                  error={formData.Mode !== "Cash" && !formData.ModeId?.trim()}
+                  helperText={formData.Mode !== "Cash" && !formData.ModeId?.trim() ? "This field is required" : ""}
+                />
+              )}
+
+              
+              <TextField
+                name="Remark"
+                label="Remark"
+                value={formData.Remark}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                multiline
+                rows={2}
+              />
+
+             
+
+             
             </Box>
           </DialogContent>
           <DialogActions>
