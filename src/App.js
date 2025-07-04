@@ -73,10 +73,11 @@ function App() {
             <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} requiredRole="Librarian" />} />
             <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} requiredRole="Accounts" />} />
             <Route path="/fees-summary" element={<PrivateRoute element={FeesSummaryView} requiredRole="Accounts" />} />
-            <Route path="/transactions" element={<PrivateRoute element={Transaction} requiredRole="Accounts" />} />
-            <Route path="/other-fees" element={<PrivateRoute element={OtherFees} requiredRole="Accounts" />} />
-            <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} requiredRole="Accounts" />} />
-            <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} requiredRole="Accounts" />} />
+            <Route path="/transactions" element={<PrivateRoute element={Transaction} requiredRoles={["Accounts", "Front Desk"]} />} />
+<Route path="/other-fees" element={<PrivateRoute element={OtherFees} requiredRoles={["Accounts", "Front Desk"]} />} />
+<Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} requiredRoles={["Accounts", "Front Desk"]} />} />
+
+            <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} requiredRoles={["Accounts", "Front Desk"]} />} />
             <Route path="/certificate" element={<PrivateRoute element={Certificate} requiredRole="HR" />} />
             <Route path="/students" element={<PrivateRoute element={Students} requiredRole="HR" />} />
             <Route path="/student/:studentId" element={<PrivateRoute element={StudentInfo} requiredRole="HR" />} />

@@ -23,8 +23,10 @@ import {
 } from "@mui/material"
 import axios from "axios"
 import CloseIcon from '@mui/icons-material/Close';
+import { useAuth } from "../auth/AuthContext";
 
 const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDueInstallment }) => {
+  const {user}=useAuth()
   const [mode, setMode] = useState("Cash")
   const [modeId, setModeId] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -322,6 +324,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
         original_transaction_id: feeData.Paid || null,
         Remark: remarks,
         payment_date: paymentDate,
+        added_by: user.emp_id,
       }
 
       console.log("Submitting payload:", payload)

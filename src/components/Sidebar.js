@@ -79,13 +79,20 @@ function Sidebar() {
     );
 
   }
-  if (user?.role === "Accounts") {
+  if (user?.role === "Accounts" ) {
     allowedRoutes.push(
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
       { path: "/fees-summary", name: "Fees Summary", icon: <SummarizeIcon /> },
       { path: '/other-fees', name: 'Other Fees', icon: <AppsIcon /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
+    );
+  }
+  if (user?.role === "Front Desk" ) {
+    allowedRoutes.push(
+      { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
+
+      { path: '/other-fees', name: 'Other Fees', icon: <AppsIcon /> },
     );
   }
   // HR-specific routes

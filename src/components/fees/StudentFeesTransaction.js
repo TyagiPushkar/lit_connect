@@ -438,7 +438,7 @@ const StudentFeesTransaction = () => {
                     </Collapse>
                   </CardContent>
 
-                  {user && (user.role === "Accounts" || user.role === "Admin") && (
+                  {user && (user.role === "Accounts" || user.role === "Admin" || user.role === "Front Desk") && (
                     <Box p={2} pt={0}>
                       {/* Show transaction receipts if paid or partially paid */}
                       {paymentStatus !== "unpaid" && transactionStatus[fee.id]?.transactions?.length > 0 && (
