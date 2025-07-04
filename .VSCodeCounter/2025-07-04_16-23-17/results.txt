@@ -1,0 +1,210 @@
+Date : 2025-07-04 16:23:17
+Directory : c:\Users\lapmall\Desktop\lit_connect
+Total : 144 files,  39427 codes, 1393 comments, 2061 blanks, all 42881 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| JSON           |          3 |     19,481 |          0 |          3 |     19,484 |
+| JavaScript     |        131 |     18,614 |      1,354 |      1,948 |     21,916 |
+| HTML           |          5 |      1,215 |         39 |         91 |      1,345 |
+| JavaScript JSX |          1 |         70 |          0 |         11 |         81 |
+| PostCSS        |          2 |         45 |          0 |          8 |         53 |
+| Markdown       |          1 |          1 |          0 |          0 |          1 |
+| XML            |          1 |          1 |          0 |          0 |          1 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                       |        144 |     39,427 |      1,393 |      2,061 |     42,881 |
+| . (Files)                                                                               |          3 |     19,457 |          0 |          2 |     19,459 |
+| public                                                                                  |          2 |         43 |         10 |          4 |         57 |
+| src                                                                                     |        139 |     19,927 |      1,383 |      2,055 |     23,365 |
+| src (Files)                                                                             |          8 |        175 |         10 |         21 |        206 |
+| src\assets                                                                              |          3 |        467 |          6 |         49 |        522 |
+| src\components                                                                          |         84 |     17,654 |      1,349 |      1,722 |     20,725 |
+| src\components (Files)                                                                  |          2 |        231 |         11 |         19 |        261 |
+| src\components\activity                                                                 |          4 |        550 |         24 |         55 |        629 |
+| src\components\admission                                                                |          3 |        700 |          5 |         69 |        774 |
+| src\components\auth                                                                     |          2 |         47 |          2 |         14 |         63 |
+| src\components\certificate                                                              |          5 |      1,131 |         23 |         91 |      1,245 |
+| src\components\certificate (Files)                                                      |          4 |        401 |          0 |         52 |        453 |
+| src\components\certificate\assets                                                       |          1 |        730 |         23 |         39 |        792 |
+| src\components\checkpoints                                                              |          2 |        944 |          4 |         77 |      1,025 |
+| src\components\dashboard                                                                |          1 |        163 |          3 |         14 |        180 |
+| src\components\dealers                                                                  |          9 |        858 |        966 |        187 |      2,011 |
+| src\components\docket                                                                   |          1 |         77 |          2 |         12 |         91 |
+| src\components\employee                                                                 |          6 |      1,873 |         86 |        135 |      2,094 |
+| src\components\expense                                                                  |          2 |        367 |         82 |         66 |        515 |
+| src\components\fees                                                                     |          9 |      3,982 |        107 |        381 |      4,470 |
+| src\components\form                                                                     |          2 |        563 |          3 |         54 |        620 |
+| src\components\holiday                                                                  |          3 |        283 |          1 |         30 |        314 |
+| src\components\leave                                                                    |          2 |        271 |          0 |         26 |        297 |
+| src\components\library                                                                  |          5 |        900 |          4 |         92 |        996 |
+| src\components\menus                                                                    |          2 |        465 |          5 |         38 |        508 |
+| src\components\news                                                                     |          3 |        199 |          0 |         21 |        220 |
+| src\components\notices                                                                  |          2 |        189 |          0 |         19 |        208 |
+| src\components\notification                                                             |          2 |        175 |          3 |         15 |        193 |
+| src\components\policy                                                                   |          2 |        224 |          2 |         31 |        257 |
+| src\components\report                                                                   |          8 |      1,679 |          7 |        127 |      1,813 |
+| src\components\students                                                                 |          3 |        626 |          0 |         55 |        681 |
+| src\components\ticket                                                                   |          1 |        182 |          3 |         22 |        207 |
+| src\components\timetable                                                                |          1 |        662 |          3 |         41 |        706 |
+| src\components\travel                                                                   |          2 |        313 |          3 |         31 |        347 |
+| src\pages                                                                               |         42 |      1,557 |         18 |        251 |      1,826 |
+| src\styles                                                                              |          2 |         74 |          0 |         12 |         86 |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                | language       | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| c:\Users\lapmall\Desktop\lit_connect\README.md                                          | Markdown       |          1 |          0 |          0 |          1 |
+| c:\Users\lapmall\Desktop\lit_connect\package-lock.json                                  | JSON           |     19,387 |          0 |          1 |     19,388 |
+| c:\Users\lapmall\Desktop\lit_connect\package.json                                       | JSON           |         69 |          0 |          1 |         70 |
+| c:\Users\lapmall\Desktop\lit_connect\public\index.html                                  | HTML           |         18 |         10 |          3 |         31 |
+| c:\Users\lapmall\Desktop\lit_connect\public\manifest.json                               | JSON           |         25 |          0 |          1 |         26 |
+| c:\Users\lapmall\Desktop\lit_connect\src\App.css                                        | PostCSS        |         33 |          0 |          6 |         39 |
+| c:\Users\lapmall\Desktop\lit_connect\src\App.js                                         | JavaScript     |         97 |          3 |          5 |        105 |
+| c:\Users\lapmall\Desktop\lit_connect\src\App.test.js                                    | JavaScript     |          7 |          0 |          2 |          9 |
+| c:\Users\lapmall\Desktop\lit_connect\src\assets\BestRoute.html                          | HTML           |        127 |          1 |         18 |        146 |
+| c:\Users\lapmall\Desktop\lit_connect\src\assets\Demo.html                               | HTML           |        197 |          5 |         16 |        218 |
+| c:\Users\lapmall\Desktop\lit_connect\src\assets\demo1.html                              | HTML           |        143 |          0 |         15 |        158 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\Navbar.js                           | JavaScript     |         82 |          0 |          8 |         90 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\Sidebar.js                          | JavaScript     |        149 |         11 |         11 |        171 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\activity\A.js                       | JavaScript     |          0 |          0 |          1 |          1 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\activity\AttendanceList.js          | JavaScript     |        377 |         24 |         36 |        437 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\activity\LocationMap.js             | JavaScript     |         20 |          0 |          4 |         24 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\activity\RegulariseList.js          | JavaScript     |        153 |          0 |         14 |        167 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\admission\AdmissionList.js          | JavaScript     |        122 |          1 |         12 |        135 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\admission\FinalizeAdmissionView.js  | JavaScript     |        214 |          1 |         27 |        242 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\admission\TempAdmissionView.js      | JavaScript     |        364 |          3 |         30 |        397 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\auth\AuthContext.js                 | JavaScript     |         33 |          1 |          8 |         42 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\auth\PrivateRoute.js                | JavaScript     |         14 |          1 |          6 |         21 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\certificate\C1.js                   | JavaScript     |        178 |          0 |         27 |        205 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\certificate\C2.js                   | JavaScript     |         89 |          0 |          9 |         98 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\certificate\CertificateListView.js  | JavaScript     |         64 |          0 |          5 |         69 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\certificate\CertificateSelector.jsx | JavaScript JSX |         70 |          0 |         11 |         81 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\certificate\assets\i.html           | HTML           |        730 |         23 |         39 |        792 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\checkpoints\AddCheckpointForm.js    | JavaScript     |        857 |          3 |         70 |        930 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\checkpoints\CheckpointList.js       | JavaScript     |         87 |          1 |          7 |         95 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dashboard\DashboardData.js          | JavaScript     |        163 |          3 |         14 |        180 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\AddDealers.js               | JavaScript     |         82 |          1 |          8 |         91 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\AttendanceReport.js         | JavaScript     |        119 |         71 |         26 |        216 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\DealerList.js               | JavaScript     |        150 |         25 |         23 |        198 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\LiveTrack.js                | JavaScript     |          0 |        339 |         25 |        364 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\MapPage.js                  | JavaScript     |          0 |        179 |         15 |        194 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\PlanVisit.js                | JavaScript     |          0 |        305 |         30 |        335 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\VisitList.js                | JavaScript     |        110 |         11 |         19 |        140 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\VisitMap.js                 | JavaScript     |        124 |          0 |         13 |        137 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\dealers\VisitTable.js               | JavaScript     |        273 |         35 |         28 |        336 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\docket\DocketList.js                | JavaScript     |         77 |          2 |         12 |         91 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\employee\EmployeeData.js            | JavaScript     |        363 |          2 |         33 |        398 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\employee\EmployeeList.js            | JavaScript     |        664 |          2 |         34 |        700 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\employee\EmployeeSalarySlip.js      | JavaScript     |        254 |         23 |         26 |        303 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\employee\SalaryList.js              | JavaScript     |        120 |         57 |         15 |        192 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\employee\SalarySlip.js              | JavaScript     |        285 |          1 |         16 |        302 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\employee\UserProfile.js             | JavaScript     |        187 |          1 |         11 |        199 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\expense\ApplyExpense.js             | JavaScript     |        117 |          0 |         10 |        127 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\expense\ViewExpense.js              | JavaScript     |        250 |         82 |         56 |        388 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\AddFeeStructureDialog.js       | JavaScript     |         90 |          0 |         11 |        101 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\FeesPaymentList.js             | JavaScript     |        782 |         41 |         76 |        899 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\FeesSummary.js                 | JavaScript     |        549 |         17 |         63 |        629 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\FeesTransaction.js             | JavaScript     |        312 |          8 |         27 |        347 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\OtherFeesTransaction.js        | JavaScript     |        535 |          3 |         46 |        584 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\PaymentDialog.js               | JavaScript     |        616 |         18 |         66 |        700 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\StructureList.js               | JavaScript     |        130 |          4 |          7 |        141 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\StudentFeesTransaction.js      | JavaScript     |        585 |          9 |         44 |        638 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\fees\TransactionDialog.js           | JavaScript     |        383 |          7 |         41 |        431 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\form\AdmissionFormLogic.js          | JavaScript     |        347 |          2 |         43 |        392 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\form\AdmissionFormRenderer.js       | JavaScript     |        216 |          1 |         11 |        228 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\holiday\AddHoliday.js               | JavaScript     |        113 |          0 |         11 |        124 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\holiday\EditHoliday.js              | JavaScript     |         64 |          0 |          6 |         70 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\holiday\ViewHoliday.js              | JavaScript     |        106 |          1 |         13 |        120 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\leave\ApplyLeave.js                 | JavaScript     |        136 |          0 |         13 |        149 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\leave\ViewLeave.js                  | JavaScript     |        135 |          0 |         13 |        148 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\library\DashboardLib.js             | JavaScript     |         76 |          1 |         11 |         88 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\library\IssueBookDialog.js          | JavaScript     |        168 |          2 |         14 |        184 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\library\LibraryList.js              | JavaScript     |        130 |          0 |         14 |        144 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\library\ListBook.js                 | JavaScript     |        196 |          0 |         18 |        214 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\library\StudentBookView.js          | JavaScript     |        330 |          1 |         35 |        366 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\menus\AddMenuForm.js                | JavaScript     |        386 |          4 |         31 |        421 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\menus\MenuList.js                   | JavaScript     |         79 |          1 |          7 |         87 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\news\AddCollegeNews.js              | JavaScript     |        104 |          0 |          9 |        113 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\news\CollegeNewsCard.js             | JavaScript     |         29 |          0 |          3 |         32 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\news\ViewNews.js                    | JavaScript     |         66 |          0 |          9 |         75 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\notices\AddNotices.js               | JavaScript     |         93 |          0 |          8 |        101 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\notices\ViewNotices.js              | JavaScript     |         96 |          0 |         11 |        107 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\notification\AddNotification.js     | JavaScript     |        108 |          3 |          8 |        119 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\notification\ViewNotification.js    | JavaScript     |         67 |          0 |          7 |         74 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\policy\AddPolicy.js                 | JavaScript     |         95 |          0 |          9 |        104 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\policy\PolicyList.js                | JavaScript     |        129 |          2 |         22 |        153 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\AssignmentReport.js          | JavaScript     |        158 |          0 |         17 |        175 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\CBT.js                       | JavaScript     |        229 |          0 |         20 |        249 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\ClassTest.js                 | JavaScript     |        230 |          0 |         20 |        250 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\InternalExam.js              | JavaScript     |        209 |          0 |         19 |        228 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\ListAssignmentReport.js      | JavaScript     |        148 |          0 |          9 |        157 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\ListCBTExam.js               | JavaScript     |        242 |          2 |         14 |        258 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\ListClassTest.js             | JavaScript     |        242 |          2 |         14 |        258 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\report\ListInternalExam.js          | JavaScript     |        221 |          3 |         14 |        238 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\students\StudentDetail.js           | JavaScript     |        178 |          0 |         14 |        192 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\students\StudentsList.js            | JavaScript     |        164 |          0 |         18 |        182 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\students\VariableFeeManager.js      | JavaScript     |        284 |          0 |         23 |        307 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\ticket\ViewTickets.js               | JavaScript     |        182 |          3 |         22 |        207 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\timetable\TimeTableView.js          | JavaScript     |        662 |          3 |         41 |        706 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\travel\ApplyTravel.js               | JavaScript     |        114 |          0 |         10 |        124 |
+| c:\Users\lapmall\Desktop\lit_connect\src\components\travel\ViewTravel.js                | JavaScript     |        199 |          3 |         21 |        223 |
+| c:\Users\lapmall\Desktop\lit_connect\src\index.css                                      | PostCSS        |         12 |          0 |          2 |         14 |
+| c:\Users\lapmall\Desktop\lit_connect\src\index.js                                       | JavaScript     |         12 |          3 |          3 |         18 |
+| c:\Users\lapmall\Desktop\lit_connect\src\logo.svg                                       | XML            |          1 |          0 |          0 |          1 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Admission.js                             | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\AdmissionFinal.js                        | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Attendance.js                            | JavaScript     |         24 |          1 |          6 |         31 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Certificate.js                           | JavaScript     |         68 |          0 |          8 |         76 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Checkpoints.js                           | JavaScript     |         27 |          0 |          4 |         31 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Dashboard.js                             | JavaScript     |         26 |          0 |          7 |         33 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Dealer.js                                | JavaScript     |         27 |          1 |          7 |         35 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Docket.js                                | JavaScript     |         24 |          0 |          5 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Employee.js                              | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\EmployeeProfile.js                       | JavaScript     |         26 |          0 |          4 |         30 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Expense.js                               | JavaScript     |         42 |          2 |         12 |         56 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\FeesPayment.js                           | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\FeesStructure.js                         | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\FeesSummaryView.js                       | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Form.js                                  | JavaScript     |         23 |          0 |          4 |         27 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Holiday.js                               | JavaScript     |         29 |          0 |          6 |         35 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Leave.js                                 | JavaScript     |         35 |          8 |          7 |         50 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Library.js                               | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\LibraryDash.js                           | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Login.js                                 | JavaScript     |        359 |          0 |         19 |        378 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Maps.js                                  | JavaScript     |         53 |          0 |          7 |         60 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Menus.js                                 | JavaScript     |         29 |          3 |         10 |         42 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\News.js                                  | JavaScript     |         24 |          0 |          5 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Notices.js                               | JavaScript     |         24 |          0 |          5 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Notification.js                          | JavaScript     |         26 |          0 |          6 |         32 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\OtherFees.js                             | JavaScript     |         24 |          0 |          5 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Policy.js                                | JavaScript     |         26 |          0 |          6 |         32 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Registration.js                          | JavaScript     |         24 |          0 |          7 |         31 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Regularise.js                            | JavaScript     |         24 |          0 |          5 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\StuLibrary.js                            | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\StudentFees.js                           | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\StudentInfo.js                           | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\StudentReport.js                         | JavaScript     |         83 |          0 |          8 |         91 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Students.js                              | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Ticket.js                                | JavaScript     |         27 |          0 |          9 |         36 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\TimeTable.js                             | JavaScript     |         24 |          0 |          5 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Transactions.js                          | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Travel.js                                | JavaScript     |         44 |          2 |         12 |         58 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\User.js                                  | JavaScript     |         30 |          0 |          5 |         35 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\Variable.js                              | JavaScript     |         25 |          0 |          4 |         29 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\ViewAdmission.js                         | JavaScript     |         24 |          0 |          4 |         28 |
+| c:\Users\lapmall\Desktop\lit_connect\src\pages\VisitReport.js                           | JavaScript     |         24 |          1 |          7 |         32 |
+| c:\Users\lapmall\Desktop\lit_connect\src\reportWebVitals.js                             | JavaScript     |         12 |          0 |          2 |         14 |
+| c:\Users\lapmall\Desktop\lit_connect\src\setupTests.js                                  | JavaScript     |          1 |          4 |          1 |          6 |
+| c:\Users\lapmall\Desktop\lit_connect\src\styles\HRMSLayout.js                           | JavaScript     |         62 |          0 |          9 |         71 |
+| c:\Users\lapmall\Desktop\lit_connect\src\styles\theme.js                                | JavaScript     |         12 |          0 |          3 |         15 |
+| Total                                                                                   |                |     39,427 |      1,393 |      2,061 |     42,881 |
++-----------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

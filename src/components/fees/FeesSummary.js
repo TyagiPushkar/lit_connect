@@ -211,7 +211,19 @@ const FeesSummaryOptimized = () => {
   
       // Process installments
       feeStructure.forEach((installment) => {
-        // Calculate installment total EXCLUDING variable_fees
+        // Check if this installment has any regular fees (not just variable fees)
+        const hasRegularFees = 
+          Number(installment.tution_fees || 0) > 0 ||
+          Number(installment.hostel_fees || 0) > 0 ||
+          Number(installment.exam_fees || 0) > 0 ||
+          Number(installment.admission_fees || 0) > 0 ||
+          Number(installment.prospectus_fees || 0) > 0;
+  
+        // Skip installments that only have variable fees
+        if (!hasRegularFees) {
+          return;
+        }
+  
         const installmentTotal =
           Number(installment.tution_fees || 0) +
           Number(installment.exam_fees || 0) +
@@ -231,21 +243,19 @@ const FeesSummaryOptimized = () => {
         if (installment.Paid && installment.Paid !== "0") {
           const transactionIds = installment.Paid.split(",").map((id) => id.trim())
           let totalPaid = 0
-          let totalBalance = 0
   
           transactionIds.forEach((transactionId) => {
             const transaction = transactionMap.get(transactionId)
             if (transaction) {
-              // For paid amount, we'll still use the full amount (including variable fees)
-              // since we can't distinguish what part was paid for variable fees
-              totalPaid += Number(transaction.deposit_amount || 0)
-              totalBalance += Number(transaction.balance_amount || 0)
+              // Only count payments for installments with regular fees
+              totalPaid += Number(transaction.deposit_amount - transaction.variable_fees || 0)
             }
           })
   
-          yearData.paid += Math.min(totalPaid, installmentTotal) // Don't count payments beyond the installment total
-          // Calculate due based on installment total minus what was actually paid
-          yearData.due += Math.max(0, installmentTotal - Math.min(totalPaid, installmentTotal))
+          // Ensure we don't count more than the installment total
+          const applicablePayment = Math.min(totalPaid, installmentTotal)
+          yearData.paid += applicablePayment
+          yearData.due += Math.max(0, installmentTotal - applicablePayment)
         } else {
           yearData.due += installmentTotal
         }
