@@ -154,7 +154,6 @@ const FeesSummaryOptimized = () => {
     }
   }
 
-  // 🚀 Optimized student processing with parallel API calls
   const processStudentOptimized = async (student) => {
     try {
       // Get fee structure with timeout
@@ -212,6 +211,7 @@ const FeesSummaryOptimized = () => {
   
       // Process installments
       feeStructure.forEach((installment) => {
+        // Calculate installment total EXCLUDING variable_fees
         const installmentTotal =
           Number(installment.tution_fees || 0) +
           Number(installment.exam_fees || 0) +
@@ -236,14 +236,16 @@ const FeesSummaryOptimized = () => {
           transactionIds.forEach((transactionId) => {
             const transaction = transactionMap.get(transactionId)
             if (transaction) {
+              // For paid amount, we'll still use the full amount (including variable fees)
+              // since we can't distinguish what part was paid for variable fees
               totalPaid += Number(transaction.deposit_amount || 0)
               totalBalance += Number(transaction.balance_amount || 0)
             }
           })
   
-          yearData.paid += totalPaid
+          yearData.paid += Math.min(totalPaid, installmentTotal) // Don't count payments beyond the installment total
           // Calculate due based on installment total minus what was actually paid
-          yearData.due += Math.max(0, installmentTotal - totalPaid)
+          yearData.due += Math.max(0, installmentTotal - Math.min(totalPaid, installmentTotal))
         } else {
           yearData.due += installmentTotal
         }
