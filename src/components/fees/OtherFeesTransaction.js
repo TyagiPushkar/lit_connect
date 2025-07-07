@@ -261,6 +261,14 @@ const OtherFeesTransaction = () => {
   const uniqueSessions = [...new Set(transactions.map(item => item.Session))].filter(Boolean);
   const uniqueModes = [...new Set(transactions.map(item => item.Mode))].filter(Boolean);
 
+  const formatDate = (datetime) => {
+    if (!datetime) return "-";
+    const dateObj = new Date(datetime);
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div>
@@ -378,7 +386,7 @@ const OtherFeesTransaction = () => {
                   <TableCell>{row.Mode}</TableCell>
                   <TableCell>{row.ModeId}</TableCell>
                   <TableCell>{row.Remark}</TableCell>
-                  <TableCell>{row.payment_date}</TableCell>
+                  <TableCell>{formatDate(row.payment_date)}</TableCell>
                   <TableCell>{row.Session}</TableCell>
                 </TableRow>
               ))}

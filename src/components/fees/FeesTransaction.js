@@ -151,6 +151,14 @@ const FeesTransaction = () => {
   const uniqueInstallments = [...new Set(structures.map(item => item.installment))].filter(Boolean);
   const uniqueSessions = [...new Set(structures.map(item => item.Session))].filter(Boolean);
 
+  const formatDate = (datetime) => {
+    if (!datetime) return "-";
+    const dateObj = new Date(datetime);
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div>
@@ -281,7 +289,7 @@ const FeesTransaction = () => {
                 <TableCell style={{ color: "white" }}>Installment</TableCell>
                 <TableCell style={{ color: "white" }}>Tuition Fees</TableCell>
                 <TableCell style={{ color: "white" }}>Hostel Fees</TableCell>
-                <TableCell style={{ color: "white" }}>Exam Fees</TableCell>
+                {/* <TableCell style={{ color: "white" }}>Exam Fees</TableCell> */}
                 <TableCell style={{ color: "white" }}>Extra Fees</TableCell>
                 {/* <TableCell style={{ color: "white" }}>Scholarship</TableCell> */}
                 <TableCell style={{ color: "white" }}>Mode</TableCell>
@@ -305,7 +313,7 @@ const FeesTransaction = () => {
                     <TableCell>{row.installment}</TableCell>
                     <TableCell>{row.tuition_fees}</TableCell>
                     <TableCell>{row.hostel_fees}</TableCell>
-                    <TableCell>{row.exam_fees}</TableCell>
+                    {/* <TableCell>{row.exam_fees}</TableCell> */}
                     <TableCell>{row.variable_fees}</TableCell>
                     {/* <TableCell>{(row.tuition_fees+row.hostel_fees+row.exam_fees)-row.total_amount}</TableCell> */}
                     <TableCell>{row.mode}</TableCell>
@@ -313,7 +321,7 @@ const FeesTransaction = () => {
                     <TableCell>{row.total_amount}</TableCell>
                     <TableCell>{row.deposit_amount}</TableCell>
                     <TableCell>{row.balance_amount}</TableCell>
-                    <TableCell>{row.payment_date}</TableCell>
+                    <TableCell>{formatDate(row.payment_date)}</TableCell>
                     <TableCell>{row.Remark}</TableCell>
                   </TableRow>
                 ))}
