@@ -29,11 +29,13 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadIcon from '@mui/icons-material/Download';
 import axios from "axios";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useAuth } from "../auth/AuthContext";
+import * as XLSX from 'xlsx';
 
 const OtherFeesTransaction = () => {
   const { user } = useAuth();
@@ -191,7 +193,7 @@ const OtherFeesTransaction = () => {
         (item) =>
           item.Student_id.toString().toLowerCase().includes(term) ||
           (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
-)
+      );
     }
 
     if (particularFilter) {
@@ -256,6 +258,37 @@ const OtherFeesTransaction = () => {
     setToDate(null);
   };
 
+  const exportToExcel = () => {
+    // Prepare data for export
+    const dataForExport = filteredTransactions.map(item => ({
+      "Student ID": item.Student_id,
+      "Student Name": item.CandidateName,
+      "Particular": item.particular,
+      "Category": item.category,
+      "Amount": item.Amount,
+      "Payment Mode": item.Mode,
+      "Mode ID": item.ModeId,
+      "Remark": item.Remark,
+      "Payment Date": formatDate(item.payment_date),
+      "Session": item.Session
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(dataForExport);
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Other Fees Transactions");
+    
+    // Generate file name with current date
+    const today = new Date();
+    const dateString = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`;
+    const fileName = `Other_Fees_Transactions_${dateString}.xlsx`;
+    
+    // Export the file
+    XLSX.writeFile(wb, fileName);
+  };
+
   const uniqueParticulars = [...new Set(transactions.map(item => item.particular))].filter(Boolean);
   const uniqueCategories = [...new Set(transactions.map(item => item.category))].filter(Boolean);
   const uniqueSessions = [...new Set(transactions.map(item => item.Session))].filter(Boolean);
@@ -269,6 +302,7 @@ const OtherFeesTransaction = () => {
     const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
   };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div>
@@ -277,6 +311,16 @@ const OtherFeesTransaction = () => {
           <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleOpenDialog} sx={{ mr: 2 }}>
               Add Transaction
+            </Button>
+
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<DownloadIcon />}
+              onClick={exportToExcel}
+              sx={{ mr: 0 }}
+            >
+              
             </Button>
 
             <TextField
@@ -409,8 +453,8 @@ const OtherFeesTransaction = () => {
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
           <DialogTitle>Add Other Fee Transaction</DialogTitle>
           <DialogContent>
-                      <Box sx={{ mt: 2 }}>
-                      <DatePicker
+            <Box sx={{ mt: 2 }}>
+              <DatePicker
                 label="Payment Date"
                 value={formData.payment_date}
                 onChange={handleDateChange}
@@ -457,7 +501,7 @@ const OtherFeesTransaction = () => {
                   />
                 )}
               />
-<FormControl fullWidth margin="normal" required>
+              <FormControl fullWidth margin="normal" required>
                 <InputLabel>Particular</InputLabel>
                 <Select
                   name="particular"
@@ -539,7 +583,6 @@ const OtherFeesTransaction = () => {
                   helperText={formData.Mode !== "Cash" && !formData.ModeId?.trim() ? "This field is required" : ""}
                 />
               )}
-
               
               <TextField
                 name="Remark"
@@ -551,10 +594,6 @@ const OtherFeesTransaction = () => {
                 multiline
                 rows={2}
               />
-
-             
-
-             
             </Box>
           </DialogContent>
           <DialogActions>
