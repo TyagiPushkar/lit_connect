@@ -53,7 +53,7 @@ function AssignmentReport() {
         formData.append('file', file);
 
         try {
-            const res = await fetch('https://namami-infotech.com/LIT/src/report/add_assignment_report.php', {
+            const res = await fetch('http://139.5.190.143/LIT/src/report/add_assignment_report.php', {
                 method: 'POST',
                 body: formData,
             });

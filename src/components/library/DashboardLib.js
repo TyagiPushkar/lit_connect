@@ -14,7 +14,7 @@ function DashboardLib() {
 
     const fetchDashboardData = async () => {
         try {
-            const response = await axios.get('https://namami-infotech.com/LIT/src/library/library_dash.php');
+            const response = await axios.get('http://139.5.190.143/LIT/src/library/library_dash.php');
             if (response.data.success) {
                 setDashboardData(response.data.data);
             }

@@ -25,7 +25,7 @@ import banner from "../assets/about-image.png";
 import playstore from "../assets/playstore.png";
 import appstore from "../assets/appstore.png";
 
-const API_URL = "https://namami-infotech.com/LIT/src/auth";
+const API_URL = "http://139.5.190.143/LIT/src/auth";
 
 export default function LoginPage() {
   const [empId, setEmpId] = useState("");

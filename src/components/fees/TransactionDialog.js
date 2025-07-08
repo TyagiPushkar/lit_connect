@@ -74,7 +74,7 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
     setLoading(true)
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/LIT/src/fees/get_transaction_by_stuid.php?stu_id=${transactionData.stu_id}`,
+        `http://139.5.190.143/LIT/src/fees/get_transaction_by_stuid.php?stu_id=${transactionData.stu_id}`,
       )
 
       if (response.data.success && response.data.data) {

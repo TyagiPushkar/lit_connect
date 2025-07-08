@@ -35,7 +35,7 @@ function EmployeeSalarySlip() {
   //   const fetchEmployees = async () => {
   //     try {
   //       const response = await axios.get(
-  //         `https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=1`,
+  //         `http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=1`,
   //       );
   //     } catch (error) {
   //       console.error("Error fetching employees:", error);
@@ -49,7 +49,7 @@ function EmployeeSalarySlip() {
     const fetchSalarySlip = async () => {
       try {
         const response = await axios.get(
-          `https://namami-infotech.com/LIT/src/salary/salary_slip.php?month=${selectedMonth}&year=${selectedYear}&EmpId=${EmpId}`
+          `http://139.5.190.143/LIT/src/salary/salary_slip.php?month=${selectedMonth}&year=${selectedYear}&EmpId=${EmpId}`
         );
         setSalarySlip(response.data.data);
       } catch (error) {

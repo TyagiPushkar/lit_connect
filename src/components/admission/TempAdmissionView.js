@@ -42,10 +42,10 @@ function TempAdmissionView() {
       try {
         const [detailsRes, checkpointsRes] = await Promise.all([
           axios.get(
-            `https://namami-infotech.com/LIT/src/menu/get_transaction_dtl.php?activityId=${encodeURIComponent(activityId)}`,
+            `http://139.5.190.143/LIT/src/menu/get_transaction_dtl.php?activityId=${encodeURIComponent(activityId)}`,
           ),
           axios.get(
-            `https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`,
+            `http://139.5.190.143/LIT/src/menu/get_checkpoints.php`,
           ),
         ]);
 
@@ -133,7 +133,7 @@ function TempAdmissionView() {
 
   try {
     const response = await axios.post(
-      "https://namami-infotech.com/LIT/src/students/add_student.php",
+      "http://139.5.190.143/LIT/src/students/add_student.php",
       studentData,
       {
         headers: {
@@ -169,7 +169,7 @@ localStorage.setItem("student_course", course);
       value: getValueByChkId(id),
       isImage:
         id === studentPhotoChkId &&
-        getValueByChkId(id).startsWith("https://namami-infotech.com/"),
+        getValueByChkId(id).startsWith("http://139.5.190.143/"),
     }));
 
     const imageItem = fields.find((f) => f.isImage);
@@ -240,7 +240,7 @@ localStorage.setItem("student_course", course);
           {sectionData.map((item, index) => {
             const isImage =
               typeof item.Value === "string" &&
-              item.Value.startsWith("https://namami-infotech.com/");
+              item.Value.startsWith("http://139.5.190.143/");
             return (
               <Grid item xs={12} sm={3} key={index}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>

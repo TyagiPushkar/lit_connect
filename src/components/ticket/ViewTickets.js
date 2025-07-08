@@ -30,10 +30,10 @@ function ViewTickets() {
     const fetchTickets = async () => {
         try {
             const [ticketsResponse, employeesResponse] = await Promise.all([
-                axios.get('https://namami-infotech.com/LIT/src/support/get_ticket.php', {
+                axios.get('http://139.5.190.143/LIT/src/support/get_ticket.php', {
                     params: { EmpId: user.emp_id, role: user.role },
                 }),
-                axios.get(`https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`),
+                axios.get(`http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`),
             ]);
 
             if (employeesResponse.data.success) {
@@ -86,7 +86,7 @@ function ViewTickets() {
 
     const handleStatusChange = async (id, status) => {
         try {
-            const response = await axios.post('https://namami-infotech.com/LIT/src/support/update_status.php', {
+            const response = await axios.post('http://139.5.190.143/LIT/src/support/update_status.php', {
                 id,
                 status,
             });

@@ -28,7 +28,7 @@ function DealerList() {
 
             // Fetch the list of employees for the given Tenent ID
             const employeeResponse = await axios.get(
-                `https://namami-infotech.com/LIT/src/employee/list_employee.php`,
+                `http://139.5.190.143/LIT/src/employee/list_employee.php`,
                 { params: { Tenent_Id: user.tenent_id } }
             );
 
@@ -42,7 +42,7 @@ function DealerList() {
 
             // Fetch dealers data
             const dealerResponse = await axios.get(
-                'https://namami-infotech.com/LIT/src/dealer/get_dealers.php',
+                'http://139.5.190.143/LIT/src/dealer/get_dealers.php',
                 { params: { empId: user.emp_id, role: user.role } }
             );
 

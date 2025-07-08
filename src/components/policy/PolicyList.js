@@ -16,7 +16,7 @@ function PolicyList() {
 
     const fetchPolicies = async () => {
         try {
-            const response = await axios.get(`https://namami-infotech.com/LIT/src/policy/view_policy.php?Tenent_Id=${user.tenent_id}`);
+            const response = await axios.get(`http://139.5.190.143/LIT/src/policy/view_policy.php?Tenent_Id=${user.tenent_id}`);
             if (response.data.success) {
                 setPolicies(response.data.data);
             } else {
@@ -29,7 +29,7 @@ function PolicyList() {
 
     const handleTogglePolicyStatus = async (policyId, action) => {
         try {
-            const response = await axios.post('https://namami-infotech.com/LIT/src/policy/disable_policy.php', { PolicyId: policyId, action });
+            const response = await axios.post('http://139.5.190.143/LIT/src/policy/disable_policy.php', { PolicyId: policyId, action });
             if (response.data.success) {
                 fetchPolicies(); // Refresh the list
             } else {

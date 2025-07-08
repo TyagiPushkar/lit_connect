@@ -135,7 +135,7 @@ const AttendanceList = () => {
       const fetchEmployees = async () => {
         try {
           const response = await axios.get(
-            `https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+            `http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
           );
           setEmployees(response.data.data);
         } catch (error) {
@@ -150,7 +150,7 @@ const AttendanceList = () => {
 
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/LIT/src/attendance/view_attendance.php`,
+        `http://139.5.190.143/LIT/src/attendance/view_attendance.php`,
         { params: { EmpId: selectedEmpId } },
       );
 

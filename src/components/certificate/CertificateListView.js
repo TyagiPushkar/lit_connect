@@ -8,7 +8,7 @@ function CertificateListView() {
   const [certificates, setCertificates] = useState([]);
 
   useEffect(() => {
-    axios.get('https://namami-infotech.com/LIT/src/certificate/certificate_list.php')
+    axios.get('http://139.5.190.143/LIT/src/certificate/certificate_list.php')
       .then(response => {
         if (response.data.success) {
           setCertificates(response.data.data);

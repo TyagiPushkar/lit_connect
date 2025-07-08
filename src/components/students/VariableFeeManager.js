@@ -37,7 +37,7 @@ const VariableFeeManager = () => {
   const fetchStudents = async () => {
     try {
       const response = await axios.get(
-        "https://namami-infotech.com/LIT/src/students/get_student.php",
+        "http://139.5.190.143/LIT/src/students/get_student.php",
       );
       if (response.data.success) {
         setStudents(response.data.data);
@@ -50,7 +50,7 @@ const VariableFeeManager = () => {
   const fetchVariableFees = async (studentId) => {
     try {
       const res = await axios.get(
-        `https://namami-infotech.com/LIT/src/fees/variable.php?student_id=${studentId}`,
+        `http://139.5.190.143/LIT/src/fees/variable.php?student_id=${studentId}`,
       );
       if (res.data.success) {
         setVariableFees(res.data.data);
@@ -72,7 +72,7 @@ const VariableFeeManager = () => {
 
     try {
       const res = await axios.post(
-        "https://namami-infotech.com/LIT/src/fees/variable.php",
+        "http://139.5.190.143/LIT/src/fees/variable.php",
         {
           student_id: selectedStudent.StudentID,
           particular,
@@ -123,7 +123,7 @@ const VariableFeeManager = () => {
 
     try {
       const res = await axios.post(
-        "https://namami-infotech.com/LIT/src/fees/variable.php",
+        "http://139.5.190.143/LIT/src/fees/variable.php",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

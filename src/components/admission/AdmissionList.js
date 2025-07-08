@@ -22,7 +22,7 @@ function AdmissionList() {
     useEffect(() => {
         const fetchTempData = async () => {
             try {
-                const response = await axios.get('https://namami-infotech.com/LIT/src/students/get_temp.php');
+                const response = await axios.get('http://139.5.190.143/LIT/src/students/get_temp.php');
                 if (response.data.success) {
                     setTempRecords(response.data.data);
                     setFilteredRecords(response.data.data);

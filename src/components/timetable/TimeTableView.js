@@ -105,7 +105,7 @@ const ModernTimeTableView = () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await axios.get(`https://namami-infotech.com/LIT/src/timetable/get_time_table.php`, {
+      const res = await axios.get(`http://139.5.190.143/LIT/src/timetable/get_time_table.php`, {
         params: {
           Course: course,
           Sem: semester,
@@ -141,7 +141,7 @@ const ModernTimeTableView = () => {
 
   const fetchSubjects = async () => {
     try {
-      const res = await axios.get(`https://namami-infotech.com/LIT/src/menu/subjects.php`, {
+      const res = await axios.get(`http://139.5.190.143/LIT/src/menu/subjects.php`, {
         params: {
           Course: course,
           Sem: semester,
@@ -213,7 +213,7 @@ const ModernTimeTableView = () => {
         room: formData.room,
       }
 
-      const res = await axios.post("https://namami-infotech.com/LIT/src/timetable/add_time_table.php", payload, {
+      const res = await axios.post("http://139.5.190.143/LIT/src/timetable/add_time_table.php", payload, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -249,7 +249,7 @@ const ModernTimeTableView = () => {
       )
 
       if (existing) {
-        const res = await axios.delete("https://namami-infotech.com/LIT/src/timetable/delete_time_table.php", {
+        const res = await axios.delete("http://139.5.190.143/LIT/src/timetable/delete_time_table.php", {
           data: { timetable_id: existing.timetable_id },
         })
 

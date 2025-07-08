@@ -54,7 +54,7 @@ function VisitTable() {
         if (user.role === 'HR') {
             const fetchEmployees = async () => {
                 try {
-                    const response = await axios.get(`https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);
+                    const response = await axios.get(`http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);
                     
                     if (response.data.success) {
                         setEmployees(response.data.data);
@@ -82,7 +82,7 @@ function VisitTable() {
         setNoData(false);
         try {
             const formattedDate = selectedDate.toISOString().substr(0, 10);
-            const url = `https://namami-infotech.com/LIT/src/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`;
+            const url = `http://139.5.190.143/LIT/src/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`;
             
             const response = await axios.get(url);
             if (response.data.success && response.data.data.length > 0) {
@@ -114,7 +114,7 @@ function VisitTable() {
    
 const handleViewImage = async (visitId) => {
         try {
-            const response = await axios.get(`https://namami-infotech.com/LIT/src/visit/view_one_visit.php?visit_id=${visitId}`);
+            const response = await axios.get(`http://139.5.190.143/LIT/src/visit/view_one_visit.php?visit_id=${visitId}`);
             const base64Data = response.data.data[0].Attachment;
             setImageData(`data:image/jpeg;base64,${base64Data}`);
             setRotation(0);

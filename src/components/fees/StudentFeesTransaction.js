@@ -22,7 +22,8 @@ import axios from "axios"
 import PaymentsIcon from "@mui/icons-material/Payments"
 import ScheduleIcon from "@mui/icons-material/Schedule"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
-import ExpandLess from '@mui/icons-material/ExpandLess'
+import ExpandLess from '@mui/icons-material/ExpandLess';
+// import ExpandLessIcon from "./ExpandLessIcon"
 import PaymentDialog from "./PaymentDialog"
 import TransactionDialog from "./TransactionDialog"
 import { useAuth } from "../auth/AuthContext"
@@ -46,7 +47,7 @@ const StudentFeesTransaction = () => {
   // Find first unpaid installment for variable fees
   const firstDueInstallment = feesData.find((fee) => !fee.Paid || fee.Paid === "0" || fee.Paid === "")
 
-  // Get next payable installment with flexible unlocking
+  // Get next payable installment (sequential payment logic)
   const getNextPayableInstallment = () => {
     const sortedFees = feesData
       .filter((fee) => {
@@ -61,58 +62,16 @@ const StudentFeesTransaction = () => {
       })
       .sort((a, b) => Number(a.installment) - Number(b.installment))
 
-    let foundPartial = false
-
-    for (let i = 0; i < sortedFees.length; i++) {
-      const fee = sortedFees[i]
+    // Find first unpaid or partially paid installment
+    for (const fee of sortedFees) {
       const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== ""
       const feeStatus = transactionStatus[fee.id]
-      
-      // If current installment is unpaid, it's payable
-      if (!isPaid) {
+
+      if (!isPaid || (feeStatus && feeStatus.status === "partially_paid")) {
         return fee
-      }
-      
-      // If current is partially paid, it's payable and we mark that we found a partial
-      if (feeStatus?.status === "partially_paid" && feeStatus.currentBalance > 0) {
-        foundPartial = true
-        return fee
-      }
-      
-      // If we found a partial payment previously, the next unpaid installment is payable
-      if (foundPartial && !isPaid) {
-        return fee
-      }
-      
-      // If current is fully paid and next exists, check if it's payable
-      if (i < sortedFees.length - 1) {
-        const nextFee = sortedFees[i + 1]
-        const nextIsPaid = nextFee.Paid && nextFee.Paid !== "0" && nextFee.Paid !== ""
-        
-        if (!nextIsPaid) {
-          return nextFee
-        }
       }
     }
     return null
-  }
-
-  // Check if a specific fee can be paid
-  const canPay = (fee) => {
-    const nextPayable = getNextPayableInstallment()
-    if (!nextPayable) return false
-    
-    const feeStatus = transactionStatus[fee.id]
-    
-    // Allow payment if:
-    // 1. It's the next payable installment
-    // 2. It has a balance remaining
-    // 3. It's the first unpaid after a partially paid
-    return (
-      fee.id === nextPayable.id ||
-      (feeStatus?.status === "partially_paid" && feeStatus.currentBalance > 0) ||
-      (nextPayable.installment > fee.installment && !(fee.Paid && fee.Paid !== "0" && fee.Paid !== ""))
-    )
   }
 
   const fetchStudentAndFees = async () => {
@@ -121,7 +80,7 @@ const StudentFeesTransaction = () => {
 
       // Fetch student data
       const studentRes = await axios.get(
-        `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
+        `http://139.5.190.143/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
       )
       if (studentRes.data.success && studentRes.data.data) {
         setStudentData(studentRes.data.data)
@@ -129,7 +88,7 @@ const StudentFeesTransaction = () => {
 
       // Fetch fees data
       const feesRes = await axios.get(
-        `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`,
+        `http://139.5.190.143/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`,
       )
       if (feesRes.data.success && feesRes.data.data) {
         const fees = feesRes.data.data
@@ -143,7 +102,7 @@ const StudentFeesTransaction = () => {
             return transactionIds.map(async (transactionId) => {
               try {
                 const res = await axios.get(
-                  `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+                  `http://139.5.190.143/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
                 )
                 if (res.data.success && res.data.data) {
                   if (!statusMap[fee.id]) {
@@ -183,7 +142,7 @@ const StudentFeesTransaction = () => {
 
       // Fetch variable fees
       const variableRes = await axios.get(
-        `https://namami-infotech.com/LIT/src/fees/variable.php?student_id=${studentId}`,
+        `http://139.5.190.143/LIT/src/fees/variable.php?student_id=${studentId}`,
       )
       if (variableRes.data.success && variableRes.data.data) {
         const unpaidVariableFees = variableRes.data.data.filter((vf) => !vf.Paid || vf.Paid === "0" || vf.Paid === "")
@@ -200,7 +159,7 @@ const StudentFeesTransaction = () => {
   const fetchTransactionData = async (transactionId) => {
     try {
       const res = await axios.get(
-        `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+        `http://139.5.190.143/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
       )
       if (res.data.success && res.data.data) {
         setTransactionData(res.data.data)
@@ -243,7 +202,7 @@ const StudentFeesTransaction = () => {
     try {
       setLoading(true)
       const response = await axios.post(
-        "https://namami-infotech.com/LIT/src/fees/edit_student_fee_structure.php",
+        "http://139.5.190.143/LIT/src/fees/edit_student_fee_structure.php",
         editFormData,
       )
       if (response.data.success) {
@@ -277,6 +236,7 @@ const StudentFeesTransaction = () => {
     )
   }
 
+  const nextPayableInstallment = getNextPayableInstallment()
   const sortedFees = feesData
     .filter((fee) => {
       return (
@@ -292,7 +252,7 @@ const StudentFeesTransaction = () => {
 
   return (
     <Box sx={{ p: 2, backgroundColor: "#fff" }}>
-      {/* Student Info */}
+      {/* Student Info - Original Design */}
       <Paper
         sx={{
           p: 4,
@@ -327,7 +287,7 @@ const StudentFeesTransaction = () => {
         </Box>
       </Paper>
 
-      {/* Fee Installments */}
+      {/* Fee Installments - Compact Design */}
       <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
         <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
           Fee Installments
@@ -360,7 +320,8 @@ const StudentFeesTransaction = () => {
               currentBalance = feeStatus.currentBalance || 0
             }
 
-            const payable = canPay(fee)
+            // Check if this installment can be paid (sequential logic)
+            const canPay = nextPayableInstallment && fee.id === nextPayableInstallment.id
             const isExpanded = expandedCard === fee.id
 
             return (
@@ -376,12 +337,12 @@ const StudentFeesTransaction = () => {
                         ? "green"
                         : paymentStatus === "partially_paid"
                           ? "orange"
-                          : payable
+                          : canPay
                             ? "#F69320"
                             : "#e0e0e0"
                     }`,
                     borderRadius: 2,
-                    opacity: payable || paymentStatus !== "unpaid" ? 1 : 0.6,
+                    opacity: canPay || paymentStatus !== "unpaid" ? 1 : 0.6,
                   }}
                 >
                   <CardContent sx={{ flexGrow: 1, p: 2 }}>
@@ -394,7 +355,7 @@ const StudentFeesTransaction = () => {
                             ? "green"
                             : paymentStatus === "partially_paid"
                               ? "orange"
-                              : payable
+                              : canPay
                                 ? "#F69320"
                                 : "#9e9e9e"
                         }
@@ -404,7 +365,7 @@ const StudentFeesTransaction = () => {
                           ? "(Paid)"
                           : paymentStatus === "partially_paid"
                             ? "(Partially Paid)"
-                            : payable
+                            : canPay
                               ? "(Due)"
                               : "(Pending)"}
                       </Typography>
@@ -508,8 +469,8 @@ const StudentFeesTransaction = () => {
                         </>
                       )}
 
-                      {/* Pay Button */}
-                      {payable && (
+                      {/* Pay Button - Only for next payable installment */}
+                      {canPay && (
                         <Button
                           variant="contained"
                           fullWidth
@@ -537,13 +498,13 @@ const StudentFeesTransaction = () => {
                       )}
 
                       {/* Disabled Pay Button for Future Installments */}
-                      {!payable && paymentStatus === "unpaid" && (
+                      {!canPay && paymentStatus === "unpaid" && (
                         <Button variant="outlined" fullWidth disabled sx={{ mt: 1 }}>
                           Pay Previous First
                         </Button>
                       )}
 
-                      {/* Edit button for Admin */}
+                      {/* Always show Edit button */}
                       {user && user.role === "Admin" && (
                         <Button variant="outlined" fullWidth sx={{ mt: 1 }} onClick={() => handleEditClick(fee)}>
                           Edit Structure
@@ -558,7 +519,7 @@ const StudentFeesTransaction = () => {
         </Grid>
       </Paper>
 
-      {/* Transaction Dialog */}
+      {/* Dialogs remain the same */}
       {transactionData && (
         <TransactionDialog
           student={studentData}
@@ -571,7 +532,6 @@ const StudentFeesTransaction = () => {
         />
       )}
 
-      {/* Payment Dialog */}
       {selectedFee && (
         <PaymentDialog
           open={dialogOpen}
@@ -587,7 +547,6 @@ const StudentFeesTransaction = () => {
         />
       )}
 
-      {/* Edit Dialog */}
       {editDialogOpen && (
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
           <Box sx={{ p: 3 }}>

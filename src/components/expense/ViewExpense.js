@@ -40,7 +40,7 @@ function ViewExpense() {
     useEffect(() => {
     const fetchEmployeeData = async () => {
         try {
-            const response = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php', {
+            const response = await axios.get('http://139.5.190.143/LIT/src/employee/list_employee.php', {
                 params: { Tenent_Id: user.tenent_id }
             });
 
@@ -71,7 +71,7 @@ useEffect(() => {
                 return;
             }
 
-            const response = await axios.get('https://namami-infotech.com/LIT/src/expense/get_expense.php', {
+            const response = await axios.get('http://139.5.190.143/LIT/src/expense/get_expense.php', {
                 params: { EmpId: user.emp_id, role: user.role }
             });
 
@@ -139,7 +139,7 @@ useEffect(() => {
 
     const handleStatusChange = async (detailId, status) => {
         try {
-            const response = await axios.post('https://namami-infotech.com/LIT/src/expense/update_expense.php', {
+            const response = await axios.post('http://139.5.190.143/LIT/src/expense/update_expense.php', {
                 detailId,
                 status,
                 role: user.role
@@ -340,7 +340,7 @@ export default ViewExpense;
 //                     file_put_contents($imagePath, $image);
 
 //                     // Generate the image URL
-//                     $imageUrl = 'https://namami-infotech.com/LIT/src/expense/uploads/' . $imageName;
+//                     $imageUrl = 'http://139.5.190.143/LIT/src/expense/uploads/' . $imageName;
 //                 } else {
 //                     $imageUrl = null; // If no image is provided, set it to null
 //                 }

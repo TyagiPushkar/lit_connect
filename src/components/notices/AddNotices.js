@@ -21,7 +21,7 @@ function AddNotices({ open, onClose, onNoticeAdded }) {
     try {
       const payload = { Text: text, Status: status, Date: date };
       const response = await axios.post(
-        'https://namami-infotech.com/LIT/src/notification/add_notice.php',
+        'http://139.5.190.143/LIT/src/notification/add_notice.php',
         payload,
         { headers: { 'Content-Type': 'application/json' } }
       );

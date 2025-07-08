@@ -36,7 +36,7 @@ const RegulariseList = () => {
     const fetchRegularisations = async () => {
         try {
             const params = { role: user.role, EmpId: user.emp_id };
-            const response = await axios.get('https://namami-infotech.com/LIT/src/attendance/get_regularise.php', { params });
+            const response = await axios.get('http://139.5.190.143/LIT/src/attendance/get_regularise.php', { params });
             if (response.data.success) {
                 setRegularisations(response.data.data);
             } else {
@@ -65,7 +65,7 @@ const RegulariseList = () => {
             const updateDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
             const updatedBy = user.emp_id; // Get EmpId from user object
 
-            const response = await axios.post('https://namami-infotech.com/LIT/src/attendance/update_regularise.php', {
+            const response = await axios.post('http://139.5.190.143/LIT/src/attendance/update_regularise.php', {
                 RegID: selectedReg.RegID,
                 Status: status,
                 UpdateDate: updateDate,

@@ -27,7 +27,7 @@ const AddCheckpointForm = () => {
     useEffect(() => {
         // Fetch type data on component load
         axios
-            .get('https://namami-infotech.com/LIT/src/menu/get_types.php')
+            .get('http://139.5.190.143/LIT/src/menu/get_types.php')
             .then((response) => {
                 if (response.data.success) {
                     setTypes(response.data.data);
@@ -73,7 +73,7 @@ const AddCheckpointForm = () => {
             const optionsString = formData.Options.join(', ');
 
             // Submit formData with the options as a string
-            const response = await axios.post('https://namami-infotech.com/LIT/src/menu/add_checkpoints.php', {
+            const response = await axios.post('http://139.5.190.143/LIT/src/menu/add_checkpoints.php', {
                 ...formData,
                 Options: optionsString, // Submit options as a comma-separated string
             });

@@ -34,13 +34,13 @@ function AdmissionFormLogic() {
     const fetchData = async () => {
       try {
         const menuRes = await axios.get(
-          "https://namami-infotech.com/LIT/src/menu/get_menu.php"
+          "http://139.5.190.143/LIT/src/menu/get_menu.php"
         );
         const checkpointRes = await axios.get(
-          "https://namami-infotech.com/LIT/src/menu/get_checkpoints.php"
+          "http://139.5.190.143/LIT/src/menu/get_checkpoints.php"
         );
         const typeRes = await axios.get(
-          "https://namami-infotech.com/LIT/src/menu/get_types.php"
+          "http://139.5.190.143/LIT/src/menu/get_types.php"
         );
 
         const checkpointIds = menuRes.data.data[0].CheckpointId.split(";").map(
@@ -318,7 +318,7 @@ const handleSubmit = async () => {
 
     try {
       await axios.post(
-        "https://namami-infotech.com/LIT/src/menu/add_transaction.php",
+        "http://139.5.190.143/LIT/src/menu/add_transaction.php",
         {
           menuId,
           ActivityId: activityId,
@@ -330,7 +330,7 @@ const handleSubmit = async () => {
 
       if (Object.keys(imageData).length > 0) {
         await axios.post(
-          "https://namami-infotech.com/LIT/src/menu/add_image.php",
+          "http://139.5.190.143/LIT/src/menu/add_image.php",
           {
             menuId,
             ActivityId: activityId,

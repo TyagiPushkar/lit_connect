@@ -16,15 +16,15 @@ function DocketList() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const menuResponse = await axios.get(`https://namami-infotech.com/LIT/src/menu/get_menu.php`);
+                const menuResponse = await axios.get(`http://139.5.190.143/LIT/src/menu/get_menu.php`);
                 const menuData = menuResponse.data.data[0];
                 setMenu(menuData);
 
-                const checkpointsResponse = await axios.get(`https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`);
+                const checkpointsResponse = await axios.get(`http://139.5.190.143/LIT/src/menu/get_checkpoints.php`);
                 const filteredCheckpoints = checkpointsResponse.data.data.filter(cp => menuData.CheckpointId.split(',').includes(cp.CheckpointId.toString()));
                 setCheckpoints(filteredCheckpoints);
 
-                const transactionResponse = await axios.get(`https://namami-infotech.com/LIT/src/menu/get_transaction.php?menuId=${menuData.MenuId}`);
+                const transactionResponse = await axios.get(`http://139.5.190.143/LIT/src/menu/get_transaction.php?menuId=${menuData.MenuId}`);
                 setTransactions(transactionResponse.data.data);
             } catch (err) {
                 setError('Failed to fetch data');

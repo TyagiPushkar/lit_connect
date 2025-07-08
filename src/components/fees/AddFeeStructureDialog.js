@@ -37,7 +37,7 @@ const AddFeeStructureDialog = ({ open, onClose, onSuccess }) => {
         }
 
         try {
-            const res = await axios.post('https://namami-infotech.com/LIT/src/fees/add_fee_structure.php', {
+            const res = await axios.post('http://139.5.190.143/LIT/src/fees/add_fee_structure.php', {
                 ...formData,
                 installment: parseInt(installment),
                 tution_fees: parseInt(tution_fees),

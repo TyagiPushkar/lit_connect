@@ -28,7 +28,7 @@ const AttendanceReport = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await axios.get(`https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);
+                const response = await axios.get(`http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);
                 if (response.data.success) {
                     setEmployees(response.data.data);
                 }
@@ -39,7 +39,7 @@ const AttendanceReport = () => {
 
         const fetchAttendance = async () => {
             try {
-                const response = await axios.get('https://namami-infotech.com/LIT/src/attendance/get_attendance.php');
+                const response = await axios.get('http://139.5.190.143/LIT/src/attendance/get_attendance.php');
                 if (response.data.success) {
                     setAttendance(response.data.data);
                 }

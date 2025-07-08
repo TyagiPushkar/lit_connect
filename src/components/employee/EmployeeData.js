@@ -54,12 +54,12 @@ const DashboardData = ({EmpId}) => {
             setLoading(true);
             try {
                 const [employeeResponse, leaveResponse, expenseResponse, attendanceResponse, assetResponse,salaryResponse] = await Promise.all([
-                    axios.get(`https://namami-infotech.com/LIT/src/employee/view_employee.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/LIT/src/leave/balance_leave.php?empid=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/LIT/src/expense/get_expense.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/LIT/src/attendance/view_attendance.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/LIT/src/assets/get_issue_asset.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/LIT/src/salary/get_salary.php?EmpId=${EmpId}`)
+                    axios.get(`http://139.5.190.143/LIT/src/employee/view_employee.php?EmpId=${EmpId}`),
+                    axios.get(`http://139.5.190.143/LIT/src/leave/balance_leave.php?empid=${EmpId}`),
+                    axios.get(`http://139.5.190.143/LIT/src/expense/get_expense.php?EmpId=${EmpId}`),
+                    axios.get(`http://139.5.190.143/LIT/src/attendance/view_attendance.php?EmpId=${EmpId}`),
+                    axios.get(`http://139.5.190.143/LIT/src/assets/get_issue_asset.php?EmpId=${EmpId}`),
+                    axios.get(`http://139.5.190.143/LIT/src/salary/get_salary.php?EmpId=${EmpId}`)
                 ]);
 
                 setEmployeeData(employeeResponse.data.data);
@@ -116,7 +116,7 @@ const DashboardData = ({EmpId}) => {
     const handleAddSalary = async () => {
         try {
             const response = await axios.post(
-                'https://namami-infotech.com/LIT/src/salary/add_salary.php',
+                'http://139.5.190.143/LIT/src/salary/add_salary.php',
                 { EmpId,
         basic: newSalary.basic,
         hra: newSalary.hra,
@@ -127,7 +127,7 @@ const DashboardData = ({EmpId}) => {
             if (response.data.success) {
                 alert('Salary added successfully');
                 const updatedSalaryResponse = await axios.get(
-                    `https://namami-infotech.com/LIT/src/salary/get_salary.php?EmpId=${EmpId}`
+                    `http://139.5.190.143/LIT/src/salary/get_salary.php?EmpId=${EmpId}`
                 );
                 setSalaryDetails(updatedSalaryResponse.data.data);
                 setIsDialogOpen(false);

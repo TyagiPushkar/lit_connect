@@ -37,7 +37,7 @@ function AddNotification({ open, onClose, onNotificationAdded }) {
 
             // Send POST request to backend
             const response = await axios.post(
-                'https://namami-infotech.com/LIT/src/notification/add_notification.php',
+                'http://139.5.190.143/LIT/src/notification/add_notification.php',
                 formData,
                 {
                     headers: {
