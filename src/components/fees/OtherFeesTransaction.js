@@ -99,7 +99,7 @@ const OtherFeesTransaction = () => {
   const fetchOtherFeesTransactions = async () => {
     try {
       const response = await axios.get(
-        "http://139.5.190.143/LIT/src/fees/get_other_fees_transactions.php",
+        "https://namami-infotech.com/LIT/src/fees/get_other_fees_transactions.php",
       );
       if (response.data.success) {
         setTransactions(response.data.data);
@@ -117,7 +117,7 @@ const OtherFeesTransaction = () => {
     setLoadingStudents(true);
     try {
       const response = await axios.get(
-        `http://139.5.190.143/LIT/src/students/get_student.php?search=${searchText}`
+        `https://namami-infotech.com/LIT/src/students/get_student.php?search=${searchText}`
       );
       if (response.data.success) {
         setStudents(response.data.data);
@@ -153,7 +153,7 @@ const OtherFeesTransaction = () => {
   const handleSubmit = async () => {
     try {
       const response = await axios.post(
-        "http://139.5.190.143/LIT/src/fees/add_other_fees_transaction.php",
+        "https://namami-infotech.com/LIT/src/fees/add_other_fees_transaction.php",
         formData
       );
       if (response.data.success) {

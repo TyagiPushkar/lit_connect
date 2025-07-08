@@ -45,7 +45,7 @@ const UserProfile = () => {
     setSuccess("");
     try {
       const response = await axios.post(
-        "http://139.5.190.143/LIT/src/auth/change_password.php",
+        "https://namami-infotech.com/LIT/src/auth/change_password.php",
         {
           EmpId: user?.emp_id,
           currentPassword,

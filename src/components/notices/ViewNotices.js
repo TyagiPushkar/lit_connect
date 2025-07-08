@@ -16,7 +16,7 @@ function ViewNotices() {
 
   const fetchNotices = async () => {
     try {
-      const response = await axios.get('http://139.5.190.143/LIT/src/notification/get_notice.php');
+      const response = await axios.get('https://namami-infotech.com/LIT/src/notification/get_notice.php');
       setNotices(response.data.notices || []);
     } catch (err) {
       setError('Failed to fetch notices');

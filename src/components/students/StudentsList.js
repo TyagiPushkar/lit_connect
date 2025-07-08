@@ -41,7 +41,7 @@ const [amount, setAmount] = useState('');
 
     const fetchLibraryTransactions = async () => {
         try {
-            const response = await axios.get('http://139.5.190.143/LIT/src/students/get_student.php');
+            const response = await axios.get('https://namami-infotech.com/LIT/src/students/get_student.php');
             if (response.data.success) {
                 const sorted = response.data.data.sort((a, b) => b.TransactionId - a.TransactionId);
                 setTransactions(sorted);
@@ -85,7 +85,7 @@ const [amount, setAmount] = useState('');
         }
     
         try {
-            const response = await axios.post('http://139.5.190.143/LIT/src/fees/variable.php', {
+            const response = await axios.post('https://namami-infotech.com/LIT/src/fees/variable.php', {
                 student_id: selectedStudent,
                 particular,
                 amount

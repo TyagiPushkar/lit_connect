@@ -61,7 +61,7 @@ const FeesTransaction = () => {
   const fetchFeeStructures = async () => {
     try {
       const response = await axios.get(
-        "http://139.5.190.143/LIT/src/fees/get_all_transactions.php",
+        "https://namami-infotech.com/LIT/src/fees/get_all_transactions.php",
       );
       if (response.data.success) {
         setStructures(response.data.data);

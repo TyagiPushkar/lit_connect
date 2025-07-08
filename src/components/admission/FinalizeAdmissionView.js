@@ -50,7 +50,7 @@ const FinalizeAdmissionView = () => {
       const fetchFeeStructure = async () => {
         try {
           const res = await axios.get(
-            "http://139.5.190.143/LIT/src/fees/get_fee_structure.php"
+            "https://namami-infotech.com/LIT/src/fees/get_fee_structure.php"
           );
 
           if (res.data.success && Array.isArray(res.data.data)) {
@@ -113,7 +113,7 @@ const FinalizeAdmissionView = () => {
     try {
       for (const data of formDataList) {
         await axios.post(
-          "http://139.5.190.143/LIT/src/fees/add_student_fee_structure.php",
+          "https://namami-infotech.com/LIT/src/fees/add_student_fee_structure.php",
           data
         );
       }

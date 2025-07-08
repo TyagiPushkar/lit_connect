@@ -48,7 +48,7 @@ function ApplyExpense({ open, onClose, onExpenseApplied }) {
             const payload = {
                 expenses: expenseEntries
             };
-            const response = await axios.post('http://139.5.190.143/LIT/src/expense/apply_expense.php', payload);
+            const response = await axios.post('https://namami-infotech.com/LIT/src/expense/apply_expense.php', payload);
             if (response.data.success) {
                 onExpenseApplied();
                 onClose();

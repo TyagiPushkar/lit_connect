@@ -40,7 +40,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
 
     const fetchBooks = async () => {
         try {
-            const response = await axios.get('http://139.5.190.143/LIT/src/library/list_book.php');
+            const response = await axios.get('https://namami-infotech.com/LIT/src/library/list_book.php');
             if (response.data.success) {
                 setBooks(response.data.data);
                 if (defaultStatusFilter) {
@@ -84,7 +84,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
     const handleAddBook = async () => {
         try {
             const res = await axios.post(
-                'http://139.5.190.143/LIT/src/library/add_book.php',
+                'https://namami-infotech.com/LIT/src/library/add_book.php',
                 newBook
             );
             if (res.data.success) {

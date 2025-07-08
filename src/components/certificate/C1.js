@@ -22,7 +22,7 @@ function C1() {
 const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    axios.get('http://139.5.190.143/LIT/src/students/get_student.php')
+    axios.get('https://namami-infotech.com/LIT/src/students/get_student.php')
       .then(response => {
         if (response.data.success) {
           const options = response.data.data.map(student => ({
@@ -81,7 +81,7 @@ const generatePDF = async () => {
     formDataToUpload.append("certificate", pdfBlob, `${formData.name || 'certificate'}.pdf`);
 
     const response = await axios.post(
-      "http://139.5.190.143/LIT/src/certificate/upload_certificate.php",
+      "https://namami-infotech.com/LIT/src/certificate/upload_certificate.php",
       formDataToUpload,
       { headers: { "Content-Type": "multipart/form-data" } }
     );

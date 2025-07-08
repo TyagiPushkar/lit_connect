@@ -28,7 +28,7 @@ function CBT() {
             if (!course || !sem) return;
 
             try {
-                const res = await fetch(`http://139.5.190.143/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
+                const res = await fetch(`https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
                 const result = await res.json();
                 if (result.success) {
                     setSubjectsList(result.data || []);
@@ -85,7 +85,7 @@ function CBT() {
         formData.append('file', file);
 
         try {
-            const res = await fetch('http://139.5.190.143/LIT/src/report/add_cbt_marks.php', {
+            const res = await fetch('https://namami-infotech.com/LIT/src/report/add_cbt_marks.php', {
                 method: 'POST',
                 body: formData,
             });

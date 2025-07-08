@@ -23,7 +23,7 @@ function ViewHoliday() {
 
     const fetchHolidays = async () => {
         try {
-            const response = await axios.get(`http://139.5.190.143/LIT/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`);
+            const response = await axios.get(`https://namami-infotech.com/LIT/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`);
             if (response.data.success) {
                 const holidayEvents = response.data.data.map(holiday => ({
                     title: holiday.title,

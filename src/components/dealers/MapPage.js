@@ -33,7 +33,7 @@
 //       const fetchEmployees = async () => {
 //         try {
 //           const response = await axios.get(
-//             `http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
+//             `https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`
 //           );
 //           if (response.data.success) {
 //             setEmployees(response.data.data);
@@ -70,7 +70,7 @@
 //   const fetchVisits = async () => {
 //     try {
 //       const formattedDate = selectedDate.toISOString().substr(0, 10);
-//       const url = `http://139.5.190.143/LIT/src/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`;
+//       const url = `https://namami-infotech.com/LIT/src/visit/view_visit.php?empId=${selectedEmpId}&date=${formattedDate}`;
 //       const response = await axios.get(url);
 //       if (response.data.success && response.data.data.length > 0) {
 //         const visitData = response.data.data;

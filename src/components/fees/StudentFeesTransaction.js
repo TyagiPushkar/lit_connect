@@ -80,7 +80,7 @@ const StudentFeesTransaction = () => {
 
       // Fetch student data
       const studentRes = await axios.get(
-        `http://139.5.190.143/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
+        `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
       )
       if (studentRes.data.success && studentRes.data.data) {
         setStudentData(studentRes.data.data)
@@ -88,7 +88,7 @@ const StudentFeesTransaction = () => {
 
       // Fetch fees data
       const feesRes = await axios.get(
-        `http://139.5.190.143/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`,
+        `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${studentId}`,
       )
       if (feesRes.data.success && feesRes.data.data) {
         const fees = feesRes.data.data
@@ -102,7 +102,7 @@ const StudentFeesTransaction = () => {
             return transactionIds.map(async (transactionId) => {
               try {
                 const res = await axios.get(
-                  `http://139.5.190.143/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+                  `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
                 )
                 if (res.data.success && res.data.data) {
                   if (!statusMap[fee.id]) {
@@ -142,7 +142,7 @@ const StudentFeesTransaction = () => {
 
       // Fetch variable fees
       const variableRes = await axios.get(
-        `http://139.5.190.143/LIT/src/fees/variable.php?student_id=${studentId}`,
+        `https://namami-infotech.com/LIT/src/fees/variable.php?student_id=${studentId}`,
       )
       if (variableRes.data.success && variableRes.data.data) {
         const unpaidVariableFees = variableRes.data.data.filter((vf) => !vf.Paid || vf.Paid === "0" || vf.Paid === "")
@@ -159,7 +159,7 @@ const StudentFeesTransaction = () => {
   const fetchTransactionData = async (transactionId) => {
     try {
       const res = await axios.get(
-        `http://139.5.190.143/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+        `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
       )
       if (res.data.success && res.data.data) {
         setTransactionData(res.data.data)
@@ -202,7 +202,7 @@ const StudentFeesTransaction = () => {
     try {
       setLoading(true)
       const response = await axios.post(
-        "http://139.5.190.143/LIT/src/fees/edit_student_fee_structure.php",
+        "https://namami-infotech.com/LIT/src/fees/edit_student_fee_structure.php",
         editFormData,
       )
       if (response.data.success) {

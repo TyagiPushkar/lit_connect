@@ -29,7 +29,7 @@ function ListCBTExam({ setView }) {
         const fetchSubjects = async () => {
             if (!course || !sem) return;
             try {
-                const res = await fetch(`http://139.5.190.143/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
+                const res = await fetch(`https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
                 const result = await res.json();
                 setSubjectsList(result.success ? result.data || [] : []);
             } catch (err) {
@@ -52,7 +52,7 @@ function ListCBTExam({ setView }) {
     const fetchRecords = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get('http://139.5.190.143/LIT/src/report/list_class_test.php', {
+            const { data } = await axios.get('https://namami-infotech.com/LIT/src/report/list_class_test.php', {
                 params: { Course: course, Sem: sem, Subject: subject, Category: Category }
             });
             setRecords(data.success ? data.data : []);
@@ -83,7 +83,7 @@ function ListCBTExam({ setView }) {
 
     const handleSave = async (rowId) => {
         try {
-            const { data } = await axios.post('http://139.5.190.143/LIT/src/report/edit_class_test.php', {
+            const { data } = await axios.post('https://namami-infotech.com/LIT/src/report/edit_class_test.php', {
                 Id: rowId,
                 ObtainedMarks: editedMarks
             });

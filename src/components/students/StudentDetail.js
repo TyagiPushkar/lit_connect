@@ -27,7 +27,7 @@ function StudentDetail() {
     const fetchStudent = async () => {
       try {
         const res = await fetch(
-          `http://139.5.190.143/LIT/src/students/get_student_id.php?StudentId=${studentId}`
+          `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`
         );
         const json = await res.json();
         if (json.success && json.data) {
@@ -53,7 +53,7 @@ function StudentDetail() {
   const handleSave = async () => {
     try {
       const response = await fetch(
-        `http://139.5.190.143/LIT/src/students/edit_student.php`,
+        `https://namami-infotech.com/LIT/src/students/edit_student.php`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

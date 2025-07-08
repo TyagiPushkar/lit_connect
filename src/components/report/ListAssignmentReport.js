@@ -28,7 +28,7 @@ function ListAssignmentReport() {
     const fetchRecords = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get('http://139.5.190.143/LIT/src/report/list_assignment.php', {
+            const { data } = await axios.get('https://namami-infotech.com/LIT/src/report/list_assignment.php', {
                 params: { Course: course, Semester: sem, Month: month }
             });
             if (data.success) setRecords(data.data);

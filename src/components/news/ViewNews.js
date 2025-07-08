@@ -17,7 +17,7 @@ function ViewNews() {
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://139.5.190.143/LIT/src/notification/get_college_news.php');
+      const response = await axios.get('https://namami-infotech.com/LIT/src/notification/get_college_news.php');
       setNews(response.data.news || []);
     } catch (err) {
       console.error('Failed to load news:', err);

@@ -93,7 +93,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
   const fetchLibraryTransactions = async () => {
     setLoading(true)
     try {
-      const response = await axios.get("http://139.5.190.143/LIT/src/students/get_student.php")
+      const response = await axios.get("https://namami-infotech.com/LIT/src/students/get_student.php")
       if (response.data.success) {
         setTransactions(response.data.data)
         setFilteredTransactions(response.data.data)
@@ -198,7 +198,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
 
     try {
       // Initial fetch of all students
-      const studentsResponse = await axios.get("http://139.5.190.143/LIT/src/students/get_student.php")
+      const studentsResponse = await axios.get("https://namami-infotech.com/LIT/src/students/get_student.php")
 
       if (!studentsResponse.data.success) {
         throw new Error("Failed to fetch student data")
@@ -285,7 +285,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
       let feeStructure = []
       try {
         const feeResponse = await axios.get(
-          `http://139.5.190.143/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
+          `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
           { timeout: 10000 },
         )
         if (feeResponse.data.success) {
@@ -306,7 +306,7 @@ const [selectedCourse, setSelectedCourse] = useState("")
           let transactionDetails = null
           if (installment.Paid && installment.Paid !== "0") {
             const transactionResponse = await axios.get(
-              `http://139.5.190.143/LIT/src/fees/get_fee_transaction.php?id=${installment.Paid}`,
+              `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${installment.Paid}`,
               { timeout: 10000 },
             )
             if (transactionResponse.data.success) {

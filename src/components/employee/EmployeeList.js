@@ -75,7 +75,7 @@ function EmployeeList() {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        `http://139.5.190.143/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+        `https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
       );
       console.log("Employees response:", response.data); // Debugging line
       if (response.data.success) {
@@ -91,7 +91,7 @@ function EmployeeList() {
   const fetchOffices = async () => {
     try {
       const response = await axios.get(
-        "http://139.5.190.143/LIT/src/employee/get_office.php",
+        "https://namami-infotech.com/LIT/src/employee/get_office.php",
       );
       console.log("Offices response:", response.data); // Debugging line
       if (response.data.success) {
@@ -224,8 +224,8 @@ function EmployeeList() {
 
     const url =
       formMode === "add"
-        ? "http://139.5.190.143/LIT/src/employee/add_employee.php"
-        : "http://139.5.190.143/LIT/src/employee/edit_employee.php";
+        ? "https://namami-infotech.com/LIT/src/employee/add_employee.php"
+        : "https://namami-infotech.com/LIT/src/employee/edit_employee.php";
 
     try {
       const response = await axios.post(url, formattedFormData);
@@ -284,7 +284,7 @@ function EmployeeList() {
     try {
       const action = employee.IsActive ? "disable" : "enable";
       const response = await axios.post(
-        "http://139.5.190.143/LIT/src/employee/disable_employee.php",
+        "https://namami-infotech.com/LIT/src/employee/disable_employee.php",
         {
           EmpId: employee.EmpId,
           action: action,

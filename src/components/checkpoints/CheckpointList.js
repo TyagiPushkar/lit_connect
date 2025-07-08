@@ -11,7 +11,7 @@ function CheckpointList() {
     // Fetch checkpoint data from API
     const fetchCheckpoints = async () => {
         try {
-            const response = await axios.get('http://139.5.190.143/LIT/src/menu/get_checkpoints.php');
+            const response = await axios.get('https://namami-infotech.com/LIT/src/menu/get_checkpoints.php');
             if (response.data.success) {
                 setCheckpoints(response.data.data);
             } else {

@@ -27,7 +27,7 @@ function SalaryList() {
 
     const fetchSalaries = async (month, year) => {
         try {
-            const response = await axios.get(`http://139.5.190.143/LIT/src/salary/salary_records.php?month=${month}&year=${year}`);
+            const response = await axios.get(`https://namami-infotech.com/LIT/src/salary/salary_records.php?month=${month}&year=${year}`);
             if (response.data.success) {
                 setSalaries(response.data.data);
             } else {

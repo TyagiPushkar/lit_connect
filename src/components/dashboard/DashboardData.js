@@ -45,11 +45,11 @@ const DashboardData = () => {
             setLoading(true);
             try {
                 const responses = await Promise.all([
-                    axios.get(`http://139.5.190.143/LIT/src/employee/view_employee.php?EmpId=${EmpId}`),
-                    axios.get(`http://139.5.190.143/LIT/src/leave/balance_leave.php?empid=${EmpId}`),
-                    axios.get(`http://139.5.190.143/LIT/src/expense/get_expense.php?EmpId=${EmpId}`),
-                    axios.get(`http://139.5.190.143/LIT/src/attendance/view_attendance.php?EmpId=${EmpId}`),
-                    axios.get(`http://139.5.190.143/LIT/src/assets/get_issue_asset.php?EmpId=${EmpId}`)
+                    axios.get(`https://namami-infotech.com/LIT/src/employee/view_employee.php?EmpId=${EmpId}`),
+                    axios.get(`https://namami-infotech.com/LIT/src/leave/balance_leave.php?empid=${EmpId}`),
+                    axios.get(`https://namami-infotech.com/LIT/src/expense/get_expense.php?EmpId=${EmpId}`),
+                    axios.get(`https://namami-infotech.com/LIT/src/attendance/view_attendance.php?EmpId=${EmpId}`),
+                    axios.get(`https://namami-infotech.com/LIT/src/assets/get_issue_asset.php?EmpId=${EmpId}`)
                 ]);
 
                 setEmployeeData(responses[0].data.data);

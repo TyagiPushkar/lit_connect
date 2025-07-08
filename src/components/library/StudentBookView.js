@@ -34,7 +34,7 @@ const StudentBooksView = () => {
   const fetchStudentAndBooks = async () => {
     try {
       const studentRes = await axios.get(
-        `http://139.5.190.143/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
+        `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
       );
 
       if (studentRes.data.success && studentRes.data.data) {
@@ -42,7 +42,7 @@ const StudentBooksView = () => {
         setStudentData(student);
 
         const issuedRes = await axios.get(
-          `http://139.5.190.143/LIT/src/library/get_library_transaction.php?StudentId=${studentId}`,
+          `https://namami-infotech.com/LIT/src/library/get_library_transaction.php?StudentId=${studentId}`,
         );
 
         if (issuedRes.data.success && issuedRes.data.data) {
@@ -51,7 +51,7 @@ const StudentBooksView = () => {
           const bookDetailsRes = await Promise.all(
             issuedRes.data.data.map(async (transaction) => {
               const bookRes = await axios.get(
-                `http://139.5.190.143/LIT/src/library/get_book.php?BookId=${transaction.BookId}`,
+                `https://namami-infotech.com/LIT/src/library/get_book.php?BookId=${transaction.BookId}`,
               );
               return bookRes.data.success ? bookRes.data.data[0] : null;
             }),
@@ -60,7 +60,7 @@ const StudentBooksView = () => {
         }
 
         const returnedRes = await axios.get(
-          `http://139.5.190.143/LIT/src/library/get_library_history.php?StudentId=${studentId}`,
+          `https://namami-infotech.com/LIT/src/library/get_library_history.php?StudentId=${studentId}`,
         );
 
         if (returnedRes.data.success && returnedRes.data.data) {
@@ -69,7 +69,7 @@ const StudentBooksView = () => {
           const returnedBookDetailsRes = await Promise.all(
             returnedRes.data.data.map(async (transaction) => {
               const bookRes = await axios.get(
-                `http://139.5.190.143/LIT/src/library/get_book.php?BookId=${transaction.BookId}`,
+                `https://namami-infotech.com/LIT/src/library/get_book.php?BookId=${transaction.BookId}`,
               );
               return bookRes.data.success ? bookRes.data.data[0] : null;
             }),
@@ -122,7 +122,7 @@ const StudentBooksView = () => {
 
     try {
       const response = await axios.post(
-        "http://139.5.190.143/LIT/src/library/return_book.php", // Assuming you create this API
+        "https://namami-infotech.com/LIT/src/library/return_book.php", // Assuming you create this API
         {
           StudentId: studentId,
           TransactionIds: selectedTransactions,

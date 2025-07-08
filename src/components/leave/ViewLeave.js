@@ -27,7 +27,7 @@ function ViewLeave() {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const { data } = await axios.get('http://139.5.190.143/LIT/src/employee/list_employee.php', {
+                const { data } = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php', {
                     params: { Tenent_Id: user.tenent_id }
                 });
                 if (data.success) {
@@ -48,7 +48,7 @@ function ViewLeave() {
 
         const fetchLeaves = async () => {
             try {
-                const { data } = await axios.get('http://139.5.190.143/LIT/src/leave/get_leave.php?role=Teacher');
+                const { data } = await axios.get('https://namami-infotech.com/LIT/src/leave/get_leave.php?role=Teacher');
 
                 if (data.success) {
                     const filtered = data.data.filter(leave =>

@@ -11,7 +11,7 @@ function ViewNotifications() {
     const { user } = useAuth()
     const fetchNotifications = async () => {
         try {
-            const response = await axios.get(`http://139.5.190.143/LIT/src/notification/get_notification.php?Tenent_Id=${user.tenent_id}`);
+            const response = await axios.get(`https://namami-infotech.com/LIT/src/notification/get_notification.php?Tenent_Id=${user.tenent_id}`);
             setNotifications(response.data.notifications);
         } catch (err) {
             setError('Failed to fetch notifications');

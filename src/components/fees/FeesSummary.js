@@ -57,7 +57,7 @@ const FeesSummaryOptimized = () => {
       setLoadingProgress(10)
 
       // Step 1: Get all students
-      const studentsResponse = await axios.get("http://139.5.190.143/LIT/src/students/get_student.php")
+      const studentsResponse = await axios.get("https://namami-infotech.com/LIT/src/students/get_student.php")
 
       if (!studentsResponse.data.success) {
         throw new Error("Failed to fetch student data")
@@ -158,7 +158,7 @@ const FeesSummaryOptimized = () => {
     try {
       // Get fee structure with timeout
       const feeResponse = await axios.get(
-        `http://139.5.190.143/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
+        `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
         { timeout: 10000 },
       )
   
@@ -190,7 +190,7 @@ const FeesSummaryOptimized = () => {
       const transactionPromises = Array.from(transactionIds).map(async (transactionId) => {
         try {
           const response = await axios.get(
-            `http://139.5.190.143/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+            `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
             { timeout: 5000 },
           )
           return response.data.success ? { id: transactionId, data: response.data.data } : null

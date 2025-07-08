@@ -27,7 +27,7 @@ function AddCollegeNews({ open, onClose, onSuccess }) {
 
     try {
       const response = await axios.post(
-        'http://139.5.190.143/LIT/src/notification/add_college_news.php',
+        'https://namami-infotech.com/LIT/src/notification/add_college_news.php',
         formData
       );
 

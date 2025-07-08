@@ -25,7 +25,7 @@ function ViewTravel({ EmpId }) {
    useEffect(() => {
     const fetchEmployeeData = async () => {
         try {
-            const response = await axios.get('http://139.5.190.143/LIT/src/employee/list_employee.php', {
+            const response = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php', {
                 params: { Tenent_Id: user.tenent_id }
             });
 
@@ -54,7 +54,7 @@ useEffect(() => {
                 return;
             }
 
-            const response = await axios.get('http://139.5.190.143/LIT/src/travel/get_travel.php', {
+            const response = await axios.get('https://namami-infotech.com/LIT/src/travel/get_travel.php', {
                 params: { empId: user.emp_id, role: user.role }
             });
 
@@ -99,7 +99,7 @@ useEffect(() => {
 
     const handleStatusChange = async (id, status) => {
         try {
-            const response = await axios.post('http://139.5.190.143/LIT/src/travel/update_status.php', {
+            const response = await axios.post('https://namami-infotech.com/LIT/src/travel/update_status.php', {
                 id,
                 status
             });

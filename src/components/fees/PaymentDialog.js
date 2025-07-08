@@ -61,7 +61,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
     setErrorMsg("")
     try {
       const response = await axios.get(
-        `http://139.5.190.143/LIT/src/fees/get_transaction_by_stuid.php?stu_id=${student.StudentID}`,
+        `https://namami-infotech.com/LIT/src/fees/get_transaction_by_stuid.php?stu_id=${student.StudentID}`,
       )
 
       console.log("API Response:", response.data)
@@ -329,7 +329,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
 
       console.log("Submitting payload:", payload)
 
-      const res = await axios.post("http://139.5.190.143/LIT/src/fees/add_fee_transaction.php", payload)
+      const res = await axios.post("https://namami-infotech.com/LIT/src/fees/add_fee_transaction.php", payload)
 
       if (res.data.success) {
         setSuccessMsg("Payment recorded successfully!")
@@ -358,7 +358,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
     
     try {
       const response = await axios.post(
-        'http://139.5.190.143/LIT/src/fees/write_off_variable.php',
+        'https://namami-infotech.com/LIT/src/fees/write_off_variable.php',
         {
           action: 'write_off',
           student_id: student.StudentID,

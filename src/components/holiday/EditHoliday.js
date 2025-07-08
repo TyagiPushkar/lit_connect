@@ -15,7 +15,7 @@ function EditHoliday({ open, onClose, holiday, onHolidayUpdated }) {
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('http://139.5.190.143/LIT/src/holiday/edit_holiday.php', {
+            const response = await axios.post('https://namami-infotech.com/LIT/src/holiday/edit_holiday.php', {
                 id: holiday.id,
                 title,
                 date

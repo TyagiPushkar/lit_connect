@@ -39,7 +39,7 @@ const IssueBookDialog = ({ open, onClose, onSuccess, course, StudentId }) => {
     const fetchBooks = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://139.5.190.143/LIT/src/library/get_sem_books.php?course=${course}`);
+            const res = await axios.get(`https://namami-infotech.com/LIT/src/library/get_sem_books.php?course=${course}`);
             if (res.data.success) {
                 setBooks(res.data.data);
             } else {
@@ -56,7 +56,7 @@ const IssueBookDialog = ({ open, onClose, onSuccess, course, StudentId }) => {
         if (event.target.checked) {
             const encodedTitle = encodeURIComponent(book.book_title);  // URL encode the book title
             try {
-                const res = await axios.get(`http://139.5.190.143/LIT/src/library/get_available_books.php?title=${encodedTitle}`);
+                const res = await axios.get(`https://namami-infotech.com/LIT/src/library/get_available_books.php?title=${encodedTitle}`);
                 if (res.data.success && res.data.data.Status === 'Available') {
                     setSelectedBooks((prevSelectedBooks) => {
                         const updatedSelectedBooks = [...prevSelectedBooks, res.data.data];
@@ -94,7 +94,7 @@ const IssueBookDialog = ({ open, onClose, onSuccess, course, StudentId }) => {
         console.log('Payload being sent:', payload);  // Log to verify the format
 
         try {
-            const res = await axios.post('http://139.5.190.143/LIT/src/library/issue_book.php', payload);
+            const res = await axios.post('https://namami-infotech.com/LIT/src/library/issue_book.php', payload);
             setLoading(true)
             if (res.data.success) {
                 setSnackbar({ open: true, message: 'Books issued successfully!' });

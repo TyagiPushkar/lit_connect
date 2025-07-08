@@ -46,7 +46,7 @@ const AddMenuForm = () => {
       setLoadingCheckpoints(true);
       try {
         const response = await axios.get(
-          "http://139.5.190.143/LIT/src/menu/get_checkpoints.php"
+          "https://namami-infotech.com/LIT/src/menu/get_checkpoints.php"
         );
         if (response.data.success) {
           setCheckpoints(response.data.data);
@@ -69,7 +69,7 @@ const AddMenuForm = () => {
     const fetchMenus = async () => {
       try {
         const response = await axios.get(
-          "http://139.5.190.143/LIT/src/menu/get_menu.php"
+          "https://namami-infotech.com/LIT/src/menu/get_menu.php"
         );
         if (response.data.success) {
           setMenus(response.data.data);
@@ -161,7 +161,7 @@ const handleSubmit = async (e) => {
 
   try {
     const response = await axios.post(
-      "http://139.5.190.143/LIT/src/menu/add_menus.php",
+      "https://namami-infotech.com/LIT/src/menu/add_menus.php",
       {
         ...formData,
         SameMenuId, // Conditionally include SameMenuId
