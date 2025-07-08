@@ -83,8 +83,8 @@ const FeesTransaction = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (item) =>
-          item.stu_id.toString().includes(term) ||
-          (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
+          item.stu_id?.toString().toLowerCase().includes(term) || // Fixed this line
+        (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
       );
     }
 
