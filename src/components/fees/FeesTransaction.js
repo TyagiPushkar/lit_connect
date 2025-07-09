@@ -47,6 +47,7 @@ const FeesTransaction = () => {
   const [courseFilter, setCourseFilter] = useState("");
   const [installmentFilter, setInstallmentFilter] = useState("");
   const [sessionFilter, setSessionFilter] = useState("");
+  const [modeFilter, setModeFilter] = useState("");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
 
@@ -56,7 +57,7 @@ const FeesTransaction = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [structures, searchTerm, courseFilter, installmentFilter, sessionFilter, fromDate, toDate]);
+  }, [structures, searchTerm, courseFilter, installmentFilter, sessionFilter, modeFilter, fromDate, toDate]);
 
   const fetchFeeStructures = async () => {
     try {
@@ -83,8 +84,8 @@ const FeesTransaction = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (item) =>
-          item.stu_id?.toString().toLowerCase().includes(term) || // Fixed this line
-        (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
+          item.stu_id?.toString().toLowerCase().includes(term) ||
+          (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
       );
     }
 
@@ -106,6 +107,13 @@ const FeesTransaction = () => {
     if (sessionFilter) {
       filtered = filtered.filter(
         (item) => item.Session && item.Session === sessionFilter
+      );
+    }
+
+    // Apply mode filter
+    if (modeFilter) {
+      filtered = filtered.filter(
+        (item) => item.mode && item.mode === modeFilter
       );
     }
 
@@ -144,6 +152,7 @@ const FeesTransaction = () => {
     setCourseFilter("");
     setInstallmentFilter("");
     setSessionFilter("");
+    setModeFilter("");
     setFromDate(null);
     setToDate(null);
   };
@@ -188,6 +197,7 @@ const FeesTransaction = () => {
   const uniqueCourses = [...new Set(structures.map(item => item.course))].filter(Boolean);
   const uniqueInstallments = [...new Set(structures.map(item => item.installment))].filter(Boolean);
   const uniqueSessions = [...new Set(structures.map(item => item.Session))].filter(Boolean);
+  const uniqueModes = [...new Set(structures.map(item => item.mode))].filter(Boolean);
 
   const formatDate = (datetime) => {
     if (!datetime) return "-";
@@ -211,104 +221,118 @@ const FeesTransaction = () => {
         >
           <h2>Fee Transaction List</h2>
           <Box sx={{ 
-          display: 'flex', 
-          gap: 1, 
-          mb: 2,
-          alignItems: 'center',
-          flexWrap: 'wrap'
-        }}>
-          <TextField
-            size="small"
-            placeholder="Search ID/Name"
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />
-              ),
-              endAdornment: searchTerm && (
-                <IconButton size="small" onClick={() => setSearchTerm("")}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            }}
-            sx={{ width: 180 }}
-          />
-
-          <FormControl size="small" sx={{ width: 150 }}>
-            <InputLabel>Course</InputLabel>
-            <Select
-              value={courseFilter}
-              label="Course"
-              onChange={(e) => setCourseFilter(e.target.value)}
-            >
-              <MenuItem value="">All Courses</MenuItem>
-              {uniqueCourses.map((course) => (
-                <MenuItem key={course} value={course}>{course}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ width: 150 }}>
-            <InputLabel>Installment</InputLabel>
-            <Select
-              value={installmentFilter}
-              label="Installment"
-              onChange={(e) => setInstallmentFilter(e.target.value)}
-            >
-              <MenuItem value="">All Installments</MenuItem>
-              {uniqueInstallments.map((installment) => (
-                <MenuItem key={installment} value={installment}>{installment}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          
-          <FormControl size="small" sx={{ width: 150 }}>
-            <InputLabel>Session</InputLabel>
-            <Select
-              value={sessionFilter}
-              label="Session"
-              onChange={(e) => setSessionFilter(e.target.value)}
-            >
-              <MenuItem value="">All Sessions</MenuItem>
-              {uniqueSessions.map((session) => (
-                <MenuItem key={session} value={session}>
-                  {session}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <DatePicker
-            label="From Date"
-            value={fromDate}
-            onChange={(newValue) => setFromDate(newValue)}
-            renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
-          />
-
-          <DatePicker
-            label="To Date"
-            value={toDate}
-            onChange={(newValue) => setToDate(newValue)}
-            renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
-            minDate={fromDate}
-          />
-
-          <Tooltip title="Clear filters">
-            <IconButton 
-              size="small" 
-              onClick={clearFilters}
-              sx={{ 
-                border: '1px solid rgba(0, 0, 0, 0.23)',
-                borderRadius: 1,
-                p: '6px'
+            display: 'flex', 
+            gap: 1, 
+            mb: 2,
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}>
+            <TextField
+              size="small"
+              placeholder="Search ID/Name"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />
+                ),
+                endAdornment: searchTerm && (
+                  <IconButton size="small" onClick={() => setSearchTerm("")}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ),
               }}
-            >
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+              sx={{ width: 180 }}
+            />
+
+            <FormControl size="small" sx={{ width: 150 }}>
+              <InputLabel>Course</InputLabel>
+              <Select
+                value={courseFilter}
+                label="Course"
+                onChange={(e) => setCourseFilter(e.target.value)}
+              >
+                <MenuItem value="">All Courses</MenuItem>
+                {uniqueCourses.map((course) => (
+                  <MenuItem key={course} value={course}>{course}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ width: 150 }}>
+              <InputLabel>Installment</InputLabel>
+              <Select
+                value={installmentFilter}
+                label="Installment"
+                onChange={(e) => setInstallmentFilter(e.target.value)}
+              >
+                <MenuItem value="">All Installments</MenuItem>
+                {uniqueInstallments.map((installment) => (
+                  <MenuItem key={installment} value={installment}>{installment}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl size="small" sx={{ width: 150 }}>
+              <InputLabel>Session</InputLabel>
+              <Select
+                value={sessionFilter}
+                label="Session"
+                onChange={(e) => setSessionFilter(e.target.value)}
+              >
+                <MenuItem value="">All Sessions</MenuItem>
+                {uniqueSessions.map((session) => (
+                  <MenuItem key={session} value={session}>
+                    {session}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ width: 150 }}>
+              <InputLabel>Payment Mode</InputLabel>
+              <Select
+                value={modeFilter}
+                label="Payment Mode"
+                onChange={(e) => setModeFilter(e.target.value)}
+              >
+                <MenuItem value="">All Modes</MenuItem>
+                {uniqueModes.map((mode) => (
+                  <MenuItem key={mode} value={mode}>{mode}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <DatePicker
+              label="From Date"
+              value={fromDate}
+              onChange={(newValue) => setFromDate(newValue)}
+              renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+            />
+
+            <DatePicker
+              label="To Date"
+              value={toDate}
+              onChange={(newValue) => setToDate(newValue)}
+              renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+              minDate={fromDate}
+            />
+
+            <Tooltip title="Clear filters">
+              <IconButton 
+                size="small" 
+                onClick={clearFilters}
+                sx={{ 
+                  border: '1px solid rgba(0, 0, 0, 0.23)',
+                  borderRadius: 1,
+                  p: '6px'
+                }}
+              >
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Box sx={{ 
             display: 'flex', 
             gap: 0, 
@@ -327,8 +351,6 @@ const FeesTransaction = () => {
             </Button>
           </Box>
         </div>
-
-       
 
         <AddFeeStructureDialog
           open={dialogOpen}
