@@ -43,7 +43,14 @@ const StudentFeesTransaction = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editFormData, setEditFormData] = useState(null)
   const [expandedCard, setExpandedCard] = useState(null)
-
+  const formatDate = (datetime) => {
+    if (!datetime) return "-";
+    const dateObj = new Date(datetime);
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
   // Find first unpaid installment for variable fees
   const firstDueInstallment = feesData.find((fee) => !fee.Paid || fee.Paid === "0" || fee.Paid === "")
 
@@ -431,7 +438,7 @@ const StudentFeesTransaction = () => {
                         <Box display="flex" alignItems="center" gap={1} mt={1}>
                           <ScheduleIcon fontSize="small" color="action" />
                           <Typography variant="body2">
-                            <strong>Due Date:</strong> {fee.due_date}
+                            <strong>Due Date:</strong> {formatDate(fee.due_date)}
                           </Typography>
                         </Box>
                       </Box>

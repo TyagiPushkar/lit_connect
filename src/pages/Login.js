@@ -179,7 +179,7 @@ export default function LoginPage() {
               fontWeight="bold"
               sx={{ lineHeight: 1.2 }}
             >
-              Lakshay Institute of Technology
+              Lakshya Institute of Technology
             </Typography>
           </Box>
 
