@@ -566,7 +566,7 @@ const OtherFeesTransaction = () => {
                   onChange={handleInputChange}
                   label="Payment Mode"
                 >
-                  {["Cash", "Online", "UPI", "Cheque"].map((option) => (
+                  {["Cash", "Online", "Cheque"].map((option) => (
                     <MenuItem key={option} value={option}>{option}</MenuItem>
                   ))}
                 </Select>

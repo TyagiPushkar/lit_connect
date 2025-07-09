@@ -648,7 +648,7 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
             value={mode}
             onChange={(e) => setMode(e.target.value)}
           >
-            {["Cash", "Online", "UPI", "Cheque"].map((option) => (
+            {["Cash", "Online", "Cheque"].map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
