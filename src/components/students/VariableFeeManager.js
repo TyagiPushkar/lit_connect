@@ -154,26 +154,35 @@ const VariableFeeManager = () => {
       >
         <h2>Variable Fee </h2>
         <Autocomplete
-          options={students}
-          getOptionLabel={(option) =>
-            `${option.StudentID} - ${option.CandidateName}`
-          }
-          onChange={(event, value) => {
-            setSelectedStudent(value);
-            setVariableFees([]);
-            if (value) fetchVariableFees(value.StudentID);
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select Student"
-              sx={{ width: "500px" }}
-            />
-          )}
-          isOptionEqualToValue={(option, value) =>
-            option.StudentID === value.StudentID
-          }
-        />
+  options={students}
+  getOptionLabel={(option) =>
+    `${option.StudentID} - ${option.CandidateName}`
+  }
+  onChange={(event, value) => {
+    setSelectedStudent(value);
+    setVariableFees([]);
+    if (value) fetchVariableFees(value.StudentID);
+  }}
+  onKeyDown={(event) => {
+    if (event.key === 'Enter' && students.length === 1) {
+      setSelectedStudent(students[0]);
+      setVariableFees([]);
+      fetchVariableFees(students[0].StudentID);
+      // Close the dropdown
+      event.defaultMuiPrevented = true;
+    }
+  }}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Select Student"
+      sx={{ width: "500px" }}
+    />
+  )}
+  isOptionEqualToValue={(option, value) =>
+    option.StudentID === value.StudentID
+  }
+/>
         <div style={{
          
           display: "flex",
@@ -243,9 +252,12 @@ const VariableFeeManager = () => {
                     <TableRow key={index}>
                       <TableCell>{fee.particular}</TableCell>
                       <TableCell>{fee.amount}</TableCell>
-                      <TableCell>
-                        {Number(fee.Paid) === 0 ? "Not Paid" : "Paid"}
-                      </TableCell>
+                      <TableCell
+  style={{ color: Number(fee.Paid) === 0 ? 'red' : 'green', fontWeight: 'bold' }}
+>
+  {Number(fee.Paid) === 0 ? 'Not Paid' : 'Paid'}
+</TableCell>
+
                     </TableRow>
                   ))
                 ) : (

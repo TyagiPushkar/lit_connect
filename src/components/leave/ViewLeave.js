@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Typography, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, CircularProgress, TableFooter,
-    TablePagination, Button
+    Box,
+    Typography,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    CircularProgress,
+    TableFooter,
+    TablePagination,
+    IconButton,
+    Button
 } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
+import CheckIcon from '@mui/icons-material/Check';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 function ViewLeave() {
     const { user } = useAuth();
@@ -17,6 +30,7 @@ function ViewLeave() {
     const [rowsPerPage, setRowsPerPage] = useState(5);
 
     const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -24,120 +38,244 @@ function ViewLeave() {
         return `${day}/${month}/${year}`;
     };
 
+    const fetchLeaves = useCallback(async () => {
+        if (!user || !user.emp_id || employees.length === 0) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const params = user.role === 'HR' ? { role: "HR" } : { empId: user.emp_id };
+            const response = await axios.get('https://namami-infotech.com/LIT/src/leave/get_leave.php', { params });
+
+            if (response.data.success) {
+                const filteredLeaves = response.data.data.filter(leave => 
+                    employees.some(emp => emp.EmpId === leave.EmpId)
+                );
+                setLeaves(filteredLeaves);
+            } else {
+                setError(response.data.message || 'Failed to fetch leave data');
+            }
+        } catch (error) {
+            setError('Error fetching leave data. Please try again later.');
+            console.error('Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user, employees]);
+
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const { data } = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php', {
+                if (!user?.tenent_id) {
+                    setError('User information not available');
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php', {
                     params: { Tenent_Id: user.tenent_id }
                 });
-                if (data.success) {
-                    setEmployees(data.data);
+
+                if (response.data.success) {
+                    setEmployees(response.data.data);
                 } else {
-                    setError(data.message);
+                    setError(response.data.message || 'Failed to fetch employee data');
+                    setLoading(false);
                 }
-            } catch (err) {
-                console.error(err);
-                setError('Failed to fetch employees');
-            }
-        };
-
-        fetchEmployees();
-    }, [user.tenent_id]);
-
-    useEffect(() => {
-
-        const fetchLeaves = async () => {
-            try {
-                const { data } = await axios.get('https://namami-infotech.com/LIT/src/leave/get_leave.php?role=Teacher');
-
-                if (data.success) {
-                    const filtered = data.data.filter(leave =>
-                        employees.some(emp => emp.EmpId === leave.EmpId)
-                    );
-                    setLeaves(filtered);
-                } else {
-                    setError(data.message);
-                }
-            } catch (err) {
-                console.error(err);
-                setError('Failed to fetch leaves');
-            } finally {
+            } catch (error) {
+                setError('Error fetching employee data. Please try again later.');
+                console.error('Error:', error);
                 setLoading(false);
             }
         };
 
-        fetchLeaves();
-    }, [employees, user.emp_id]);
+        fetchEmployees();
+    }, [user?.tenent_id]);
 
-    const exportToCsv = () => {
-        const csvRows = [['Employee Name', 'Start Date', 'End Date', 'Reason', 'Status']];
-        leaves.forEach(({ EmpId, StartDate, EndDate, Reason, Status }) => {
-            const emp = employees.find(e => e.EmpId === EmpId);
-            csvRows.push([
-                emp ? emp.Name : 'Unknown',
-                formatDate(StartDate),
-                formatDate(EndDate),
-                Reason,
-                Status
-            ]);
-        });
-        const blob = new Blob([csvRows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute('download', 'leaves.csv');
-        link.click();
+    useEffect(() => {
+        if (employees.length > 0) {
+            fetchLeaves();
+        }
+    }, [employees, fetchLeaves]);
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
     };
 
-    if (loading) return <Box p={3}><CircularProgress /></Box>;
-    if (error) return <Typography color="error" p={3}>{error}</Typography>;
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const handleStatusChange = async (id, newStatus) => {
+        try {
+            const response = await axios.post('https://namami-infotech.com/LIT/src/leave/approve_leave.php', {
+                id,
+                status: newStatus
+            });
+
+            if (response.data.success) {
+                setLeaves(leaves.map(leave =>
+                    leave.Id === id ? { ...leave, Status: newStatus } : leave
+                ));
+            } else {
+                setError(response.data.message || 'Failed to update leave status');
+            }
+        } catch (error) {
+            setError('Error updating leave status. Please try again later.');
+            console.error('Error:', error);
+        }
+    };
+
+    const exportToCsv = () => {
+        if (leaves.length === 0) {
+            setError('No data to export');
+            return;
+        }
+
+        const csvRows = [
+            ['Employee Name', 'Start Date', 'End Date', 'Category', 'Reason', 'Status', 'Applied On']
+        ];
+
+        leaves.forEach((leave) => {
+            const employee = employees.find(emp => emp.EmpId === leave.EmpId);
+            const employeeName = employee ? employee.Name : 'Unknown';
+            csvRows.push([
+                employeeName,
+                formatDate(leave.StartDate),
+                formatDate(leave.EndDate),
+                leave.Category || 'N/A',
+                leave.Reason || 'N/A',
+                leave.Status || 'Pending',
+                formatDate(leave.CreatedAt)
+            ]);
+        });
+
+        const csvContent = csvRows.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', `leaves_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+                <Typography color="error" variant="h6">{error}</Typography>
+            </Box>
+        );
+    }
 
     return (
-        <Box p={3}>
+        <Box sx={{ p: 3 }}>
             <Button
                 variant="contained"
+                color="primary"
                 onClick={exportToCsv}
-                style={{ backgroundColor: "#CC7A00", float: "right", marginBottom: 16 }}
+                disabled={leaves.length === 0}
+                sx={{ 
+                    marginBottom: '16px', 
+                    backgroundColor: "#CC7A00", 
+                    float: "right",
+                    '&:hover': { backgroundColor: "#E68A00" }
+                }}
             >
                 Export CSV
             </Button>
-            <TableContainer component={Paper}>
+
+            <TableContainer component={Paper} sx={{ overflowX: 'auto', mt: 2 }}>
                 <Table>
-                    <TableHead style={{ backgroundColor: "#CC7A00" }}>
+                    <TableHead sx={{ backgroundColor: "#CC7A00" }}>
                         <TableRow>
-                            <TableCell sx={{ color: "#fff" }}>Employee Name</TableCell>
-                            <TableCell sx={{ color: "#fff" }}>Date</TableCell>
-                            <TableCell sx={{ color: "#fff" }}>Reason</TableCell>
-                            <TableCell sx={{ color: "#fff" }}>Applied On</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Employee Name</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Date</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Category</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Reason</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Status</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Applied on</TableCell>
+                            {user?.role === 'HR' && <TableCell sx={{ color: "white", fontWeight: 'bold' }}>Actions</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {leaves.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((leave) => {
-                            const employee = employees.find(e => e.EmpId === leave.EmpId);
-                            return (
-                                <TableRow key={leave.Id}>
-                                    <TableCell>{employee ? employee.Name : 'Unknown'}</TableCell>
-                                    <TableCell>{formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}</TableCell>
-                                    <TableCell>{leave.Reason}</TableCell>
-                                    <TableCell>{formatDate(leave.CreatedAt)}</TableCell>
-                                </TableRow>
-                            );
-                        })}
+                        {leaves.length > 0 ? (
+                            leaves
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((leave) => {
+                                    const employee = employees.find(emp => emp.EmpId === leave.EmpId);
+                                    const employeeName = employee ? employee.Name : 'Unknown';
+
+                                    return (
+                                        <TableRow key={leave.Id} hover>
+                                            <TableCell>{employeeName}</TableCell>
+                                            <TableCell>
+                                                {formatDate(leave.StartDate)} - {formatDate(leave.EndDate)}
+                                            </TableCell>
+                                            <TableCell>{leave.Category || 'N/A'}</TableCell>
+                                            <TableCell>{leave.Reason || 'N/A'}</TableCell>
+                                            <TableCell>{leave.Status || 'Pending'}</TableCell>
+                                            <TableCell>{formatDate(leave.CreatedAt)}</TableCell>
+                                            {user?.role === 'HR' && (
+                                                <TableCell>
+                                                    <IconButton
+                                                        color="success"
+                                                        onClick={() => handleStatusChange(leave.Id, 'Approved')}
+                                                        disabled={leave.Status === 'Approved' || leave.Status === 'Rejected'}
+                                                        aria-label="approve"
+                                                    >
+                                                        <CheckIcon />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        color="error"
+                                                        onClick={() => handleStatusChange(leave.Id, 'Rejected')}
+                                                        disabled={leave.Status === 'Approved' || leave.Status === 'Rejected'}
+                                                        aria-label="reject"
+                                                    >
+                                                        <CancelIcon />
+                                                    </IconButton>
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    );
+                                })
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={user?.role === 'HR' ? 7 : 6} align="center">
+                                    <Typography variant="body1" color="textSecondary">
+                                        No leave records found
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TablePagination
-                                count={leaves.length}
-                                page={page}
-                                rowsPerPage={rowsPerPage}
-                                onPageChange={(e, newPage) => setPage(newPage)}
-                                onRowsPerPageChange={(e) => {
-                                    setRowsPerPage(parseInt(e.target.value, 10));
-                                    setPage(0);
-                                }}
-                                rowsPerPageOptions={[5, 10, 25]}
-                            />
-                        </TableRow>
-                    </TableFooter>
+                    {leaves.length > 0 && (
+                        <TableFooter>
+                            <TableRow>
+                                <TablePagination
+                                    rowsPerPageOptions={[5, 10, 25]}
+                                    count={leaves.length}
+                                    rowsPerPage={rowsPerPage}
+                                    page={page}
+                                    onPageChange={handleChangePage}
+                                    onRowsPerPageChange={handleChangeRowsPerPage}
+                                />
+                            </TableRow>
+                        </TableFooter>
+                    )}
                 </Table>
             </TableContainer>
         </Box>

@@ -42,7 +42,7 @@ function ViewHoliday() {
 
     useEffect(() => {
         fetchHolidays();
-    });
+    },[user.tenent_id]);
 
     // Handle month and year changes
     const handleMonthYearChange = (date) => {
