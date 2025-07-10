@@ -22,8 +22,7 @@ import axios from "axios"
 import PaymentsIcon from "@mui/icons-material/Payments"
 import ScheduleIcon from "@mui/icons-material/Schedule"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
-import ExpandLess from '@mui/icons-material/ExpandLess';
-// import ExpandLessIcon from "./ExpandLessIcon"
+import ExpandLess from "@mui/icons-material/ExpandLess"
 import PaymentDialog from "./PaymentDialog"
 import TransactionDialog from "./TransactionDialog"
 import { useAuth } from "../auth/AuthContext"
@@ -43,14 +42,16 @@ const StudentFeesTransaction = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editFormData, setEditFormData] = useState(null)
   const [expandedCard, setExpandedCard] = useState(null)
+
   const formatDate = (datetime) => {
-    if (!datetime) return "-";
-    const dateObj = new Date(datetime);
-    const day = String(dateObj.getDate()).padStart(2, "0");
-    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-    const year = dateObj.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+    if (!datetime) return "-"
+    const dateObj = new Date(datetime)
+    const day = String(dateObj.getDate()).padStart(2, "0")
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0")
+    const year = dateObj.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
   // Find first unpaid installment for variable fees
   const firstDueInstallment = feesData.find((fee) => !fee.Paid || fee.Paid === "0" || fee.Paid === "")
 
@@ -74,7 +75,12 @@ const StudentFeesTransaction = () => {
       const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== ""
       const feeStatus = transactionStatus[fee.id]
 
-      if (!isPaid || (feeStatus && feeStatus.status === "partially_paid")) {
+      // Check if installment has variable fees and is partially paid
+      const hasVariableFees = firstDueInstallment && fee.id === firstDueInstallment.id && variableFees.length > 0
+      const isPartiallyPaid = feeStatus && feeStatus.status === "partially_paid"
+
+      // If installment is not paid, or partially paid, or has variable fees, it can be paid
+      if (!isPaid || isPartiallyPaid || hasVariableFees) {
         return fee
       }
     }
@@ -100,8 +106,8 @@ const StudentFeesTransaction = () => {
       if (feesRes.data.success && feesRes.data.data) {
         const fees = feesRes.data.data
         setFeesData(fees)
-
         const statusMap = {}
+
         const transactionPromises = fees
           .filter((fee) => fee.Paid && fee.Paid !== "0" && fee.Paid !== "")
           .flatMap((fee) => {
@@ -244,6 +250,7 @@ const StudentFeesTransaction = () => {
   }
 
   const nextPayableInstallment = getNextPayableInstallment()
+
   const sortedFees = feesData
     .filter((fee) => {
       return (
@@ -259,7 +266,7 @@ const StudentFeesTransaction = () => {
 
   return (
     <Box sx={{ p: 2, backgroundColor: "#fff" }}>
-      {/* Student Info - Original Design */}
+      {/* Student Info */}
       <Paper
         sx={{
           p: 4,
@@ -294,7 +301,7 @@ const StudentFeesTransaction = () => {
         </Box>
       </Paper>
 
-      {/* Fee Installments - Compact Design */}
+      {/* Fee Installments */}
       <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
         <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
           Fee Installments
@@ -327,8 +334,12 @@ const StudentFeesTransaction = () => {
               currentBalance = feeStatus.currentBalance || 0
             }
 
-            // Check if this installment can be paid (sequential logic)
-            const canPay = nextPayableInstallment && fee.id === nextPayableInstallment.id
+            // Enhanced logic: Check if this installment can be paid
+            const hasVariableFees = isFirstUnpaidWithVariables && variableFees.length > 0
+            const isPartiallyPaid = paymentStatus === "partially_paid"
+            const canPay =
+              (nextPayableInstallment && fee.id === nextPayableInstallment.id) || hasVariableFees || isPartiallyPaid
+
             const isExpanded = expandedCard === fee.id
 
             return (
@@ -425,7 +436,15 @@ const StudentFeesTransaction = () => {
                               <strong>Variable Fees:</strong> ₹{variableTotal}
                               <Chip label="Additional" size="small" color="warning" sx={{ ml: 1, height: 16 }} />
                             </Typography>
-                            <Box sx={{ ml: 1, bgcolor: "#fff3cd", p: 1, borderRadius: 1, mt: 0.5 }}>
+                            <Box
+                              sx={{
+                                ml: 1,
+                                bgcolor: "#fff3cd",
+                                p: 1,
+                                borderRadius: 1,
+                                mt: 0.5,
+                              }}
+                            >
                               {variableFees.map((vf, i) => (
                                 <Typography key={i} variant="caption" display="block">
                                   • {vf.particular}: ₹{vf.amount}
@@ -476,7 +495,7 @@ const StudentFeesTransaction = () => {
                         </>
                       )}
 
-                      {/* Pay Button - Only for next payable installment */}
+                      {/* Pay Button - Enhanced logic for variable fees and partial payments */}
                       {canPay && (
                         <Button
                           variant="contained"
@@ -500,7 +519,9 @@ const StudentFeesTransaction = () => {
                         >
                           {paymentStatus === "partially_paid" && currentBalance > 0
                             ? `Pay Balance (₹${currentBalance})`
-                            : "Pay Now"}
+                            : hasVariableFees
+                              ? `Pay with Variables (₹${total})`
+                              : "Pay Now"}
                         </Button>
                       )}
 
@@ -511,7 +532,7 @@ const StudentFeesTransaction = () => {
                         </Button>
                       )}
 
-                      {/* Always show Edit button */}
+                      {/* Always show Edit button for Admin */}
                       {user && user.role === "Admin" && (
                         <Button variant="outlined" fullWidth sx={{ mt: 1 }} onClick={() => handleEditClick(fee)}>
                           Edit Structure
@@ -526,7 +547,7 @@ const StudentFeesTransaction = () => {
         </Grid>
       </Paper>
 
-      {/* Dialogs remain the same */}
+      {/* Transaction Dialog */}
       {transactionData && (
         <TransactionDialog
           student={studentData}
@@ -539,6 +560,7 @@ const StudentFeesTransaction = () => {
         />
       )}
 
+      {/* Payment Dialog */}
       {selectedFee && (
         <PaymentDialog
           open={dialogOpen}
@@ -554,6 +576,7 @@ const StudentFeesTransaction = () => {
         />
       )}
 
+      {/* Edit Dialog */}
       {editDialogOpen && (
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
           <Box sx={{ p: 3 }}>
