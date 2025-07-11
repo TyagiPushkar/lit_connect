@@ -85,6 +85,8 @@ const OtherFeesTransaction = () => {
   const otherCategories = [
     
     "Practical Fees",
+    "Student Kit, Books & Materials Fees",
+    "Student Uniform Fees",
     "Other Fees"
   ];
 
