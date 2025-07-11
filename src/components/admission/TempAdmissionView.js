@@ -23,7 +23,7 @@ function TempAdmissionView() {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Checkpoint groups
   const sections = {
     "Address for Correspondence": [15, 16],
@@ -74,7 +74,8 @@ function TempAdmissionView() {
     return item ? item.Value : "";
   };
 
- const handleNext = async () => {
+  const handleNext = async () => {
+    setIsSubmitting(true); 
   const fieldMap = {
     3: "CandidateName",
     4: "Photo",
@@ -158,7 +159,10 @@ localStorage.setItem("student_course", course);
   } catch (error) {
     console.error("Submission error:", error);
     alert("Failed to submit student data.");
-  }
+    }
+    finally {
+      setIsSubmitting(false); // Stop loading regardless of success/failure
+    }
 };
 
 
@@ -373,19 +377,19 @@ localStorage.setItem("student_course", course);
         zIndex: 1000,
       }}
       >
-        <Button
-        variant="contained"
-        sx={{ backgroundColor: "#CC7A00" }}
-      >
-        Reject
-      </Button>
+       
       <Button
-        variant="contained"
-        sx={{ backgroundColor: "#CC7A00" }}
-        onClick={handleNext}
-      >
-        Enroll
-      </Button>
+  variant="contained"
+  sx={{ backgroundColor: "#CC7A00" }}
+  onClick={handleNext}
+  disabled={isSubmitting}
+>
+  {isSubmitting ? (
+    <CircularProgress size={24} color="inherit" />
+  ) : (
+    "Enroll"
+  )}
+</Button>
     </Box>
   </Box>
 );

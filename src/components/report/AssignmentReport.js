@@ -93,9 +93,9 @@ function AssignmentReport() {
                 <FormControl size="small" sx={{ minWidth: 140 }}>
                     <InputLabel>Course</InputLabel>
                     <Select value={course} label="Course" onChange={(e) => setCourse(e.target.value)}>
-                         <MenuItem value="BSC.DS">BSc. DS</MenuItem>
-                                                    <MenuItem value="BSC.CS(H)">BSc. CS(H)</MenuItem>
-                                                    <MenuItem value="BSC.ITM(H)">BSc. ITM(H)</MenuItem>
+                         <MenuItem value="BSc. DS">BSc. DS</MenuItem>
+                                                    <MenuItem value="BSc. CS(H)">BSc. CS(H)</MenuItem>
+                                                    <MenuItem value="BSc. ITM(H)">BSc. ITM(H)</MenuItem>
                                                     <MenuItem value="BCA">BCA</MenuItem>
                     </Select>
                 </FormControl>

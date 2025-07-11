@@ -13,6 +13,7 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import logo from "../../assets/images (1).png";
 import StudentFeesTransaction from "../fees/StudentFeesTransaction";
+import StudentReports from "./StudentReport";
 
 function StudentDetail() {
   const { studentId } = useParams();
@@ -184,6 +185,7 @@ function StudentDetail() {
           </Box>
         ))}
       </Paper>
+      <StudentReports/>
     </Box>
   );
 }
