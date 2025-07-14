@@ -112,7 +112,6 @@ function TempAdmissionView() {
     52: "AlternateGaurdiaNumber",
     53: "Disabled",
     54: "RefrenceBy"
-    // Add more mappings if required
   };
 
   const studentData = {
@@ -145,15 +144,17 @@ function TempAdmissionView() {
 
     if (response.data.success) {
   const studentId = response.data.data.StudentID;
-const course = studentData.Course;
+      const course = studentData.Course;
+      const hostel = studentData.Hostel;
   // Save to localStorage
   localStorage.setItem("student_id", studentId);
 localStorage.setItem("student_course", course);
+localStorage.setItem("student_hostel", hostel);
   alert("Student record saved successfully.");
  navigate("/admissions/finalize", {
-  state: { studentId, course }
-});}
- else {
+  state: { studentId, course, hostel }
+});
+    } else {
       alert("Error: " + response.data.message);
     }
   } catch (error) {

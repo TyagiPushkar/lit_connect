@@ -40,9 +40,10 @@ const FinalizeAdmissionView = () => {
     const timeout = setTimeout(() => {
       const studentId = state?.studentId || localStorage.getItem("studentId");
       const course = state?.course || localStorage.getItem("course");
-// console.log("Course:",course)
-      if (!studentId || !course) {
-        alert("Student ID or Course not found. Please go back and try again.");
+      const hostel = state?.hostel || localStorage.getItem("hostel");
+      // console.log("Course:",course)
+      if (!studentId || !course || !hostel) {
+        alert("Student ID, Course or Hostel not found. Please go back and try again.");
         setLoading(false);
         return;
       }

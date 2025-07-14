@@ -299,6 +299,17 @@ const StudentFeesTransaction = () => {
             <strong>Student Id:</strong> {studentId}
           </Typography>
         </Box>
+        <Box sx={{ flex: 1, marginLeft: 3 }}>
+          {/* <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
+            {studentData.CandidateName}
+          </Typography> */}
+          <Typography variant="subtitle1" color="textSecondary">
+            <strong>Phone:</strong> {studentData.StudentContactNo}
+          </Typography>
+          <Typography variant="subtitle1" color="textSecondary">
+            <strong>Session:</strong> {studentData.Session}
+          </Typography>
+        </Box>
       </Paper>
 
       {/* Fee Installments */}
