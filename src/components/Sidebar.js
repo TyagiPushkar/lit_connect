@@ -85,6 +85,7 @@ function Sidebar() {
 
       { path: "/fees-summary", name: "Fees Summary", icon: <SummarizeIcon /> },
       { path: '/other-fees', name: 'Other Fees', icon: <AppsIcon /> },
+      { path: '/students', name: 'Students', icon: <Person /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );
   }

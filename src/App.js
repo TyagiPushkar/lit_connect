@@ -79,7 +79,7 @@ function App() {
 
             <Route path="/fees/:studentId" element={<PrivateRoute element={StudentFees} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
             <Route path="/certificate" element={<PrivateRoute element={Certificate} requiredRole="HR" />} />
-            <Route path="/students" element={<PrivateRoute element={Students} requiredRole="HR" />} />
+            <Route path="/students" element={<PrivateRoute element={Students} requiredRoles={["Accounts", "Front Desk","Admin","HR"]} />} />
             <Route path="/student/:studentId" element={<PrivateRoute element={StudentInfo} requiredRole="HR" />} />
             <Route path="/variable" element={<PrivateRoute element={Variable} requiredRole="HR" />} />
             <Route path="/hr-report" element={<PrivateRoute element={VisitReport} requiredRole="HR" />} />

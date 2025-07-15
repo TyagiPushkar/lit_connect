@@ -25,8 +25,7 @@ const FinalizeAdmissionView = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  const feeFields = {
-    
+  const feeFields = { 
     tution_fees: "Tuition Fees",
     exam_fees: "Exam Fees",
     hostel_fees: "Hostel Fees",
