@@ -457,53 +457,56 @@ const OtherFeesTransaction = () => {
           <DialogTitle>Add Other Fee Transaction</DialogTitle>
           <DialogContent>
             <Box sx={{ mt: 2 }}>
-              <DatePicker
-                label="Payment Date"
-                value={formData.payment_date}
-                onChange={handleDateChange}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    margin="normal"
-                    required
-                  />
-                )}
-              />
+            <DatePicker
+  label="Payment Date"
+  value={formData.payment_date}
+  onChange={(newValue) =>
+    setFormData((prev) => ({ ...prev, payment_date: newValue }))
+  }
+  format="DD/MM/YYYY" // <- use this prop to display in dd/mm/yyyy format
+  renderInput={(params) => (
+    <TextField {...params} fullWidth margin="normal" required />
+  )}
+/>
+
+
               <Autocomplete
-                options={students}
-                getOptionLabel={(option) => `${option.StudentID} - ${option.CandidateName}`}
-                value={students.find(student => student.StudentID === formData.Student_id) || null}
-                onChange={(event, newValue) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    Student_id: newValue?.StudentID || ""
-                  }));
-                }}
-                onInputChange={(event, newInputValue) => {
-                  fetchStudents(newInputValue);
-                }}
-                loading={loadingStudents}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Student"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    required
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingStudents ? <CircularProgress color="inherit" size={20} /> : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
+  options={students}
+  getOptionLabel={(option) =>
+    `${option.StudentID} - ${option.CandidateName} - ${option.Course || ""} - ${option.Session || ""}`
+  }
+  value={students.find(student => student.StudentID === formData.Student_id) || null}
+  onChange={(event, newValue) => {
+    setFormData(prev => ({
+      ...prev,
+      Student_id: newValue?.StudentID || ""
+    }));
+  }}
+  onInputChange={(event, newInputValue) => {
+    fetchStudents(newInputValue);
+  }}
+  loading={loadingStudents}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Student"
+      variant="outlined"
+      fullWidth
+      margin="normal"
+      required
+      InputProps={{
+        ...params.InputProps,
+        endAdornment: (
+          <>
+            {loadingStudents ? <CircularProgress color="inherit" size={20} /> : null}
+            {params.InputProps.endAdornment}
+          </>
+        ),
+      }}
+    />
+  )}
+/>
+
               <FormControl fullWidth margin="normal" required>
                 <InputLabel>Particular</InputLabel>
                 <Select
