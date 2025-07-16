@@ -377,6 +377,7 @@ const FeesTransaction = () => {
                 <TableCell style={{ color: "white" }}>Balance Amount</TableCell>
                 <TableCell style={{ color: "white" }}>Payment Date</TableCell>
                 <TableCell style={{ color: "white" }}>Remark</TableCell>
+                <TableCell style={{ color: "white" }}>Deposit By</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -399,6 +400,7 @@ const FeesTransaction = () => {
                     <TableCell>{row.balance_amount}</TableCell>
                     <TableCell>{formatDate(row.payment_date)}</TableCell>
                     <TableCell>{row.Remark}</TableCell>
+                    <TableCell>{row.added_by}</TableCell>
                   </TableRow>
                 ))}
             </TableBody>
