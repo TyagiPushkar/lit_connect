@@ -232,7 +232,7 @@ const FeesTransaction = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ p: 3 }}> {/* Added a Box for overall padding */}
+      <Box sx={{ pt:1 }}> {/* Added a Box for overall padding */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <Grid item xs={12} md={4}>
             <h2>Fee Transaction List</h2>

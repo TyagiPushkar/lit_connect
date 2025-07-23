@@ -115,10 +115,10 @@ function ListCBTExam({ setView }) {
                         <FormControl fullWidth size="small">
                             <InputLabel>Course</InputLabel>
                             <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
-                                <MenuItem value="BCA">BCA</MenuItem>
-                                <MenuItem value="BSC.DS">BSC.DS</MenuItem>
-                                <MenuItem value="BSC.CS(H)">BSC.CS(H)</MenuItem>
-                                <MenuItem value="BSC.ITM(H)">BSC.ITM(H)</MenuItem>
+                                <MenuItem value="BSc. DS">BSc. DS</MenuItem>
+                                                            <MenuItem value="BSc. CS(H)">BSc. CS(H)</MenuItem>
+                                                            <MenuItem value="BSc. ITM(H)">BSc. ITM(H)</MenuItem>
+                                                            <MenuItem value="BCA">BCA</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
