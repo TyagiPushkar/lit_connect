@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
     Button, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Snackbar, TablePagination,
-    TableFooter, TextField,
-    Autocomplete
+    TableFooter, TextField, Tooltip, IconButton
 } from '@mui/material';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     InputLabel, MenuItem, Select, FormControl
 } from '@mui/material';
-
+import * as XLSX from 'xlsx';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -27,9 +27,10 @@ const StudentsList = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [openDialog, setOpenDialog] = useState(false);
-const [selectedStudent, setSelectedStudent] = useState('');
-const [particular, setParticular] = useState('');
-const [amount, setAmount] = useState('');
+    const [selectedStudent, setSelectedStudent] = useState('');
+    const [particular, setParticular] = useState('');
+    const [amount, setAmount] = useState('');
+    const [isExporting, setIsExporting] = useState(false);
 
     useEffect(() => {
         fetchLibraryTransactions();
@@ -77,6 +78,7 @@ const [amount, setAmount] = useState('');
     const handleViewClick = (studentId) => {
         navigate(`/student/${studentId}`);
     };
+
     const handleSubmit = async () => {
         if (!selectedStudent || !particular || !amount) {
             setSnackbarMessage("All fields are required.");
@@ -107,18 +109,81 @@ const [amount, setAmount] = useState('');
             setOpenSnackbar(true);
         }
     };
-    
+
+    const exportToExcel = () => {
+        setIsExporting(true);
+        
+        // Prepare the data for export
+        const dataForExport = transactions.map(student => ({
+            'Student ID': student.StudentID,
+            'Name': student.CandidateName,
+            'Course': student.Course,
+            'Semester': student.Sem,
+            'Session': student.Session,
+            'Gender': student.Gender,
+            'DOB': student.DOB,
+            'Contact': student.StudentContactNo,
+            'Guardian Name': student.GuardianName,
+            'Guardian Contact': student.GuardianContactNo,
+            'Email': student.EmailId,
+            'Address': student.PermanentAddress,
+            'Blood Group': student.BloodGroup,
+            '10th Board': student.Board10University,
+            '10th Passing Year': student.Year10Passing,
+            '10th Percentage': student.Percentage10,
+            '12th Board': student.Board12University || student.Council12Name,
+            '12th Passing Year': student.Year12Passing || student.Year12PassingAlt,
+            '12th Percentage': student.Percentage12,
+            'Aadhar Number': student.AadharNumber,
+            'Category': student.ReligionCategory,
+            'Disabled': student.Disabled,
+            'Hostel Interest': student.InterestInHostel,
+            'Transport Interest': student.InterestInTransport,
+            'Submission Date': student.SubmissionDate,
+            'Reference By': student.RefrenceBy
+        }));
+
+        // Create worksheet
+        const ws = XLSX.utils.json_to_sheet(dataForExport);
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Students");
+        
+        // Generate file name with current date
+        const fileName = `Students_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        
+        // Export the file
+        XLSX.writeFile(wb, fileName);
+        setIsExporting(false);
+        
+        setSnackbarMessage('Excel report downloaded successfully!');
+        setOpenSnackbar(true);
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
                 <h2>Students</h2>
-                <TextField
-                    label="Search by Student ID or Name"
-                    variant="outlined"
-                    size="small"
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                />
+                <div>
+                    <Tooltip title="Export to Excel">
+                        <IconButton 
+                            onClick={exportToExcel} 
+                            disabled={isExporting}
+                            color="primary"
+                            style={{ marginRight: '10px' }}
+                        >
+                            <FileDownloadIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <TextField
+                        label="Search by Student ID or Name"
+                        variant="outlined"
+                        size="small"
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                </div>
             </div>
 
             <TableContainer component={Paper}>
@@ -128,7 +193,7 @@ const [amount, setAmount] = useState('');
                             <TableCell style={{ color: "white" }}>Student ID</TableCell>
                             <TableCell style={{ color: "white" }}>Student Name</TableCell>
                             <TableCell style={{ color: "white" }}>Course</TableCell>
-                           <TableCell style={{ color: "white" }}>Semester</TableCell>
+                            <TableCell style={{ color: "white" }}>Semester</TableCell>
                             <TableCell style={{ color: "white" }}>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -141,9 +206,7 @@ const [amount, setAmount] = useState('');
                                     <TableCell>{tx.CandidateName}</TableCell>
                                     <TableCell>{tx.Course}</TableCell>
                                     <TableCell>{tx.Sem}</TableCell>
-                                   
                                     <TableCell>
-                                      
                                         <VisibilityIcon
                                             color="primary"
                                             sx={{ cursor: 'pointer' }}
@@ -174,6 +237,44 @@ const [amount, setAmount] = useState('');
                 onClose={() => setOpenSnackbar(false)}
                 message={snackbarMessage}
             />
+
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                <DialogTitle>Add Variable Fee</DialogTitle>
+                <DialogContent>
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Student</InputLabel>
+                        <Select
+                            value={selectedStudent}
+                            onChange={(e) => setSelectedStudent(e.target.value)}
+                        >
+                            {transactions.map((student) => (
+                                <MenuItem key={student.StudentID} value={student.StudentID}>
+                                    {student.StudentID} - {student.CandidateName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Particular"
+                        value={particular}
+                        onChange={(e) => setParticular(e.target.value)}
+                    />
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+                    <Button onClick={handleSubmit} color="primary">Submit</Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

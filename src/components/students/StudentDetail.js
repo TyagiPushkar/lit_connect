@@ -111,6 +111,7 @@ function StudentDetail() {
         { label: "Student Contact", key: "StudentContactNo" },
         { label: "Guardian Contact", key: "GuardianContactNo" },
         { label: "Student ID", key: "StudentID", editable: false },
+        { label: "Refrence By", key: "RefrenceBy", editable: false },
       ],
     },
     {
