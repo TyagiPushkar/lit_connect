@@ -40,7 +40,7 @@ function Sidebar() {
     3: { path: "/leave", name: "Leave", icon: <Person /> },
     // 10: { path: '/policy', name: 'Policy', icon: <Policy /> },
     8: { path: "/holiday", name: "Holiday", icon: <HolidayVillage /> },
-    12: { path: "/library", name: "Library", icon: <LibraryBooksIcon /> },
+    
     22: {
       path: "/library-dashboard",
       name: "Book List",
@@ -106,6 +106,11 @@ function Sidebar() {
     );
   }
 
+   if (user?.role === "Librarian") {
+    allowedRoutes.push(
+       { path: "/library", name: "Library", icon: <LibraryBooksIcon /> },
+    );
+  }
   // Combine all available routes
   const routes = [...defaultRoutes, ...allowedRoutes];
 
