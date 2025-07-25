@@ -30,7 +30,7 @@ const VisitList = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php');
+                const response = await axios.get('https://namami-infotech.com/LIT/src/employee/all_members.php');
                 if (response.data.success) {
                     setEmployees(response.data.data);
                 }
