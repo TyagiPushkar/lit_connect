@@ -28,7 +28,7 @@ const AttendanceReport = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await axios.get(`https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);
+                const response = await axios.get(`https://namami-infotech.com/LIT/src/employee/all_members.php?Tenent_Id=${user.tenent_id}`);
                 if (response.data.success) {
                     setEmployees(response.data.data);
                 }
