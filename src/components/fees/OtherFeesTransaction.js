@@ -70,7 +70,7 @@ const OtherFeesTransaction = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [modeFilter, setModeFilter] = useState("");
-
+const [remarkFilter, setRemarkFilter] = useState("");
   // Static options
   const particularOptions = ["Exam Fees", "Other"];
   const examFeeCategories = [
@@ -95,7 +95,7 @@ const OtherFeesTransaction = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [transactions, searchTerm, particularFilter, categoryFilter, sessionFilter, fromDate, toDate, modeFilter]);
+  }, [transactions, searchTerm, particularFilter, categoryFilter, sessionFilter, fromDate, toDate, modeFilter, remarkFilter]);
 
   const fetchOtherFeesTransactions = async () => {
     try {
@@ -187,63 +187,69 @@ const OtherFeesTransaction = () => {
     }));
   };
 
-  const applyFilters = () => {
-    let filtered = [...transactions];
+ const applyFilters = () => {
+  let filtered = [...transactions];
 
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.Student_id.toString().toLowerCase().includes(term) ||
-          (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
-      );
-    }
+  if (searchTerm) {
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(
+      (item) =>
+        item.Student_id.toString().toLowerCase().includes(term) ||
+        (item.CandidateName && item.CandidateName.toLowerCase().includes(term))
+    );
+  }
 
-    if (particularFilter) {
-      filtered = filtered.filter(
-        (item) => item.particular && item.particular === particularFilter
-      );
-    }
+  if (particularFilter) {
+    filtered = filtered.filter(
+      (item) => item.particular && item.particular === particularFilter
+    );
+  }
 
-    if (categoryFilter) {
-      filtered = filtered.filter(
-        (item) => item.category && item.category === categoryFilter
-      );
-    }
+  if (categoryFilter) {
+    filtered = filtered.filter(
+      (item) => item.category && item.category === categoryFilter
+    );
+  }
 
-    if (sessionFilter) {
-      filtered = filtered.filter(
-        (item) => item.Session && item.Session === sessionFilter
-      );
-    }
+  if (sessionFilter) {
+    filtered = filtered.filter(
+      (item) => item.Session && item.Session === sessionFilter
+    );
+  }
 
-    if (modeFilter) {
-      filtered = filtered.filter(
-        (item) => item.Mode && item.Mode === modeFilter
-      );
-    }
+  if (modeFilter) {
+    filtered = filtered.filter(
+      (item) => item.Mode && item.Mode === modeFilter
+    );
+  }
 
-    if (fromDate) {
-      filtered = filtered.filter(item => {
-        if (!item.payment_date) return false;
-        const paymentDate = new Date(item.payment_date);
-        return paymentDate >= new Date(fromDate);
-      });
-    }
+  if (remarkFilter) {
+    filtered = filtered.filter(
+      (item) => item.Remark && item.Remark.toLowerCase().includes(remarkFilter.toLowerCase())
+    );
+  }
 
-    if (toDate) {
-      filtered = filtered.filter(item => {
-        if (!item.payment_date) return false;
-        const paymentDate = new Date(item.payment_date);
-        const endOfDay = new Date(toDate);
-        endOfDay.setHours(23, 59, 59, 999);
-        return paymentDate <= endOfDay;
-      });
-    }
+  if (fromDate) {
+    filtered = filtered.filter(item => {
+      if (!item.payment_date) return false;
+      const paymentDate = new Date(item.payment_date);
+      return paymentDate >= new Date(fromDate);
+    });
+  }
 
-    setFilteredTransactions(filtered);
-    setPage(0);
-  };
+  if (toDate) {
+    filtered = filtered.filter(item => {
+      if (!item.payment_date) return false;
+      const paymentDate = new Date(item.payment_date);
+      const endOfDay = new Date(toDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      return paymentDate <= endOfDay;
+    });
+  }
+
+  setFilteredTransactions(filtered);
+  setPage(0);
+};
 
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
@@ -252,14 +258,15 @@ const OtherFeesTransaction = () => {
   };
 
   const clearFilters = () => {
-    setSearchTerm("");
-    setParticularFilter("");
-    setCategoryFilter("");
-    setSessionFilter("");
-    setModeFilter("");
-    setFromDate(null);
-    setToDate(null);
-  };
+  setSearchTerm("");
+  setParticularFilter("");
+  setCategoryFilter("");
+  setSessionFilter("");
+  setModeFilter("");
+  setRemarkFilter("");
+  setFromDate(null);
+  setToDate(null);
+};
 
   const exportToExcel = () => {
     // Prepare data for export
@@ -362,6 +369,22 @@ const OtherFeesTransaction = () => {
                 ))}
               </Select>
             </FormControl>
+            <TextField
+  size="small"
+  placeholder="Search Remark"
+  variant="outlined"
+  value={remarkFilter}
+  onChange={(e) => setRemarkFilter(e.target.value)}
+  InputProps={{
+    startAdornment: <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />,
+    endAdornment: remarkFilter && (
+      <IconButton size="small" onClick={() => setRemarkFilter("")}>
+        <ClearIcon fontSize="small" />
+      </IconButton>
+    ),
+  }}
+  sx={{ width: 180 }}
+/>
             
             <FormControl size="small" sx={{ width: 150 }}>
               <InputLabel>Session</InputLabel>
@@ -420,6 +443,7 @@ const OtherFeesTransaction = () => {
                 <TableCell style={{ color: "white" }}>Remark</TableCell>
                 <TableCell style={{ color: "white" }}>Payment Date</TableCell>
                 <TableCell style={{ color: "white" }}>Session</TableCell>
+                <TableCell style={{ color: "white" }}>Deposit By</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -435,6 +459,7 @@ const OtherFeesTransaction = () => {
                   <TableCell>{row.Remark}</TableCell>
                   <TableCell>{formatDate(row.payment_date)}</TableCell>
                   <TableCell>{row.Session}</TableCell>
+                  <TableCell>{row.Added_By}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
