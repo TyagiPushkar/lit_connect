@@ -38,6 +38,7 @@ import TimeTable from './pages/TimeTable';
 import Transaction from './pages/Transactions';
 import FeesSummaryView from './pages/FeesSummaryView';
 import OtherFees from './pages/OtherFees';
+import Subjects from './pages/Subjects';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -86,6 +87,7 @@ function App() {
             <Route path="/regularise" element={<PrivateRoute element={Regularise} requiredRole="HR" />} />
             <Route path="/notices" element={<PrivateRoute element={Notices} requiredRole="HR" />} />
             <Route path="/news" element={<PrivateRoute element={News} requiredRole="HR" />} />
+            <Route path="/subjects" element={<PrivateRoute element={Subjects} requiredRole="HR" />} />
             <Route path="/time-table" element={<PrivateRoute element={TimeTable} requiredRole="HR" />} />
             <Route path="/form" element={<PrivateRoute element={Form} />} />
             {/* Optional Routes */}
