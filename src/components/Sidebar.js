@@ -51,6 +51,7 @@ function Sidebar() {
     18: { path: "/teachers", name: "Teachers", icon: <Person /> },
     24: { path: "/form", name: "Admission Form", icon: <DynamicFormIcon /> },
     25: { path: "/admissions", name: "Admissions", icon: <AddHomeWorkIcon /> },
+    100 :{ path: "/dashboard", name: "Dashboard", icon: <MenuIcon /> },
   };
 
   // Default routes visible to everyone
@@ -95,6 +96,11 @@ function Sidebar() {
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
       { path: '/other-fees', name: 'Other Fees', icon: <AppsIcon /> },
+    );
+  }
+   if (user?.role === "Admin" ) {
+    allowedRoutes.push(
+      // { path: "/dashboard", name: "Dashboard", icon: <SummarizeIcon /> },
     );
   }
   // HR-specific routes
