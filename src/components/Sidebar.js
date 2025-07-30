@@ -100,7 +100,9 @@ function Sidebar() {
   }
    if (user?.role === "Admin" ) {
     allowedRoutes.push(
-      // { path: "/dashboard", name: "Dashboard", icon: <SummarizeIcon /> },
+      { path: '/students', name: 'Students', icon: <Person /> },
+      { path: '/time-table', name: 'Time Table', icon: <CalendarMonthIcon /> },
+      { path: '/subjects', name: 'Subjects', icon: <LibraryBooksIcon /> },
     );
   }
   // HR-specific routes
