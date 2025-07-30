@@ -101,8 +101,7 @@ function Sidebar() {
    if (user?.role === "Admin" ) {
     allowedRoutes.push(
       { path: '/students', name: 'Students', icon: <Person /> },
-      { path: '/time-table', name: 'Time Table', icon: <CalendarMonthIcon /> },
-      { path: '/subjects', name: 'Subjects', icon: <LibraryBooksIcon /> },
+    
     );
   }
   // HR-specific routes

@@ -596,7 +596,7 @@ const AttendanceList = () => {
 
   // Add employee fetching for HR role
  useEffect(() => {
-  if (user.role === "HR") {
+  if (user.role === "HR" || user.role === "Admin") {
     const fetchData = async () => {
       await fetchEmployees()
       await fetchStudents()
@@ -840,7 +840,7 @@ const fetchStudents = async () => {
 
         {/* Controls Section */}
         <Grid container spacing={2} alignItems="center">
-          {user.role === "HR" && (
+          {user.role === "HR" || user.role === "Admin"&& (
   <Grid item xs={12} sm={6} md={3}>
     <Autocomplete
       options={viewType === "employee" ? employees : students}
@@ -962,7 +962,7 @@ const fetchStudents = async () => {
 
           <Grid item xs={12} sm={12} md={3}>
             <Stack direction="row" spacing={1} justifyContent="flex-end">
-              {user.role === "HR" && (
+              {user.role === "HR"|| user.role === "Admin" && (
                 <Button variant="outlined" startIcon={<Settings />} onClick={regularise}>
                   Regularise
                 </Button>
