@@ -129,7 +129,7 @@ const VisitList = () => {
     return (
         <>
             <AttendanceReport />
-            <SalaryList />
+            {/* <SalaryList /> */}
             {/* <SalarySlip/> */}
         </>
         
