@@ -14,6 +14,10 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material"
 import { GetApp, DateRange, Schedule } from "@mui/icons-material"
 import axios from "axios"
@@ -23,9 +27,11 @@ import { useAuth } from "../auth/AuthContext"
 const AttendanceReport = () => {
   const { user } = useAuth()
   const [employees, setEmployees] = useState([])
+  const [filteredEmployees, setFilteredEmployees] = useState([])
   const [attendance, setAttendance] = useState([])
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
+  const [roleFilter, setRoleFilter] = useState("all") // 'all', 'student', 'staff'
   const [filteredAttendance, setFilteredAttendance] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -45,6 +51,7 @@ const AttendanceReport = () => {
 
         if (employeesResponse.data.success) {
           setEmployees(employeesResponse.data.data)
+          setFilteredEmployees(employeesResponse.data.data)
         }
 
         if (attendanceResponse.data.success) {
@@ -60,6 +67,17 @@ const AttendanceReport = () => {
 
     fetchData()
   }, [user.tenent_id])
+
+  useEffect(() => {
+    // Filter employees based on role selection
+    if (roleFilter === "all") {
+      setFilteredEmployees(employees)
+    } else if (roleFilter === "student") {
+      setFilteredEmployees(employees.filter(emp => emp.Role === "Student"))
+    } else {
+      setFilteredEmployees(employees.filter(emp => emp.Role !== "Student"))
+    }
+  }, [roleFilter, employees])
 
   useEffect(() => {
     const filterAttendance = () => {
@@ -100,7 +118,7 @@ const AttendanceReport = () => {
 
     const csvHeader = ["S. No.", "Employee ID", "Employee Name", ...uniqueDates.flatMap((date) => [date + " In", date + " Out"])]
 
-    const csvRows = employees.map((employee, index) => {
+    const csvRows = filteredEmployees.map((employee, index) => {
       const row = [index + 1, employee.EmpId, employee.Name]
 
       uniqueDates.forEach((date) => {
@@ -150,7 +168,22 @@ const AttendanceReport = () => {
 
         {/* Controls */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Filter by Role</InputLabel>
+              <Select
+                value={roleFilter}
+                label="Filter by Role"
+                onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <MenuItem value="all">All Roles</MenuItem>
+                <MenuItem value="student">Students</MenuItem>
+                <MenuItem value="staff">Staff</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
             <TextField
               label="From Date"
               type="date"
@@ -166,7 +199,7 @@ const AttendanceReport = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
             <TextField
               label="To Date"
               type="date"
@@ -200,47 +233,7 @@ const AttendanceReport = () => {
           </Grid>
         </Grid>
 
-        {/* Stats Cards */}
-        {fromDate && toDate && filteredAttendance.length > 0 && (
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={4}>
-              <Card sx={{ bgcolor: "primary.50", border: "1px solid", borderColor: "primary.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="primary.main" fontWeight="bold">
-                    {stats.totalRecords}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Records
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Card sx={{ bgcolor: "success.50", border: "1px solid", borderColor: "success.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="success.main" fontWeight="bold">
-                    {stats.uniqueEmployees}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Active Employees
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Card sx={{ bgcolor: "info.50", border: "1px solid", borderColor: "info.200" }}>
-                <CardContent sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="h4" color="info.main" fontWeight="bold">
-                    {stats.dateRange}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Days Covered
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        )}
+       
 
         {/* Loading State */}
         {loading && (
@@ -272,6 +265,9 @@ const AttendanceReport = () => {
             <Typography variant="body2" color="text.secondary">
               <strong>Report Period:</strong> {new Date(fromDate).toLocaleDateString()} to{" "}
               {new Date(toDate).toLocaleDateString()}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Role Filter:</strong> {roleFilter === "all" ? "All Roles" : roleFilter === "student" ? "Students Only" : "Staff Only"}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               <strong>Generated:</strong> {new Date().toLocaleDateString()}
