@@ -160,7 +160,7 @@ function StudentDetail() {
           </Button>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 700, color: "#CC7A00" }}>
-              Lakshay Institute Of Technology
+              Lakshya Institute Of Technology
             </Typography>
             <Typography variant="subtitle1">Student Info: {student.StudentID}</Typography>
           </Box>

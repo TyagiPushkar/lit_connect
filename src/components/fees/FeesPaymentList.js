@@ -52,8 +52,8 @@ const FeesPaymentList = () => {
   const [selectedSession, setSelectedSession] = useState("")
   const [distinctSessions, setDistinctSessions] = useState([])
   const [distinctCourses, setDistinctCourses] = useState([])
-const [selectedCourse, setSelectedCourse] = useState("")
-  // Download report states
+  const [selectedCourse, setSelectedCourse] = useState("")
+  
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
   const [reportType, setReportType] = useState("") // "filtered" or "full"
   const [reportFilters, setReportFilters] = useState({
@@ -76,7 +76,6 @@ const [selectedCourse, setSelectedCourse] = useState("")
     { id: 12, label: "Installment 12" },
   ])
 
-  // Download progress
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [processedStudents, setProcessedStudents] = useState(0)
   const [totalStudents, setTotalStudents] = useState(0)
