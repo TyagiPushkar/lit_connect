@@ -361,7 +361,7 @@ const VariableFeesTransaction = () => {
                 <TableCell style={{ color: "white" }}>Student Name</TableCell>
                 <TableCell style={{ color: "white" }}>Course</TableCell>
                 <TableCell style={{ color: "white" }}>Session</TableCell>
-                
+                <TableCell style={{ color: "white" }}>Particular</TableCell>
                 <TableCell style={{ color: "white" }}>Mode</TableCell>
                 <TableCell style={{ color: "white" }}>Mode Id</TableCell>
                 <TableCell style={{ color: "white" }}>Total Amount</TableCell>
@@ -381,7 +381,7 @@ const VariableFeesTransaction = () => {
                     <TableCell>{row.CandidateName}</TableCell>
                     <TableCell>{row.course}</TableCell>
                     <TableCell>{row.Session}</TableCell>
-                   
+                   <TableCell>{row.particular}</TableCell>
                     <TableCell>{row.mode}</TableCell>
                     <TableCell>{row.mode_id}</TableCell>
                     <TableCell>{row.total_amount}</TableCell>
