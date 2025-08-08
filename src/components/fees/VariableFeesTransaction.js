@@ -52,7 +52,7 @@ const AddFeeStructureDialog = ({ open, onClose, onSuccess }) => {
 };
 
 
-const FeesTransaction = () => {
+const VariableFeesTransaction = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [structures, setStructures] = useState([]);
   const [filteredStructures, setFilteredStructures] = useState([]);
@@ -83,7 +83,7 @@ const FeesTransaction = () => {
   const fetchFeeStructures = async () => {
     try {
       const response = await axios.get(
-        "https://namami-infotech.com/LIT/src/fees/get_all_transactions.php",
+        "https://namami-infotech.com/LIT/src/fees/get_variable_fees_transaction.php",
       );
       if (response.data.success) {
         setStructures(response.data.data);
@@ -186,10 +186,6 @@ const FeesTransaction = () => {
       "Student Name": item.CandidateName,
       "Course": item.course,
       "Session": item.Session,
-      "Installment": item.installment,
-      "Tuition Fees": item.tuition_fees,
-      "Hostel Fees": item.hostel_fees,
-      "Extra Fees": item.variable_fees,
       "Payment Mode": item.mode,
       "Mode ID": item.mode_id,
       "Total Amount": item.total_amount,
@@ -235,7 +231,7 @@ const FeesTransaction = () => {
       <Box sx={{ pt:1 }}> {/* Added a Box for overall padding */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <Grid item xs={12} md={4}>
-            <h2>Fee Transaction List</h2>
+            <h2>Variable Fee Transaction List</h2>
           </Grid>
           <Grid item xs={12} md={8}>
             <Grid container spacing={1} alignItems="center"> {/* Inner grid for filters */}
@@ -278,17 +274,7 @@ const FeesTransaction = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Installment</InputLabel>
-                  <Select value={installmentFilter} label="Installment" onChange={(e) => setInstallmentFilter(e.target.value)}>
-                    <MenuItem value="">All Installments</MenuItem>
-                    {uniqueInstallments.map((installment) => (
-                      <MenuItem key={installment} value={installment}>{installment}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+             
               <Grid item xs={12} sm={6} md={2}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Session</InputLabel>
@@ -356,17 +342,6 @@ const FeesTransaction = () => {
                   Export
                 </Button>
               </Grid>
-              <Grid item xs={6} sm={3} md="auto">
-                <Button
-                  variant="contained"
-                  color="warning"
-                  startIcon={<DownloadIcon />}
-                  onClick={() => navigate("/variable-transactions")}
-                  fullWidth
-                >
-                  Variable Fees
-                </Button>
-              </Grid>
             </Grid>
           </Grid>
         </Grid>
@@ -386,10 +361,7 @@ const FeesTransaction = () => {
                 <TableCell style={{ color: "white" }}>Student Name</TableCell>
                 <TableCell style={{ color: "white" }}>Course</TableCell>
                 <TableCell style={{ color: "white" }}>Session</TableCell>
-                <TableCell style={{ color: "white" }}>Installment</TableCell>
-                <TableCell style={{ color: "white" }}>Tuition Fees</TableCell>
-                <TableCell style={{ color: "white" }}>Hostel Fees</TableCell>
-                <TableCell style={{ color: "white" }}>Extra Fees</TableCell>
+                
                 <TableCell style={{ color: "white" }}>Mode</TableCell>
                 <TableCell style={{ color: "white" }}>Mode Id</TableCell>
                 <TableCell style={{ color: "white" }}>Total Amount</TableCell>
@@ -409,10 +381,7 @@ const FeesTransaction = () => {
                     <TableCell>{row.CandidateName}</TableCell>
                     <TableCell>{row.course}</TableCell>
                     <TableCell>{row.Session}</TableCell>
-                    <TableCell>{row.installment}</TableCell>
-                    <TableCell>{row.tuition_fees}</TableCell>
-                    <TableCell>{row.hostel_fees}</TableCell>
-                    <TableCell>{row.variable_fees}</TableCell>
+                   
                     <TableCell>{row.mode}</TableCell>
                     <TableCell>{row.mode_id}</TableCell>
                     <TableCell>{row.total_amount}</TableCell>
@@ -449,4 +418,4 @@ const FeesTransaction = () => {
   );
 };
 
-export default FeesTransaction;
+export default VariableFeesTransaction;

@@ -40,6 +40,7 @@ import FeesSummaryView from './pages/FeesSummaryView';
 import OtherFees from './pages/OtherFees';
 import Subjects from './pages/Subjects';
 import Dashboard from './pages/Dashboard';
+import VariableFees from './pages/VariableFees';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -75,7 +76,8 @@ function App() {
             <Route path="/student/library/:studentId" element={<PrivateRoute element={StuLibrary} requiredRole="Librarian" />} />
             <Route path="/fee-structure" element={<PrivateRoute element={FeesStructure} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
             <Route path="/fees-summary" element={<PrivateRoute element={FeesSummaryView} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
-            <Route path="/transactions" element={<PrivateRoute element={Transaction} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
+            <Route path="/transactions" element={<PrivateRoute element={Transaction} requiredRoles={["Accounts", "Front Desk", "Admin"]} />} />
+            <Route path="/variable-transactions" element={<PrivateRoute element={VariableFees} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
 <Route path="/other-fees" element={<PrivateRoute element={OtherFees} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
 <Route path="/fees-payment" element={<PrivateRoute element={FeesPayment} requiredRoles={["Accounts", "Front Desk","Admin"]} />} />
 
