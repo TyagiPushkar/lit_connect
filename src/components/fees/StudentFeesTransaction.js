@@ -26,6 +26,7 @@ import ExpandLess from "@mui/icons-material/ExpandLess"
 import PaymentDialog from "./PaymentDialog"
 import TransactionDialog from "./TransactionDialog"
 import { useAuth } from "../auth/AuthContext"
+import VariableFeesDialog from "./VariableFeesDialog"
 
 const StudentFeesTransaction = () => {
   const { user } = useAuth()
@@ -42,7 +43,7 @@ const StudentFeesTransaction = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editFormData, setEditFormData] = useState(null)
   const [expandedCard, setExpandedCard] = useState(null)
-
+const [variableFeesDialogOpen, setVariableFeesDialogOpen] = useState(false) 
   const formatDate = (datetime) => {
     if (!datetime) return "-"
     const dateObj = new Date(datetime)
@@ -263,7 +264,9 @@ const StudentFeesTransaction = () => {
       )
     })
     .sort((a, b) => Number(a.installment) - Number(b.installment))
-
+const handleOpenVariableFeesDialog = () => {
+    setVariableFeesDialogOpen(true)
+  }
   return (
     <Box sx={{ p: 2, backgroundColor: "#fff" }}>
       {/* Student Info */}
@@ -310,6 +313,18 @@ const StudentFeesTransaction = () => {
             <strong>Session:</strong> {studentData.Session}
           </Typography>
         </Box>
+        {variableFees.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleOpenVariableFeesDialog}
+            sx={{ backgroundColor: "#6a1b9a", color: "white" }}
+          >
+            View/Pay Variable Fees
+          </Button>
+        </Box>
+      )}
       </Paper>
 
       {/* Fee Installments */}
@@ -333,7 +348,7 @@ const StudentFeesTransaction = () => {
                 ? variableFees.reduce((sum, vf) => sum + Number(vf.amount), 0)
                 : 0
 
-            const total = baseTotal + variableTotal
+            const total = baseTotal
             const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== ""
 
             let paymentStatus = "unpaid"
@@ -441,30 +456,7 @@ const StudentFeesTransaction = () => {
                         )}
 
                         {/* Variable Fees */}
-                        {isFirstUnpaidWithVariables && variableFees.length > 0 && (
-                          <Box mt={1}>
-                            <Typography variant="body2" sx={{ mb: 0.5 }}>
-                              <strong>Variable Fees:</strong> ₹{variableTotal}
-                              <Chip label="Additional" size="small" color="warning" sx={{ ml: 1, height: 16 }} />
-                            </Typography>
-                            <Box
-                              sx={{
-                                ml: 1,
-                                bgcolor: "#fff3cd",
-                                p: 1,
-                                borderRadius: 1,
-                                mt: 0.5,
-                              }}
-                            >
-                              {variableFees.map((vf, i) => (
-                                <Typography key={i} variant="caption" display="block">
-                                  • {vf.particular}: ₹{vf.amount}
-                                </Typography>
-                              ))}
-                            </Box>
-                          </Box>
-                        )}
-
+                        
                         <Box display="flex" alignItems="center" gap={1} mt={1}>
                           <ScheduleIcon fontSize="small" color="action" />
                           <Typography variant="body2">
@@ -576,7 +568,7 @@ const StudentFeesTransaction = () => {
         <PaymentDialog
           open={dialogOpen}
           feeData={selectedFee}
-          variableFees={variableFees}
+         
           firstDueInstallment={firstDueInstallment}
           onClose={(shouldRefresh) => {
             setDialogOpen(false)
@@ -586,7 +578,15 @@ const StudentFeesTransaction = () => {
           student={studentData}
         />
       )}
-
+<VariableFeesDialog
+        open={variableFeesDialogOpen}
+        onClose={(shouldRefresh) => {
+          setVariableFeesDialogOpen(false)
+          if (shouldRefresh) fetchStudentAndFees()
+        }}
+        student={studentData}
+        variableFees={variableFees}
+      />
       {/* Edit Dialog */}
       {editDialogOpen && (
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>

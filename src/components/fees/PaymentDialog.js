@@ -282,73 +282,89 @@ const PaymentDialog = ({ open, onClose, feeData, student, variableFees, firstDue
   }
 
   const handleSubmit = async () => {
-    if (totalCurrentPayment <= 0) {
-      setErrorMsg("Please enter a payment amount greater than 0")
-      return
-    }
-
-    if (mode !== "Cash" && !modeId.trim()) {
-      setErrorMsg("Please enter a transaction/reference ID")
-      return
-    }
-
-    setSubmitting(true)
-    setSuccessMsg("")
-    setErrorMsg("")
-
-    try {
-      // Calculate total variable fees payment
-      const totalVariableFeesPayment = Object.keys(payments)
-        .filter((key) => key.startsWith("variable_"))
-        .reduce((sum, key) => sum + (payments[key] || 0), 0)
-
-      const payload = {
-        stu_id: student.StudentID,
-        course: student.Course,
-        installment: feeData.installment,
-
-        // Send the current payment amounts
-        tuition_fees: payments.tution_fees || 0,
-        exam_fees: payments.exam_fees || 0,
-        hostel_fees: payments.hostel_fees || 0,
-        admission_fees: payments.admission_fees || 0,
-        prospectus_fees: payments.prospectus_fees || 0,
-        variable_fees: totalVariableFeesPayment,
-
-        // Payment details
-        mode,
-        mode_id: modeId,
-        total_amount: totalOriginalAmount,
-        deposit_amount: totalCurrentPayment,
-        balance_amount: totalFinalBalance,
-        original_transaction_id: feeData.Paid || null,
-        Remark: remarks,
-        payment_date: paymentDate,
-        added_by: user.emp_id,
-      }
-
-      console.log("Submitting payload:", payload)
-
-      const res = await axios.post("https://namami-infotech.com/LIT/src/fees/add_fee_transaction.php", payload)
-
-      if (res.data.success) {
-        setSuccessMsg("Payment recorded successfully!")
-        if (res.data.variable_fees_updated > 0) {
-          setSuccessMsg((prev) => prev + ` Variable fees marked as paid.`)
-        }
-        setTimeout(() => {
-          onClose(true)
-        }, 1500)
-      } else {
-        setErrorMsg(res.data.message || "Payment failed. Please try again.")
-      }
-    } catch (err) {
-      setErrorMsg("Error processing payment. Please try again.")
-      console.error(err)
-    } finally {
-      setSubmitting(false)
-    }
+  if (totalCurrentPayment <= 0) {
+    setErrorMsg("Please enter a payment amount greater than 0")
+    return
   }
+
+  if (mode !== "Cash" && !modeId.trim()) {
+    setErrorMsg("Please enter a transaction/reference ID")
+    return
+  }
+
+  setSubmitting(true)
+  setSuccessMsg("")
+  setErrorMsg("")
+
+  try {
+    // Filter variable fees to only include those with payment > 0
+    const variableFeesPayload = Object.keys(payments)
+      .filter(key => key.startsWith('variable_') && payments[key] > 0)
+      .reduce((obj, key) => {
+        obj[key] = payments[key];
+        return obj;
+      }, {});
+
+    const totalVariableFeesPayment = Object.values(variableFeesPayload)
+      .reduce((sum, amount) => sum + amount, 0);
+
+    const payload = {
+      stu_id: student.StudentID,
+      course: student.Course,
+      installment: feeData.installment,
+
+      // Send the current payment amounts
+      tuition_fees: payments.tution_fees || 0,
+      exam_fees: payments.exam_fees || 0,
+      hostel_fees: payments.hostel_fees || 0,
+      admission_fees: payments.admission_fees || 0,
+      prospectus_fees: payments.prospectus_fees || 0,
+      variable_fees: totalVariableFeesPayment,
+
+      // Include variable fee details only if there are any payments
+      ...Object.keys(variableFeesPayload).length > 0 && {
+        variable_fee_details: JSON.stringify(
+          Object.keys(variableFeesPayload).map(key => ({
+            id: key.replace('variable_', ''),
+            amount: payments[key]
+          }))
+      )
+      },
+
+      // Payment details
+      mode,
+      mode_id: modeId,
+      total_amount: totalOriginalAmount,
+      deposit_amount: totalCurrentPayment,
+      balance_amount: totalFinalBalance,
+      original_transaction_id: feeData.Paid || null,
+      Remark: remarks,
+      payment_date: paymentDate,
+      added_by: user.emp_id,
+    }
+
+    console.log("Submitting payload:", payload)
+
+    const res = await axios.post("https://namami-infotech.com/LIT/src/fees/add_fee_transaction.php", payload)
+
+    if (res.data.success) {
+      setSuccessMsg("Payment recorded successfully!")
+      if (res.data.variable_fees_updated > 0) {
+        setSuccessMsg((prev) => prev + ` Variable fees marked as paid.`)
+      }
+      setTimeout(() => {
+        onClose(true)
+      }, 1500)
+    } else {
+      setErrorMsg(res.data.message || "Payment failed. Please try again.")
+    }
+  } catch (err) {
+    setErrorMsg("Error processing payment. Please try again.")
+    console.error(err)
+  } finally {
+    setSubmitting(false)
+  }
+}
 
   const handleWriteOffConfirm = async () => {
     if (!writeOffConfirm.variableFee) return;
