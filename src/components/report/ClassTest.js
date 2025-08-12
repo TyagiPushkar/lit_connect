@@ -179,12 +179,12 @@ function ClassTest() {
                             label="Category"
                             onChange={(e) => setCategory(e.target.value)}
                         >
-                            <MenuItem value="CT 1">CT 1</MenuItem>
-                            <MenuItem value="CT 2">CT 2</MenuItem>
-                            <MenuItem value="CT 3">CT 3</MenuItem>
-                            <MenuItem value="CT 4">CT 4</MenuItem>
-                            <MenuItem value="CT 5">CT 5</MenuItem>
-                            <MenuItem value="CT 6">CT 6</MenuItem>
+                            <MenuItem value="CT1">CT1</MenuItem>
+                            <MenuItem value="CT2">CT2</MenuItem>
+                            <MenuItem value="CT3">CT3</MenuItem>
+                            <MenuItem value="CT4">CT4</MenuItem>
+                            <MenuItem value="CT5">CT5</MenuItem>
+                            <MenuItem value="CT6">CT6</MenuItem>
                         </Select>
                     </FormControl>
                 </Grid>

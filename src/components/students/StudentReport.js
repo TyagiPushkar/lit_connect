@@ -127,7 +127,7 @@ function StudentReports() {
     setShowComparison(false)
 
     if (category === "Class Test") {
-      setSubCategories(["CT 1", "CT 2", "CT 3", "CT 4", "CT 5", "CT6"])
+      setSubCategories(["CT1", "CT2", "CT3", "CT4", "CT5", "CT6"])
     } else if (category === "CBT") {
       setSubCategories(["1", "2", "3", "4", "5", "6"])
     } else {
