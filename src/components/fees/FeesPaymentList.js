@@ -313,21 +313,21 @@ const FeesPaymentList = () => {
             }
           }
 
-          const installmentTotal =
-            (installment.tution_fees || 0) +
-            (installment.exam_fees || 0) +
-            (installment.hostel_fees || 0) +
-            (installment.admission_fees || 0) +
-            (installment.prospectus_fees || 0) -
-            (installment.Scholarship || 0)
+          const installmentTotal = 
+  (installment.tution_fees || 0) + 
+  (installment.hostel_fees || 0);
 
-          const isPaid = installment.Paid && installment.Paid !== "0"
-          const amountPaid = Math.max(0, 
+          const isPaid = installment.Paid && installment.Paid !== "0";
+let amountPaid = 0;
+if (transactionDetails) {
+  // Subtract variable fees from deposit amount for tuition/hostel calculation
+  amountPaid = Math.max(0, 
     (transactionDetails.deposit_amount || 0) - 
     (transactionDetails.variable_fees || 0)
   );
-          const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal
+}
 
+const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal;
           if (isPaid) {
             totalPaid += amountPaid
             totalDue += balanceAmount
