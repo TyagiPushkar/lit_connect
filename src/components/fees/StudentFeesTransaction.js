@@ -44,6 +44,8 @@ const StudentFeesTransaction = () => {
   const [editFormData, setEditFormData] = useState(null)
   const [expandedCard, setExpandedCard] = useState(null)
 const [variableFeesDialogOpen, setVariableFeesDialogOpen] = useState(false) 
+const [paidVariableFees, setPaidVariableFees] = useState([])
+  const [paidVariableDialogOpen, setPaidVariableDialogOpen] = useState(false)
   const formatDate = (datetime) => {
     if (!datetime) return "-"
     const dateObj = new Date(datetime)
@@ -140,7 +142,7 @@ const [variableFeesDialogOpen, setVariableFeesDialogOpen] = useState(false)
           })
 
         await Promise.all(transactionPromises)
-
+await fetchPaidVariableFees()
         // Sort transactions by date and determine final status
         Object.keys(statusMap).forEach((feeId) => {
           if (statusMap[feeId].transactions.length > 0) {
@@ -170,20 +172,18 @@ const [variableFeesDialogOpen, setVariableFeesDialogOpen] = useState(false)
     }
   }
 
-  const fetchTransactionData = async (transactionId) => {
-    try {
-      const res = await axios.get(
-        `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
-      )
-      if (res.data.success && res.data.data) {
-        setTransactionData(res.data.data)
-        setTransactionDialogOpen(true)
-      }
-    } catch (err) {
-      console.error("Error fetching transaction data:", err)
-      alert("Failed to fetch transaction data.")
+  const fetchPaidVariableFees = async () => {
+  try {
+    const res = await axios.get(
+      `https://namami-infotech.com/LIT/src/fees/get_variable_by_student_id.php?student_id=${studentId}`
+    )
+    if (res.data.success && res.data.data) {
+      setPaidVariableFees(res.data.data)
     }
+  } catch (err) {
+    console.error("Error fetching paid variable fees:", err)
   }
+}
 
   useEffect(() => {
     fetchStudentAndFees()
@@ -313,18 +313,34 @@ const handleOpenVariableFeesDialog = () => {
             <strong>Session:</strong> {studentData.Session}
           </Typography>
         </Box>
+       
         {variableFees.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleOpenVariableFeesDialog}
-            sx={{ backgroundColor: "#6a1b9a", color: "white" }}
-          >
-            View/Pay Variable Fees
-          </Button>
+  <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+    <Button
+      variant="contained"
+      color="secondary"
+      onClick={handleOpenVariableFeesDialog}
+      sx={{ backgroundColor: "#6a1b9a", color: "white" }}
+    >
+      Pay Variable 
+    </Button>
+    
+  </Box>
+        )}
+        <Box sx={{ mb: 3, ml:2, display: 'flex', gap: 2 }}>
+ <Button
+      variant="outlined"
+      color="secondary"
+      onClick={() => {
+        fetchPaidVariableFees()
+        setPaidVariableDialogOpen(true)
+      }}
+      sx={{ borderColor: "#6a1b9a", color: "#6a1b9a" }}
+    >
+      Paid Variable
+    </Button>
         </Box>
-      )}
+       
       </Paper>
 
       {/* Fee Installments */}
@@ -587,6 +603,59 @@ const handleOpenVariableFeesDialog = () => {
         student={studentData}
         variableFees={variableFees}
       />
+      <Dialog 
+  open={paidVariableDialogOpen} 
+  onClose={() => setPaidVariableDialogOpen(false)}
+  maxWidth="md"
+  fullWidth
+>
+  <Box sx={{ p: 3 }}>
+    <Typography variant="h5" gutterBottom>
+      Paid Variable Fees
+    </Typography>
+    
+    {paidVariableFees.length === 0 ? (
+      <Typography variant="body1" sx={{ textAlign: 'center', my: 3 }}>
+        No paid variable fees found.
+      </Typography>
+    ) : (
+      <Box>
+        {paidVariableFees.map((fee, index) => (
+          <Paper key={index} sx={{ p: 2, mb: 2, borderLeft: '4px solid #6a1b9a' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography><strong>Amount:</strong> ₹{fee.total_amount}</Typography>
+                <Typography><strong>Payment Date:</strong> {formatDate(fee.payment_date)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography><strong>Payment Mode:</strong> {fee.mode}</Typography>
+                {fee.mode_id && <Typography><strong>Transaction ID:</strong> {fee.mode_id}</Typography>}
+              </Grid>
+              <Grid item xs={12}>
+                <Typography><strong>Particulars:</strong> {fee.particulars}</Typography>
+              </Grid>
+              {fee.Remark && (
+                <Grid item xs={12}>
+                  <Typography><strong>Remark:</strong> {fee.Remark}</Typography>
+                </Grid>
+              )}
+            </Grid>
+          </Paper>
+        ))}
+      </Box>
+    )}
+    
+    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+      <Button 
+        onClick={() => setPaidVariableDialogOpen(false)}
+        variant="contained"
+        color="primary"
+      >
+        Close
+      </Button>
+    </Box>
+  </Box>
+</Dialog>
       {/* Edit Dialog */}
       {editDialogOpen && (
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -670,6 +739,7 @@ const handleOpenVariableFeesDialog = () => {
             </Box>
           </Box>
         </Dialog>
+        
       )}
     </Box>
   )
