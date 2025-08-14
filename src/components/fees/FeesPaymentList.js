@@ -279,84 +279,104 @@ const FeesPaymentList = () => {
   }
 
   const processStudent = async (student) => {
+  try {
+    // Fetch fee structure
+    let feeStructure = []
     try {
-      // Fetch fee structure
-      let feeStructure = []
+      const feeResponse = await axios.get(
+        `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
+        { timeout: 10000 }
+      )
+      if (feeResponse.data.success) {
+        feeStructure = feeResponse.data.data
+      }
+    } catch (error) {
+      console.error(`Error fetching fee structure for ${student.StudentID}:`, error)
+      return null
+    }
+
+    // Process installments
+    const installments = []
+    let totalPaid = 0
+    let totalDue = 0
+
+    for (const installment of feeStructure) {
       try {
-        const feeResponse = await axios.get(
-          `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
-          { timeout: 10000 },
-        )
-        if (feeResponse.data.success) {
-          feeStructure = feeResponse.data.data
-        }
-      } catch (error) {
-        console.error(`Error fetching fee structure for ${student.StudentID}:`, error)
-        return null
-      }
-
-      // Process installments
-      const installments = []
-      let totalPaid = 0
-      let totalDue = 0
-
-      for (const installment of feeStructure) {
-        try {
-          let transactionDetails = null
-          if (installment.Paid && installment.Paid !== "0") {
-            const transactionResponse = await axios.get(
-              `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${installment.Paid}`,
-              { timeout: 10000 },
-            )
-            if (transactionResponse.data.success) {
-              transactionDetails = transactionResponse.data.data
+        let transactionDetails = []
+        let totalPaidForInstallment = 0
+        let totalVariableFees = 0
+        
+        if (installment.Paid && installment.Paid !== "0") {
+          // Handle multiple transaction IDs (comma-separated)
+          const transactionIds = installment.Paid.split(',').map(id => id.trim())
+          
+          // Fetch all transactions for this installment
+          const transactionPromises = transactionIds.map(async (transactionId) => {
+            try {
+              const response = await axios.get(
+                `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
+                { timeout: 10000 }
+              )
+              if (response.data.success) {
+                return response.data.data
+              }
+            } catch (error) {
+              console.error(`Error fetching transaction ${transactionId}:`, error)
+              return null
             }
-          }
-
-          const installmentTotal = 
-  (installment.tution_fees || 0) + 
-            (installment.hostel_fees || 0) -
-  (installment.Scholarship || 0);
-
-          const isPaid = installment.Paid && installment.Paid !== "0";
-let amountPaid = 0;
-if (transactionDetails) {
-  // Subtract variable fees from deposit amount for tuition/hostel calculation
-  amountPaid = Math.max(0, 
-    (transactionDetails.deposit_amount || 0) - 
-    (transactionDetails.variable_fees || 0)
-  );
-}
-
-const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal;
-          if (isPaid) {
-            totalPaid += amountPaid
-            totalDue += balanceAmount
-          } else {
-            totalDue += installmentTotal
-          }
-
-          installments.push({
-            installmentNo: installment.installment,
-            dueDate: installment.due_date,
-            tuitionFees: installment.tution_fees || 0,
-            examFees: installment.exam_fees || 0,
-            hostelFees: installment.hostel_fees || 0,
-            admissionFees: installment.admission_fees || 0,
-            prospectusFees: installment.prospectus_fees || 0,
-            scholarship: installment.Scholarship || 0,
-            totalAmount: installmentTotal,
-            status: isPaid ? (balanceAmount === 0 ? "Paid" : "Partially Paid") : "Due",
-            paymentDate: transactionDetails?.date_time || "",
-            paymentMode: transactionDetails?.mode || "",
-            amountPaid: amountPaid,
-            balanceAmount: balanceAmount,
           })
-        } catch (error) {
-          console.error(`Error processing installment ${installment.installment} for ${student.StudentID}:`, error)
-          continue
+          
+          const transactions = await Promise.all(transactionPromises)
+          transactionDetails = transactions.filter(tx => tx !== null)
+          
+          // Calculate total paid amount (subtracting variable fees)
+          totalPaidForInstallment = transactionDetails.reduce((sum, tx) => {
+            return sum + (tx.deposit_amount || 0) - (tx.variable_fees || 0)
+          }, 0)
+          
+          // Sum all variable fees
+          totalVariableFees = transactionDetails.reduce((sum, tx) => sum + (tx.variable_fees || 0), 0)
         }
+
+        const installmentTotal = 
+          (installment.tution_fees || 0) + 
+          (installment.hostel_fees || 0) -
+          (installment.Scholarship || 0)
+
+        const isPaid = installment.Paid && installment.Paid !== "0"
+        const amountPaid = Math.max(0, totalPaidForInstallment)
+        const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal
+
+        if (isPaid) {
+          totalPaid += amountPaid
+          totalDue += balanceAmount
+        } else {
+          totalDue += installmentTotal
+        }
+
+        installments.push({
+          installmentNo: installment.installment,
+          dueDate: installment.due_date,
+          tuitionFees: installment.tution_fees || 0,
+          examFees: installment.exam_fees || 0,
+          hostelFees: installment.hostel_fees || 0,
+          admissionFees: installment.admission_fees || 0,
+          prospectusFees: installment.prospectus_fees || 0,
+          scholarship: installment.Scholarship || 0,
+          totalAmount: installmentTotal,
+          status: isPaid ? (balanceAmount === 0 ? "Paid" : "Partially Paid") : "Due",
+          paymentDate: transactionDetails.length > 0 ? transactionDetails[0].date_time : "",
+          paymentMode: transactionDetails.length > 0 ? transactionDetails[0].mode : "",
+          amountPaid: amountPaid,
+          balanceAmount: balanceAmount,
+          transactionCount: transactionDetails.length,
+          totalVariableFees: totalVariableFees
+        })
+      } catch (error) {
+        console.error(`Error processing installment ${installment.installment} for ${student.StudentID}:`, error)
+        continue
       }
+    }
 
       // Calculate totals
       const totalFees = feeStructure.reduce(
