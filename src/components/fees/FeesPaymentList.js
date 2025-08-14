@@ -322,7 +322,10 @@ const FeesPaymentList = () => {
             (installment.Scholarship || 0)
 
           const isPaid = installment.Paid && installment.Paid !== "0"
-          const amountPaid = transactionDetails?.deposit_amount || 0
+          const amountPaid = Math.max(0, 
+    (transactionDetails.deposit_amount || 0) - 
+    (transactionDetails.variable_fees || 0)
+  );
           const balanceAmount = isPaid ? installmentTotal - amountPaid : installmentTotal
 
           if (isPaid) {
