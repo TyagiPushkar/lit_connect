@@ -315,7 +315,8 @@ const FeesPaymentList = () => {
 
           const installmentTotal = 
   (installment.tution_fees || 0) + 
-  (installment.hostel_fees || 0);
+            (installment.hostel_fees || 0) -
+  (installment.Scholarship || 0);
 
           const isPaid = installment.Paid && installment.Paid !== "0";
 let amountPaid = 0;
