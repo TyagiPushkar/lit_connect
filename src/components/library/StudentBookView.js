@@ -279,6 +279,9 @@ const StudentBooksView = () => {
                     <Typography variant="h6" fontWeight={600}>
                       {book.Title}
                     </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      <strong>Book Id:</strong>{book.BookId}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
                       <strong>Author:</strong> {book.Author}
                     </Typography>
@@ -334,6 +337,9 @@ const StudentBooksView = () => {
                       <Typography variant="h6" fontWeight={600}>
                         {book.Title}
                       </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                      <strong>Book Id:</strong>{transaction.BookId}
+                    </Typography>
                       <Typography variant="body2" color="text.secondary">
                         <strong>Issue Date:</strong>{" "}
                         {new Date(transaction.IssueDate).toLocaleDateString()}
@@ -343,7 +349,7 @@ const StudentBooksView = () => {
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         <strong>Return on</strong>{" "}
-                        transaction.UpdatedAt
+                        {transaction.UpdatedAt}
                           
                       </Typography>
                     </CardContent>
