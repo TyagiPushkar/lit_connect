@@ -15,6 +15,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VariableFeeManager from './VariableFeeManager';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const StudentsList = () => {
     const { user } = useAuth();
@@ -31,6 +32,7 @@ const StudentsList = () => {
     const [particular, setParticular] = useState('');
     const [amount, setAmount] = useState('');
     const [isExporting, setIsExporting] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         fetchLibraryTransactions();
@@ -161,6 +163,29 @@ const StudentsList = () => {
         setOpenSnackbar(true);
     };
 
+    const handleRemoveMobileID = async (StudentID) => {
+    try {
+      const response = await fetch(
+        "https://namami-infotech.com/LIT/src/auth/remove_device.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ employee_id: StudentID }),
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        alert("Mobile ID removed successfully.");
+        fetchLibraryTransactions();
+      } else {
+        alert( "Mobile ID already removed");
+      }
+    } catch (err) {
+      setError("Error removing Mobile ID.");
+    }
+  };
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
@@ -194,7 +219,11 @@ const StudentsList = () => {
                             <TableCell style={{ color: "white" }}>Student Name</TableCell>
                             <TableCell style={{ color: "white" }}>Course</TableCell>
                             <TableCell style={{ color: "white" }}>Semester</TableCell>
-                            <TableCell style={{ color: "white" }}>Action</TableCell>
+                            <TableCell style={{ color: "white" }}>View</TableCell>
+                            {user && user.role === 'HR'&&
+                               <TableCell style={{ color: "white" }}>Action</TableCell>
+                           }
+                                
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -213,6 +242,16 @@ const StudentsList = () => {
                                             onClick={() => handleViewClick(tx.StudentID)}
                                         />
                                     </TableCell>
+                                    {user && user.role === 'HR' &&
+                                    <TableCell>
+                                        <IconButton
+                                            variant="contained"
+                                            sx={{backgroundColor:"red", color:"white", ":hover": {backgroundColor:"red"}}}
+                                            onClick={() => handleRemoveMobileID(tx.StudentID)}
+                                        >
+                    <RestartAltIcon />
+                  </IconButton>
+                </TableCell>}
                                 </TableRow>
                             ))}
                     </TableBody>
