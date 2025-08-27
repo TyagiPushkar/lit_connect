@@ -10,7 +10,6 @@ function EmpProfile() {
 
     return (
         <Box sx={{ display: 'flex', height: '100vh' }}>
-            {/* Sidebar with fixed width */}
             <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
                 <Sidebar />
             </Box>
@@ -22,7 +21,6 @@ function EmpProfile() {
                             <Box sx={{ mt: 1 }}>
                                 <EmployeeProfile/>
                             </Box>
-
                         </Grid>
                     </Grid>
                 </Container>

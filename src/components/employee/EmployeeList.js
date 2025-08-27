@@ -32,6 +32,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { CheckBox } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
+import { useRef } from "react";
 function EmployeeList() {
   const { user } = useAuth();
 
@@ -70,7 +71,7 @@ function EmployeeList() {
   useEffect(() => {
     fetchEmployees();
     fetchOffices();
-  });
+  }, [user]);
 
   const fetchEmployees = async () => {
     try {
