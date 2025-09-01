@@ -33,8 +33,11 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { CheckBox } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import { useRef } from "react";
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+
 function EmployeeList() {
   const { user } = useAuth();
+  const [error, setError] = useState("");
 
   const [employees, setEmployees] = useState([]);
   const [offices, setOffices] = useState([]);
@@ -313,6 +316,29 @@ function EmployeeList() {
     });
   });
 
+  const handleRemoveMobileID = async (EmpId) => {
+    try {
+      const response = await fetch(
+        "https://namami-infotech.com/LIT/src/auth/remove_device.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ employee_id: EmpId }),
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        alert("Mobile ID removed successfully.");
+        fetchEmployees();
+      } else {
+        alert( "Mobile ID already removed");
+      }
+    } catch (err) {
+      setError("Error removing Mobile ID.");
+    }
+  };
   return (
     <div>
       <Grid container spacing={2} alignItems="center">
@@ -351,6 +377,7 @@ function EmployeeList() {
                 <TableCell style={{ color: "white" }}>Shift</TableCell>
                 <TableCell style={{ color: "white" }}>Status</TableCell>
                 <TableCell style={{ color: "white" }}>Actions</TableCell>
+                <TableCell style={{ color: "white" }}>MobileId</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -423,6 +450,16 @@ function EmployeeList() {
                         )}
                       </IconButton>
                     </TableCell>
+                    {user && user.role === 'HR' &&
+                                                        <TableCell>
+                                                            <IconButton
+                                                                variant="contained"
+                                                                sx={{backgroundColor:"red", color:"white", ":hover": {backgroundColor:"red"}}}
+                                                                onClick={() => handleRemoveMobileID(employee.EmpId)}
+                                                            >
+                                        <RestartAltIcon />
+                                      </IconButton>
+                                    </TableCell>}
                   </TableRow>
                 ))}
             </TableBody>
