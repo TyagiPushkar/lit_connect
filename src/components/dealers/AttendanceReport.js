@@ -116,7 +116,7 @@ const AttendanceReport = () => {
       .filter(date => !isSunday(date))
       .sort()
 
-    const csvHeader = ["S. No.", "Employee ID", "Employee Name", ...uniqueDates.flatMap((date) => [date + " In", date + " Out"])]
+    const csvHeader = ["S. No.", "Employee ID", "Employee Name", ...uniqueDates.flatMap((date) => [date])]
 
     const csvRows = filteredEmployees.map((employee, index) => {
       const row = [index + 1, employee.EmpId, employee.Name]
@@ -128,10 +128,9 @@ const AttendanceReport = () => {
 
         if (attendanceRecords.length > 0) {
           const inTime = attendanceRecords[0].InTime.split(" ")[1] || ""
-          const outTime = attendanceRecords[0].OutTime ? attendanceRecords[0].OutTime.split(" ")[1] : ""
-          row.push(inTime, outTime)
+          row.push(inTime)
         } else {
-          row.push("Absent", "Absent")
+          row.push("Absent")
         }
       })
 
