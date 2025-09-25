@@ -116,10 +116,10 @@ const AttendanceReport = () => {
       .filter(date => !isSunday(date))
       .sort()
 
-    const csvHeader = ["S. No.", "Employee ID", "Employee Name", ...uniqueDates.flatMap((date) => [date])]
+    const csvHeader = ["S. No.", "Employee ID", "Employee Name", "RefrenceBy", ...uniqueDates.flatMap((date) => [date])]
 
     const csvRows = filteredEmployees.map((employee, index) => {
-      const row = [index + 1, employee.EmpId, employee.Name]
+      const row = [index + 1, employee.EmpId, employee.Name, employee.RefrenceBy]
 
       uniqueDates.forEach((date) => {
         const attendanceRecords = filteredAttendance.filter(
