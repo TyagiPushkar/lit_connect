@@ -19,6 +19,7 @@ import logo from "../../assets/images (1).png";
 import StudentFeesTransaction from "../fees/StudentFeesTransaction";
 import StudentReports from "./StudentReport";
 import { useAuth } from "../auth/AuthContext";
+import AttendanceSummary from "./AttendanceSummary";
 
 function StudentDetail() {
   const { user } = useAuth();
@@ -254,6 +255,9 @@ function StudentDetail() {
       </Dialog>
 
       <StudentReports />
+      <Box sx={{ mb: 3 }}>
+          <AttendanceSummary EmpId={studentId} />
+      </Box>
     </Box>
   );
 }
