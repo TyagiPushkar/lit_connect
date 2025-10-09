@@ -29,6 +29,7 @@ const AttendanceReport = () => {
   const [employees, setEmployees] = useState([])
   const [filteredEmployees, setFilteredEmployees] = useState([])
   const [attendance, setAttendance] = useState([])
+  const [students, setStudents] = useState([]) // New state for student data
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [roleFilter, setRoleFilter] = useState("all") // 'all', 'student', 'staff'
@@ -42,11 +43,12 @@ const AttendanceReport = () => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [employeesResponse, attendanceResponse] = await Promise.all([
+        const [employeesResponse, attendanceResponse, studentsResponse] = await Promise.all([
           axios.get(
             `https://namami-infotech.com/LIT/src/employee/all_members.php?Tenent_Id=${user.tenent_id}`,
           ),
           axios.get("https://namami-infotech.com/LIT/src/attendance/get_attendance.php"),
+          axios.get("https://namami-infotech.com/LIT/src/students/get_student.php") // Fetch student data
         ])
 
         if (employeesResponse.data.success) {
@@ -56,6 +58,10 @@ const AttendanceReport = () => {
 
         if (attendanceResponse.data.success) {
           setAttendance(attendanceResponse.data.data)
+        }
+
+        if (studentsResponse.data.success) {
+          setStudents(studentsResponse.data.data)
         }
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -105,6 +111,23 @@ const AttendanceReport = () => {
     return date.getDay() === 0 // Sunday is 0 in JavaScript
   }
 
+  // Function to get student details by matching EmpId with StudentID
+  const getStudentDetails = (empId) => {
+    const student = students.find(student => student.StudentID === empId.toString())
+    if (student) {
+      return {
+        course: student.Course || "N/A",
+        guardianName: student.GuardianName || "N/A",
+        guardianContactNo: student.GuardianContactNo || "N/A"
+      }
+    }
+    return {
+      course: "N/A",
+      guardianName: "N/A",
+      guardianContactNo: "N/A"
+    }
+  }
+
   const exportAttendanceToCSV = () => {
     if (!filteredAttendance.length) {
       alert("No data available for export.")
@@ -116,10 +139,30 @@ const AttendanceReport = () => {
       .filter(date => !isSunday(date))
       .sort()
 
-    const csvHeader = ["S. No.", "Employee ID", "Employee Name", "RefrenceBy", ...uniqueDates.flatMap((date) => [date])]
+    // Updated CSV header with additional columns
+    const csvHeader = [
+      "S. No.", 
+      "Employee ID", 
+      "Employee Name", 
+      "RefrenceBy", 
+      "Course", 
+      "Guardian Name", 
+      "Guardian Contact No.",
+      ...uniqueDates.flatMap((date) => [date])
+    ]
 
     const csvRows = filteredEmployees.map((employee, index) => {
-      const row = [index + 1, employee.EmpId, employee.Name, employee.RefrenceBy]
+      const studentDetails = getStudentDetails(employee.EmpId)
+      
+      const row = [
+        index + 1, 
+        employee.EmpId, 
+        employee.Name, 
+        employee.RefrenceBy,
+        studentDetails.course,
+        studentDetails.guardianName,
+        studentDetails.guardianContactNo
+      ]
 
       uniqueDates.forEach((date) => {
         const attendanceRecords = filteredAttendance.filter(
@@ -231,8 +274,6 @@ const AttendanceReport = () => {
             </Stack>
           </Grid>
         </Grid>
-
-       
 
         {/* Loading State */}
         {loading && (
