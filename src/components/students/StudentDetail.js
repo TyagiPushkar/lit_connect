@@ -20,6 +20,7 @@ import StudentFeesTransaction from "../fees/StudentFeesTransaction";
 import StudentReports from "./StudentReport";
 import { useAuth } from "../auth/AuthContext";
 import AttendanceSummary from "./AttendanceSummary";
+import ReportCardPDF from "./ReportCardPDF";
 
 function StudentDetail() {
   const { user } = useAuth();
@@ -255,8 +256,9 @@ function StudentDetail() {
       </Dialog>
 
       <StudentReports />
+      <ReportCardPDF studentId={studentId} />
       <Box sx={{ mb: 3 }}>
-          <AttendanceSummary EmpId={studentId} />
+          {/* <AttendanceSummary EmpId={studentId} /> */}
       </Box>
     </Box>
   );
