@@ -160,8 +160,9 @@ export default function ReportCardPDF({ studentId }) {
     if (!reportRef.current) return
     setIsGenerating(true)
     try {
+      // Increase scale for better resolution and larger text
       const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
+        scale: 3, // Increased from 2 to 3 for larger text
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -170,6 +171,12 @@ export default function ReportCardPDF({ studentId }) {
           Array.from(imgs).forEach((img) => {
             img.setAttribute("crossorigin", "anonymous")
           })
+          
+          // Apply PDF-specific styles for larger text
+          const reportElement = clonedDoc.getElementById('reportCard')
+          if (reportElement) {
+            reportElement.style.fontSize = '14px'; // Base font size increase
+          }
         },
       })
       const imgData = canvas.toDataURL("image/png")
@@ -251,13 +258,33 @@ export default function ReportCardPDF({ studentId }) {
           id="reportCard"
           elevation={0}
           variant="outlined"
-          sx={{ p: 3 }}
+          sx={{ 
+            p: 3,
+            // Increased font sizes for PDF
+            fontSize: { xs: '14px', sm: '16px' },
+            '& .MuiTypography-body2': {
+              fontSize: { xs: '14px', sm: '16px' },
+            },
+            '& .MuiTypography-body1': {
+              fontSize: { xs: '15px', sm: '17px' },
+            },
+            '& .MuiTypography-subtitle1': {
+              fontSize: { xs: '16px', sm: '18px' },
+            },
+            '& .MuiTypography-h6': {
+              fontSize: { xs: '18px', sm: '20px' },
+            },
+            '& .MuiTableCell-root': {
+              fontSize: { xs: '14px', sm: '16px' },
+              py: 1.5, // Increased padding for better readability
+            },
+          }}
           aria-label="Report Card Content"
         >
           {/* Header / Identity */}
           <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={2}>
             <Box>
-              <Typography variant="h6" fontWeight={700}>
+              <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '18px', sm: '22px' } }}>
                 LAKSHYA INSTITUTE OF TECHNOLOGY
               </Typography>
               <Typography variant="subtitle1" sx={{ mt: 0.5 }} fontWeight={600}>
@@ -274,7 +301,7 @@ export default function ReportCardPDF({ studentId }) {
               component="img"
               src={"https://lit-connect.vercel.app/static/media/images%20(1).0a5419d3ae0870e1e361.png"}
               alt="Institute logo"
-              sx={{ width: 64, height: 64, borderRadius: 1, objectFit: "contain" }}
+              sx={{ width: 80, height: 80, borderRadius: 1, objectFit: "contain" }} // Increased logo size
               crossOrigin="anonymous"
             />
           </Box>
@@ -370,9 +397,9 @@ export default function ReportCardPDF({ studentId }) {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Subject</TableCell>
-                        <TableCell align="right">Marks</TableCell>
-                        <TableCell align="right">Percentage</TableCell>
+                        <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
+                        <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
+                        <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -382,11 +409,11 @@ export default function ReportCardPDF({ studentId }) {
                         const pct = max > 0 ? (got / max) * 100 : 0
                         return (
                           <TableRow key={idx}>
-                            <TableCell>{row?.Subject || "-"}</TableCell>
-                            <TableCell align="right">
+                            <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
+                            <TableCell align="right" sx={{ fontSize: '14px' }}>
                               {got} / {max}
                             </TableCell>
-                            <TableCell align="right">{formatPct(pct)}</TableCell>
+                            <TableCell align="right" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
                           </TableRow>
                         )
                       })}
@@ -436,7 +463,7 @@ export default function ReportCardPDF({ studentId }) {
                   return (
                     <Paper key={section.category} variant="outlined">
                       <Box borderBottom="1px solid" borderColor="divider" px={2} py={1.25}>
-                        <Typography variant="body2" fontWeight={600}>
+                        <Typography variant="body2" fontWeight={600} sx={{ fontSize: '16px' }}>
                           {section.category}
                         </Typography>
                       </Box>
@@ -444,9 +471,9 @@ export default function ReportCardPDF({ studentId }) {
                         <Table size="small">
                           <TableHead>
                             <TableRow>
-                              <TableCell>Subject</TableCell>
-                              <TableCell align="right">Marks</TableCell>
-                              <TableCell align="right">Percentage</TableCell>
+                              <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
+                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
+                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -456,20 +483,20 @@ export default function ReportCardPDF({ studentId }) {
                               const pct = max > 0 ? (got / max) * 100 : 0
                               return (
                                 <TableRow key={idx}>
-                                  <TableCell>{row?.Subject || "-"}</TableCell>
-                                  <TableCell align="right">
+                                  <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
+                                  <TableCell align="right" sx={{ fontSize: '14px' }}>
                                     {got} / {max}
                                   </TableCell>
-                                  <TableCell align="right">{formatPct(pct)}</TableCell>
+                                  <TableCell align="right" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
                                 </TableRow>
                               )
                             })}
                             <TableRow selected>
-                              <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '15px' }}>Total</TableCell>
+                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {totals.totalObtained} / {totals.totalMax}
                               </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {formatPct(totals.pct)}
                               </TableCell>
                             </TableRow>
@@ -500,7 +527,7 @@ export default function ReportCardPDF({ studentId }) {
                   return (
                     <Paper key={section.category} variant="outlined">
                       <Box borderBottom="1px solid" borderColor="divider" px={2} py={1.25}>
-                        <Typography variant="body2" fontWeight={600}>
+                        <Typography variant="body2" fontWeight={600} sx={{ fontSize: '16px' }}>
                           CBT {section.category}
                         </Typography>
                       </Box>
@@ -508,9 +535,9 @@ export default function ReportCardPDF({ studentId }) {
                         <Table size="small">
                           <TableHead>
                             <TableRow>
-                              <TableCell>Subject</TableCell>
-                              <TableCell align="right">Marks</TableCell>
-                              <TableCell align="right">Percentage</TableCell>
+                              <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
+                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
+                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -520,20 +547,20 @@ export default function ReportCardPDF({ studentId }) {
                               const pct = max > 0 ? (got / max) * 100 : 0
                               return (
                                 <TableRow key={idx}>
-                                  <TableCell>{row?.Subject || "-"}</TableCell>
-                                  <TableCell align="right">
+                                  <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
+                                  <TableCell align="right" sx={{ fontSize: '14px' }}>
                                     {got} / {max}
                                   </TableCell>
-                                  <TableCell align="right">{formatPct(pct)}</TableCell>
+                                  <TableCell align="right" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
                                 </TableRow>
                               )
                             })}
                             <TableRow selected>
-                              <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '15px' }}>Total</TableCell>
+                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {totals.totalObtained} / {totals.totalMax}
                               </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {formatPct(totals.pct)}
                               </TableCell>
                             </TableRow>
@@ -551,7 +578,7 @@ export default function ReportCardPDF({ studentId }) {
 
           {/* Footer note */}
           <Box textAlign="center">
-            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+            <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ fontSize: '16px' }}>
               Official Report Card - Lakshya Institute Of Technology
             </Typography>
           </Box>
