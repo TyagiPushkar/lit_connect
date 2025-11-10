@@ -884,9 +884,6 @@ const FeesPaymentList = () => {
           />
         </div>
       </div>
-
-      
-
       <TableContainer component={Paper} elevation={3}>
         <Table>
           <TableHead style={{ backgroundColor: "#CC7A00" }}>

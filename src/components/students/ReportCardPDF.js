@@ -34,6 +34,14 @@ const fetchReportArray = async (url) => {
   return json?.success && json?.data ? json.data : []
 }
 
+// Grade calculation function
+const calculateGrade = (percentage) => {
+  if (percentage >= 80) return "A"
+  if (percentage >= 60) return "B"
+  if (percentage >= 45) return "C"
+  return "D"
+}
+
 export default function ReportCardPDF({ studentId }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const reportRef = useRef(null)
@@ -524,6 +532,7 @@ export default function ReportCardPDF({ studentId }) {
                 {cbtAll.map((section) => {
                   if (!section.rows || section.rows.length === 0) return null
                   const totals = calcMarksTotals(section.rows)
+                  const totalGrade = calculateGrade(totals.pct)
                   return (
                     <Paper key={section.category} variant="outlined">
                       <Box borderBottom="1px solid" borderColor="divider" px={2} py={1.25}>
@@ -537,7 +546,7 @@ export default function ReportCardPDF({ studentId }) {
                             <TableRow>
                               <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
                               <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
+                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Grade</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -545,13 +554,16 @@ export default function ReportCardPDF({ studentId }) {
                               const max = Number.parseInt(row?.MaxMarks || 0, 10)
                               const got = Number.parseInt(row?.ObtainedMarks || 0, 10)
                               const pct = max > 0 ? (got / max) * 100 : 0
+                              const grade = calculateGrade(pct)
                               return (
                                 <TableRow key={idx}>
                                   <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
                                   <TableCell align="right" sx={{ fontSize: '14px' }}>
                                     {got} / {max}
                                   </TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
+                                  <TableCell align="right" sx={{ fontSize: '14px', fontWeight: 600 }}>
+                                    {grade}
+                                  </TableCell>
                                 </TableRow>
                               )
                             })}
@@ -561,7 +573,7 @@ export default function ReportCardPDF({ studentId }) {
                                 {totals.totalObtained} / {totals.totalMax}
                               </TableCell>
                               <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
-                                {formatPct(totals.pct)}
+                                {totalGrade}
                               </TableCell>
                             </TableRow>
                           </TableBody>
@@ -572,6 +584,27 @@ export default function ReportCardPDF({ studentId }) {
                 })}
               </Box>
             )}
+          </Box>
+
+          {/* Grade Legend */}
+          <Box mt={3} p={2} sx={{ backgroundColor: 'grey.50', borderRadius: 1 }}>
+            <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+              Grade Legend:
+            </Typography>
+            <Box display="flex" gap={3} flexWrap="wrap">
+              <Typography variant="body2">
+                <strong>A:</strong> 80-100%
+              </Typography>
+              <Typography variant="body2">
+                <strong>B:</strong> 60-79%
+              </Typography>
+              <Typography variant="body2">
+                <strong>C:</strong> 45-59%
+              </Typography>
+              <Typography variant="body2">
+                <strong>D:</strong> Below 45%
+              </Typography>
+            </Box>
           </Box>
 
           <Divider sx={{ my: 3 }} />
