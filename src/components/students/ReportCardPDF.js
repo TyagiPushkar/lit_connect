@@ -406,8 +406,8 @@ export default function ReportCardPDF({ studentId }) {
                     <TableHead>
                       <TableRow>
                         <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
-                        <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                        <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
+                        <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
+                        <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -418,10 +418,10 @@ export default function ReportCardPDF({ studentId }) {
                         return (
                           <TableRow key={idx}>
                             <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
-                            <TableCell align="right" sx={{ fontSize: '14px' }}>
+                            <TableCell align="center" sx={{ fontSize: '14px' }}>
                               {got} / {max}
                             </TableCell>
-                            <TableCell align="right" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
+                            <TableCell align="center" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
                           </TableRow>
                         )
                       })}
@@ -480,8 +480,8 @@ export default function ReportCardPDF({ studentId }) {
                           <TableHead>
                             <TableRow>
                               <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
-                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
+                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
+                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -492,19 +492,19 @@ export default function ReportCardPDF({ studentId }) {
                               return (
                                 <TableRow key={idx}>
                                   <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '14px' }}>
+                                  <TableCell align="center" sx={{ fontSize: '14px' }}>
                                     {got} / {max}
                                   </TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
+                                  <TableCell align="center" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
                                 </TableRow>
                               )
                             })}
                             <TableRow selected>
                               <TableCell sx={{ fontWeight: 600, fontSize: '15px' }}>Total</TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
+                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {totals.totalObtained} / {totals.totalMax}
                               </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
+                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {formatPct(totals.pct)}
                               </TableCell>
                             </TableRow>
@@ -545,8 +545,8 @@ export default function ReportCardPDF({ studentId }) {
                           <TableHead>
                             <TableRow>
                               <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
-                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                              <TableCell align="right" sx={{ fontSize: '15px', fontWeight: 600 }}>Grade</TableCell>
+                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
+                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Grade</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -558,10 +558,10 @@ export default function ReportCardPDF({ studentId }) {
                               return (
                                 <TableRow key={idx}>
                                   <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '14px' }}>
+                                  <TableCell align="center" sx={{ fontSize: '14px' }}>
                                     {got} / {max}
                                   </TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '14px', fontWeight: 600 }}>
+                                  <TableCell align="center" sx={{ fontSize: '14px', fontWeight: 600 }}>
                                     {grade}
                                   </TableCell>
                                 </TableRow>
@@ -569,10 +569,10 @@ export default function ReportCardPDF({ studentId }) {
                             })}
                             <TableRow selected>
                               <TableCell sx={{ fontWeight: 600, fontSize: '15px' }}>Total</TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
+                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {totals.totalObtained} / {totals.totalMax}
                               </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: 600, fontSize: '15px' }}>
+                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
                                 {totalGrade}
                               </TableCell>
                             </TableRow>

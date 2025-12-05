@@ -24,16 +24,23 @@ import {
   InputLabel,
   FormControl,
   ListItemText,
+  Chip,
+  Stack,
+  Tooltip,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ClearIcon from "@mui/icons-material/Clear";
 import { CheckBox } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
-import { useRef } from "react";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import BlockIcon from '@mui/icons-material/Block';
 
 function EmployeeList() {
   const { user } = useAuth();
@@ -70,6 +77,12 @@ function EmployeeList() {
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [showFilters, setShowFilters] = useState(false);
+  const [roleFilter, setRoleFilter] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
@@ -78,6 +91,7 @@ function EmployeeList() {
 
   const fetchEmployees = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(
         `https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
       );
@@ -89,6 +103,8 @@ function EmployeeList() {
       }
     } catch (error) {
       console.error("Error fetching employees:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,7 +151,7 @@ function EmployeeList() {
         IsOTPExpired: employee.IsOTPExpired || 1,
         IsGeofence: employee.IsGeofence || 0,
         Tenent_Id: user.tenent_id,
-        IsActive: employee.IsActive || 1,
+        IsActive: employee.IsActive || 1, // Use the IsActive from API
         OfficeId: employee.OfficeId || null,
         OfficeName: employee.OfficeName || "",
         LatLong: employee.LatLong || "",
@@ -145,6 +161,9 @@ function EmployeeList() {
         Shift: employee.Shift,
         DOB: employee.DOB || "", // Ensure DOB is included
         JoinDate: employee.JoinDate || "", // Ensure JoinDate is included
+        WeekOff: employee.WeekOff || "",
+        Designation: employee.Designation || "",
+        Category: employee.Category || "",
       });
     } else {
       setFormData({
@@ -286,7 +305,9 @@ function EmployeeList() {
     }
 
     try {
-      const action = employee.IsActive ? "disable" : "enable";
+      const isActive = employee.IsActive === 1;
+      const action = isActive ? "disable" : "enable";
+      
       const response = await axios.post(
         "https://namami-infotech.com/LIT/src/employee/disable_employee.php",
         {
@@ -296,25 +317,72 @@ function EmployeeList() {
       );
 
       if (response.data.success) {
-        fetchEmployees(); // Refresh the employee list after the update
+        // Update local state immediately for better UX
+        setEmployees(prevEmployees => 
+          prevEmployees.map(emp => 
+            emp.EmpId === employee.EmpId 
+              ? { ...emp, IsActive: isActive ? 0 : 1 } 
+              : emp
+          )
+        );
       } else {
         console.error("Error:", response.data.message);
+        alert(response.data.message || `Failed to ${action} employee`);
       }
     } catch (error) {
       console.error("Error:", error);
+      alert("Error updating employee status");
     }
   };
 
+  // Extract unique roles for filter
+  const uniqueRoles = [...new Set(employees.map(emp => emp.Role).filter(Boolean))].sort();
+
   const filteredEmployees = employees.filter((employee) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return Object.keys(employee).some((key) => {
-      const value = employee[key];
-      return (
-        value != null &&
-        value.toString().toLowerCase().includes(lowerCaseSearchTerm)
-      );
-    });
+    // Apply text search filter
+    if (searchTerm) {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase();
+      const matchesSearch = Object.keys(employee).some((key) => {
+        const value = employee[key];
+        return (
+          value != null &&
+          value.toString().toLowerCase().includes(lowerCaseSearchTerm)
+        );
+      });
+      if (!matchesSearch) return false;
+    }
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      const isActiveFilter = statusFilter === 'active';
+      // API returns IsActive as 1/0, convert to boolean
+      const isActive = employee.IsActive === 1;
+      if (isActive !== isActiveFilter) return false;
+    }
+    
+    // Apply role filter
+    if (roleFilter) {
+      if (employee.Role !== roleFilter) return false;
+    }
+    
+    return true;
   });
+
+  const handleClearFilters = () => {
+    setStatusFilter('all');
+    setRoleFilter('');
+  };
+
+  const hasActiveFilters = () => {
+    return statusFilter !== 'all' || roleFilter;
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (statusFilter !== 'all') count++;
+    if (roleFilter) count++;
+    return count;
+  };
 
   const handleRemoveMobileID = async (EmpId) => {
     try {
@@ -339,19 +407,56 @@ function EmployeeList() {
       setError("Error removing Mobile ID.");
     }
   };
+
+  // Calculate counts for summary
+  const activeCount = employees.filter(emp => emp.IsActive === 1).length;
+  const inactiveCount = employees.filter(emp => emp.IsActive === 0).length;
+
+  // Helper function to check if employee is active
+  const isEmployeeActive = (employee) => {
+    return employee.IsActive === 1;
+  };
+
   return (
     <div>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={8}>
+      <Grid container spacing={2} alignItems="center" justifyContent="space-between">
+        <Grid item xs={12} md={6}>
           <TextField
             fullWidth
             variant="outlined"
             placeholder="Search Employee"
             margin="normal"
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={4} sx={{ textAlign: "right" }}>
+        <Grid item xs={12} md={6} sx={{ textAlign: "right", display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
+            <IconButton 
+              onClick={() => setShowFilters(!showFilters)}
+              color={hasActiveFilters() ? "primary" : "default"}
+              sx={{ 
+                border: hasActiveFilters() ? '2px solid #1976d2' : 'none',
+                borderRadius: 1
+              }}
+            >
+              <FilterListIcon />
+              {hasActiveFilters() && (
+                <Chip 
+                  label={getActiveFilterCount()}
+                  size="small"
+                  sx={{ 
+                    position: 'absolute', 
+                    top: -8, 
+                    right: -8,
+                    height: 20,
+                    minWidth: 20,
+                    fontSize: '0.75rem'
+                  }}
+                />
+              )}
+            </IconButton>
+          </Tooltip>
           <Button
             variant="contained"
             color="primary"
@@ -363,6 +468,75 @@ function EmployeeList() {
           </Button>
         </Grid>
       </Grid>
+
+      {/* Filter Section */}
+      {showFilters && (
+        <Paper sx={{ p: 2, mb: 2, backgroundColor: '#f5f5f5' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <h4 style={{ margin: 0 }}>Filters</h4>
+            <Button
+              startIcon={<ClearIcon />}
+              onClick={handleClearFilters}
+              size="small"
+              disabled={!hasActiveFilters()}
+            >
+              Clear All
+            </Button>
+          </Box>
+          
+          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                label="Status"
+              >
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="active">Active Only</MenuItem>
+                <MenuItem value="inactive">Inactive Only</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Role</InputLabel>
+              <Select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                label="Role"
+              >
+                <MenuItem value="">All Roles</MenuItem>
+                {uniqueRoles.map(role => (
+                  <MenuItem key={role} value={role}>{role}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+          
+          {/* Active Filters Display */}
+          {hasActiveFilters() && (
+            <Box sx={{ mt: 2 }}>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {statusFilter !== 'all' && (
+                  <Chip
+                    label={`Status: ${statusFilter === 'active' ? 'Active' : 'Inactive'}`}
+                    onDelete={() => setStatusFilter('all')}
+                    size="small"
+                  />
+                )}
+                {roleFilter && (
+                  <Chip
+                    label={`Role: ${roleFilter}`}
+                    onDelete={() => setRoleFilter('')}
+                    size="small"
+                  />
+                )}
+              </Stack>
+            </Box>
+          )}
+        </Paper>
+      )}
+
       <Box sx={{ overflowX: "auto", mt: 2 }}>
         <TableContainer component={Paper}>
           <Table>
@@ -373,98 +547,156 @@ function EmployeeList() {
                 <TableCell style={{ color: "white" }}>Mobile</TableCell>
                 <TableCell style={{ color: "white" }}>Email</TableCell>
                 <TableCell style={{ color: "white" }}>Role</TableCell>
-                {/* <TableCell style={{ color: "white" }}>RM</TableCell> */}
                 <TableCell style={{ color: "white" }}>Shift</TableCell>
                 <TableCell style={{ color: "white" }}>Status</TableCell>
                 <TableCell style={{ color: "white" }}>Actions</TableCell>
-                <TableCell style={{ color: "white" }}>MobileId</TableCell>
+                {user && user.role === 'HR' && (
+                  <TableCell style={{ color: "white" }}>MobileId</TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredEmployees
-                .sort((a, b) => a.Name.localeCompare(b.Name))
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((employee) => (
-                  <TableRow key={employee.EmpId}>
-                    <TableCell
-                      component={Link}
-                      to={employee.EmpId}
-                      style={{ textDecoration: "none" }}
-                    >
-                      {employee.EmpId}
-                    </TableCell>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={user && user.role === 'HR' ? 9 : 8} align="center">
+                    Loading employees...
+                  </TableCell>
+                </TableRow>
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees
+                  .sort((a, b) => a.Name.localeCompare(b.Name))
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((employee) => {
+                    const isActive = isEmployeeActive(employee);
+                    return (
+                      <TableRow 
+                        key={employee.EmpId}
+                        sx={{ 
+                          backgroundColor: !isActive ? '#f5f5f5' : 'inherit',
+                          opacity: !isActive ? 0.7 : 1
+                        }}
+                      >
+                        <TableCell
+                          component={Link}
+                          to={employee.EmpId}
+                          style={{ textDecoration: "none" }}
+                        >
+                          {employee.EmpId}
+                        </TableCell>
 
-                    <TableCell
-                      component={Link}
-                      to={employee.EmpId}
-                      style={{ textDecoration: "none" }}
-                    >
-                      {employee.Name}
-                    </TableCell>
-                    <TableCell
-                      component={Link}
-                      to={employee.EmpId}
-                      style={{ textDecoration: "none" }}
-                    >
-                      {employee.Mobile}
-                    </TableCell>
-                    <TableCell
-                      component={Link}
-                      to={employee.EmpId}
-                      style={{ textDecoration: "none" }}
-                    >
-                      {employee.EmailId}
-                    </TableCell>
-                    <TableCell
-                      component={Link}
-                      to={employee.EmpId}
-                      style={{ textDecoration: "none" }}
-                    >
-                      {employee.Role}
-                    </TableCell>
-                    {/* <TableCell>{employee.RM}</TableCell> */}
-                    <TableCell>{employee.Shift}</TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        color={employee.IsActive ? "green" : "red"}
-                      >
-                        {employee.IsActive ? "Active" : "Inactive"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell style={{ display: "flex" }}>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleOpenForm("edit", employee)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color={employee.IsActive ? "error" : "success"}
-                        onClick={() => handleToggleEmployeeStatus(employee)}
-                      >
-                        {employee.IsActive ? (
-                          <CloseIcon />
-                        ) : (
-                          <CheckCircleIcon />
+                        <TableCell
+                          component={Link}
+                          to={employee.EmpId}
+                          style={{ textDecoration: "none" }}
+                        >
+                          {employee.Name}
+                        </TableCell>
+                        <TableCell
+                          component={Link}
+                          to={employee.EmpId}
+                          style={{ textDecoration: "none" }}
+                        >
+                          {employee.Mobile}
+                        </TableCell>
+                        <TableCell
+                          component={Link}
+                          to={employee.EmpId}
+                          style={{ textDecoration: "none" }}
+                        >
+                          {employee.EmailId}
+                        </TableCell>
+                        <TableCell
+                          component={Link}
+                          to={employee.EmpId}
+                          style={{ textDecoration: "none" }}
+                        >
+                          {employee.Role}
+                        </TableCell>
+                        <TableCell>{employee.Shift}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={isActive ? "Active" : "Inactive"}
+                            color={isActive ? "success" : "error"}
+                            size="small"
+                            icon={isActive ? <CheckCircleIcon /> : <BlockIcon />}
+                          />
+                        </TableCell>
+                        <TableCell style={{ display: "flex", alignItems: "center" }}>
+                          <Tooltip title="Edit Employee">
+                            <IconButton
+                              color="primary"
+                              onClick={() => handleOpenForm("edit", employee)}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={isActive ? "Disable Employee" : "Enable Employee"}>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={isActive}
+                                  onChange={() => handleToggleEmployeeStatus(employee)}
+                                  color={isActive ? "primary" : "secondary"}
+                                />
+                              }
+                              label=""
+                            />
+                          </Tooltip>
+                        </TableCell>
+                        {user && user.role === 'HR' && (
+                          <TableCell>
+                            <Tooltip title="Reset Mobile ID">
+                              <IconButton
+                                sx={{backgroundColor:"red", color:"white", ":hover": {backgroundColor:"darkred"}}}
+                                onClick={() => handleRemoveMobileID(employee.EmpId)}
+                              >
+                                <RestartAltIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
                         )}
-                      </IconButton>
-                    </TableCell>
-                    {user && user.role === 'HR' &&
-                                                        <TableCell>
-                                                            <IconButton
-                                                                variant="contained"
-                                                                sx={{backgroundColor:"red", color:"white", ":hover": {backgroundColor:"red"}}}
-                                                                onClick={() => handleRemoveMobileID(employee.EmpId)}
-                                                            >
-                                        <RestartAltIcon />
-                                      </IconButton>
-                                    </TableCell>}
-                  </TableRow>
-                ))}
+                      </TableRow>
+                    );
+                  })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={user && user.role === 'HR' ? 9 : 8} align="center">
+                    No employees found
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
+        
+        {/* Summary information */}
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip 
+              label={`Total Employees: ${employees.length}`} 
+              color="primary" 
+              variant="outlined"
+            />
+            <Chip 
+              label={`Active: ${activeCount}`} 
+              color="success" 
+              variant="outlined"
+            />
+            <Chip 
+              label={`Inactive: ${inactiveCount}`} 
+              color="error" 
+              variant="outlined"
+            />
+          </Box>
+          {hasActiveFilters() && (
+            <Chip 
+              label={`Filtered: ${filteredEmployees.length}`} 
+              color="secondary" 
+              variant="outlined"
+            />
+          )}
+        </Box>
+        
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component="div"
@@ -475,6 +707,7 @@ function EmployeeList() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+      
       <Dialog open={openForm} onClose={handleCloseForm}>
         <DialogTitle>
           {formMode === "add" ? "Add Employee" : "Edit Employee"}
@@ -707,6 +940,26 @@ function EmployeeList() {
                       </MenuItem>
                     ))}
                   </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.IsActive === 1}
+                        onChange={(e) =>
+                          setFormData({ 
+                            ...formData, 
+                            IsActive: e.target.checked ? 1 : 0 
+                          })
+                        }
+                        color="primary"
+                      />
+                    }
+                    label={formData.IsActive === 1 ? "Active" : "Inactive"}
+                  />
                 </FormControl>
               </Grid>
             </Grid>

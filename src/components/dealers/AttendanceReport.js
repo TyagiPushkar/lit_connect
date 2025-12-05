@@ -128,6 +128,40 @@ const AttendanceReport = () => {
     }
   }
 
+  // Function to calculate attendance percentage for an employee
+  const calculateAttendancePercentage = (employeeId) => {
+    if (!filteredAttendance.length || !fromDate || !toDate) return 0
+    
+    // Get all unique dates excluding Sundays
+    const startDate = new Date(fromDate)
+    const endDate = new Date(toDate)
+    
+    // Calculate total working days (excluding Sundays)
+    const totalDays = []
+    const currentDate = new Date(startDate)
+    
+    while (currentDate <= endDate) {
+      if (currentDate.getDay() !== 0) { // Not Sunday
+        totalDays.push(new Date(currentDate).toISOString().split('T')[0])
+      }
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+    
+    const totalWorkingDays = totalDays.length
+    if (totalWorkingDays === 0) return 0
+    
+    // Count attendance days for this employee
+    const attendanceDays = new Set(
+      filteredAttendance
+        .filter(record => record.EmpId === employeeId)
+        .map(record => record.InTime.split(" ")[0])
+    ).size
+    
+    // Calculate percentage
+    const percentage = (attendanceDays / totalWorkingDays) * 100
+    return Math.round(percentage * 100) / 100 // Round to 2 decimal places
+  }
+
   const exportAttendanceToCSV = () => {
     if (!filteredAttendance.length) {
       alert("No data available for export.")
@@ -139,7 +173,7 @@ const AttendanceReport = () => {
       .filter(date => !isSunday(date))
       .sort()
 
-    // Updated CSV header with additional columns
+    // Updated CSV header with Attendance % column
     const csvHeader = [
       "S. No.", 
       "Employee ID", 
@@ -148,11 +182,13 @@ const AttendanceReport = () => {
       "Course", 
       "Guardian Name", 
       "Guardian Contact No.",
+      "Attendance %", // New column
       ...uniqueDates.flatMap((date) => [date])
     ]
 
     const csvRows = filteredEmployees.map((employee, index) => {
       const studentDetails = getStudentDetails(employee.EmpId)
+      const attendancePercentage = calculateAttendancePercentage(employee.EmpId)
       
       const row = [
         index + 1, 
@@ -161,7 +197,8 @@ const AttendanceReport = () => {
         employee.RefrenceBy,
         studentDetails.course,
         studentDetails.guardianName,
-        studentDetails.guardianContactNo
+        studentDetails.guardianContactNo,
+        `${attendancePercentage}%`, // Add attendance percentage
       ]
 
       uniqueDates.forEach((date) => {

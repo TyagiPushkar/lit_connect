@@ -20,7 +20,6 @@ function VisitReport() {
             <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
                 <Navbar />
                 <Box sx={{ mt: 1 }}>
-                  
                    <VisitList />
                 </Box>
             </Box>

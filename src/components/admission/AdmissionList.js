@@ -6,6 +6,8 @@ import {
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import * as XLSX from 'xlsx';
+import { Button } from '@mui/material';
 
 function AdmissionList() {
     const [tempRecords, setTempRecords] = useState([]);
@@ -43,9 +45,11 @@ function AdmissionList() {
         setSearchTerm(value);
         const filtered = tempRecords.filter((record) => {
             const nameEntry = record.chkData?.find((chk) => chk.ChkId === 3);
+            const numberEntry = record.chkData?.find((chk) => chk.ChkId === 7);
             const name = nameEntry?.Value?.toLowerCase() || '';
             const tempId = record.TempId?.toLowerCase() || '';
-            return tempId.includes(value) || name.includes(value);
+            const number = numberEntry?.Value?.toLowerCase() || '';
+            return tempId.includes(value) || name.includes(value) || number.includes(value);
         });
         setFilteredRecords(filtered);
         setPage(0);
@@ -65,20 +69,51 @@ const formatDate = (datetime) => {
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
-  };
+    };
+    const exportToExcel = () => {
+    // Convert your data into a simple array of objects
+    const excelData = filteredRecords.map((record) => {
+        const nameEntry = record.chkData?.find((chk) => chk.ChkId === 3);
+        const courseEntry = record.chkData?.find((chk) => chk.ChkId === 5);
+        const numberEntry = record.chkData?.find((chk) => chk.ChkId === 7);
+
+        return {
+            "Admission ID": record.TempId,
+            "Name": nameEntry?.Value || "-",
+            "Course": courseEntry?.Value || "-",
+            "Contact No": numberEntry?.Value || "-",
+            "Date": formatDate(record.Datetime)
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Admissions");
+
+    XLSX.writeFile(workbook, "Admissions_List.xlsx");
+};
+
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h5">Admissions</Typography>
-                <TextField
-                    label="Search by Admission ID or Name"
-                    variant="outlined"
-                    size="small"
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    sx={{ width: 300 }}
-                />
-            </Box>
+           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+    <Typography variant="h5">Admissions</Typography>
+
+    <Box display="flex" gap={2}>
+        <TextField
+            label="Search by Admission ID or Name"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearch}
+            sx={{ width: 300 }}
+        />
+
+        <Button variant="contained" color="success" onClick={exportToExcel}>
+            Export Excel
+        </Button>
+    </Box>
+</Box>
+
 
             <TableContainer component={Paper} sx={{ mb: 2 }}>
                 <Table size='small'>
@@ -87,6 +122,7 @@ const formatDate = (datetime) => {
                             <TableCell sx={{ color: 'white' }}>Admission ID</TableCell>
                             <TableCell sx={{ color: 'white' }}>Name</TableCell>
                             <TableCell sx={{ color: 'white' }}>Course</TableCell>
+                            <TableCell sx={{ color: 'white' }}>Contact no.</TableCell>
                             <TableCell sx={{ color: 'white' }}>Date</TableCell>
                             <TableCell sx={{ color: 'white' }}>Actions</TableCell>
                         </TableRow>
@@ -97,12 +133,14 @@ const formatDate = (datetime) => {
                             .map((record) => {
                                 const nameEntry = record.chkData?.find((chk) => chk.ChkId === 3);
                                 const courseEntry = record.chkData?.find((chk) => chk.ChkId === 5);
+                                const numberEntry = record.chkData?.find((chk) => chk.ChkId === 7);
 
                                 return (
                                     <TableRow key={record.ID}>
                                         <TableCell>{record.TempId}</TableCell>
                                         <TableCell>{nameEntry?.Value || '-'}</TableCell>
                                         <TableCell>{courseEntry?.Value || '-'}</TableCell>
+                                        <TableCell>{numberEntry?.Value || '-'}</TableCell>
                                         <TableCell>{formatDate(record.Datetime)}</TableCell>
                                         <TableCell>
                                             <VisibilityIcon
