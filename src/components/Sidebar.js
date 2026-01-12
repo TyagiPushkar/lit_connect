@@ -93,9 +93,14 @@ function Sidebar() {
   }
   if (user?.role === "Front Desk" ) {
     allowedRoutes.push(
+      {
+        path: "/student-certificate",
+        name: "Student Certificate",
+        icon: <WorkspacePremiumIcon />,
+      },
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
-      { path: '/other-fees', name: 'Other Fees', icon: <AppsIcon /> },
+      { path: "/other-fees", name: "Other Fees", icon: <AppsIcon /> }
     );
   }
    if (user?.role === "Admin" ) {

@@ -11,11 +11,8 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  IconButton,
-  Pagination,
-  Stack,
+  Grid
 } from "@mui/material"
-import { TrendingUp, CalendarToday, Refresh } from "@mui/icons-material"
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, isSunday, parseISO } from "date-fns"
@@ -27,8 +24,6 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
   const [holidayLoading, setHolidayLoading] = useState(false)
   const [error, setError] = useState(null)
   const [holidayError, setHolidayError] = useState(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 12
 
   // Fetch holidays from API
   const fetchHolidays = async () => {
@@ -36,14 +31,10 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
     setHolidayError(null)
     
     try {
-      console.log("Fetching holidays for Tenent_Id:", tenentId)
-      
       const response = await axios.get(
         `https://namami-infotech.com/LIT/src/holiday/view_holiday.php?Tenent_Id=${tenentId}`,
         { timeout: 10000 }
       )
-      
-      console.log("Holidays API Response:", response.data)
       
       if (response.data.success && response.data.data) {
         setHolidays(response.data.data)
@@ -147,7 +138,6 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
               if (!activity.date) return false
               
               try {
-                // Parse date in dd/MM/yyyy format
                 const [day, monthStr, year] = activity.date.split('/')
                 const activityDate = new Date(Number.parseInt(year), Number.parseInt(monthStr) - 1, Number.parseInt(day))
                 
@@ -158,10 +148,9 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
               }
             })
 
-            // Calculate actual working days (excluding Sundays and holidays)
             const totalWorkingDays = calculateWorkingDays(month)
             const present = monthData.length
-            const absent = Math.max(0, totalWorkingDays - present) // Ensure non-negative
+            const absent = Math.max(0, totalWorkingDays - present)
             const percentage = totalWorkingDays > 0 ? ((present / totalWorkingDays) * 100).toFixed(1) : 0
 
             return {
@@ -172,15 +161,6 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
               absent,
               percentage: Number.parseFloat(percentage),
               sortKey: new Date(month.year, month.month).getTime(),
-              holidayCount: holidays.filter(holiday => {
-                try {
-                  const holidayDate = parseISO(holiday.date)
-                  return holidayDate.getMonth() === month.month && 
-                         holidayDate.getFullYear() === month.year
-                } catch {
-                  return false
-                }
-              }).length
             }
           }
           return null
@@ -196,15 +176,6 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
             percentage: 0,
             error: true,
             sortKey: new Date(month.year, month.month).getTime(),
-            holidayCount: holidays.filter(holiday => {
-              try {
-                const holidayDate = parseISO(holiday.date)
-                return holidayDate.getMonth() === month.month && 
-                       holidayDate.getFullYear() === month.year
-              } catch {
-                return false
-              }
-            }).length
           }
         }
       })
@@ -212,11 +183,9 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
       const results = await Promise.all(summaryPromises)
       const validResults = results.filter(result => result !== null)
       
-      // Sort by date descending (newest first)
       validResults.sort((a, b) => b.sortKey - a.sortKey)
       
       setSummaryData(validResults)
-      setCurrentPage(1) // Reset to first page when data changes
     } catch (error) {
       console.error("Error fetching attendance summary:", error)
       setError("Failed to load attendance summary")
@@ -232,227 +201,290 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
 
   // Fetch attendance summary when EmpId changes or holidays are loaded
   useEffect(() => {
-    if (EmpId && holidays.length >= 0) { // Check if holidays are loaded (even if empty array)
+    if (EmpId && holidays.length >= 0) {
       fetchAttendanceSummary()
     }
   }, [EmpId, holidays])
 
-  const getPercentageColor = (percentage) => {
-    if (percentage >= 90) return "success.main"
-    if (percentage >= 75) return "warning.main"
-    return "error.main"
-  }
-
-  // Refresh all data
-  const refreshData = () => {
-    fetchHolidays()
-    if (EmpId) {
-      fetchAttendanceSummary()
-    }
-  }
-
-  // Pagination calculations
-  const totalPages = Math.ceil(summaryData.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedData = summaryData.slice(startIndex, startIndex + itemsPerPage)
-
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value)
-  }
-
   if (!EmpId) {
     return (
-      <Paper sx={{ p: 2, borderRadius: 2 }}>
-        <Typography variant="body2" color="text.secondary" align="center">
-          Please select an employee to view summary
+      <Box sx={{
+        border: '1px dashed #999',
+        padding: '20px',
+        textAlign: 'center',
+        fontFamily: '"Courier New", monospace',
+        backgroundColor: '#fafafa'
+      }}>
+        <Typography variant="body2" color="text.secondary">
+          Student ID required to view attendance summary
         </Typography>
-      </Paper>
+      </Box>
     )
   }
 
   return (
-    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 2 }}>
-      {/* Header */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <TrendingUp color="primary" />
-          <Typography variant="h6" fontWeight="bold">
-            Attendance Summary
-          </Typography>
-        </Box>
-        
-        <Box display="flex" alignItems="center" gap={1}>
-          {summaryData.length > 0 && (
-            <Typography variant="caption" color="text.secondary">
-              Page {currentPage} of {totalPages}
-            </Typography>
-          )}
-          <IconButton 
-            size="small" 
-            onClick={refreshData} 
-            disabled={loading || holidayLoading}
-            title="Refresh data"
-          >
-            <Refresh fontSize="small" />
-          </IconButton>
-        </Box>
+    <Box sx={{
+      border: '2px solid #333',
+      padding: '20px',
+      marginBottom: '30px',
+      backgroundColor: '#fafafa',
+      fontFamily: '"Courier New", monospace',
+      position: 'relative'
+    }}>
+      {/* Corner label */}
+      <Box sx={{
+        position: 'absolute',
+        top: '-10px',
+        left: '20px',
+        backgroundColor: '#f5f5f5',
+        padding: '0 10px',
+        fontFamily: '"Courier New", monospace',
+        fontWeight: 'bold',
+        fontSize: '14px',
+        letterSpacing: '1px'
+      }}>
+        ATTENDANCE RECORD
       </Box>
 
       {/* Error Alerts */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ 
+          mb: 2, 
+          fontFamily: '"Courier New", monospace',
+          border: '1px solid #f44336'
+        }}>
           {error}
         </Alert>
       )}
       
       {holidayError && (
-        <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setHolidayError(null)}>
+        <Alert severity="warning" sx={{ 
+          mb: 2, 
+          fontFamily: '"Courier New", monospace',
+          border: '1px solid #ff9800'
+        }}>
           {holidayError}
         </Alert>
       )}
 
       {/* Loading States */}
       {(loading || holidayLoading) && (
-        <Box display="flex" justifyContent="center" alignItems="center" py={3} gap={2}>
-          <CircularProgress size={30} />
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          py: 3,
+          fontFamily: '"Courier New", monospace'
+        }}>
+          <CircularProgress size={24} sx={{ mr: 2 }} />
           <Typography variant="body2" color="text.secondary">
-            {holidayLoading ? "Loading holidays..." : "Loading attendance data..."}
+            {holidayLoading ? "Loading academic calendar..." : "Loading attendance data..."}
           </Typography>
         </Box>
       )}
 
-      {!(loading || holidayLoading) && (
+      {!(loading || holidayLoading) && summaryData.length > 0 ? (
         <>
+          <Typography variant="subtitle1" sx={{ 
+            fontWeight: 'bold', 
+            mb: 2,
+            textDecoration: 'underline',
+            fontFamily: '"Courier New", monospace'
+          }}>
+            Monthly Attendance Summary (July to Current Month)
+          </Typography>
+
           <TableContainer>
-            <Table size="small">
+            <Table size="small" sx={{ 
+              fontFamily: '"Courier New", monospace',
+              border: '1px solid #333'
+            }}>
               <TableHead>
-                <TableRow sx={{ backgroundColor: "#CC7A00" }}>
-                  <TableCell sx={{ color: "white", fontWeight: "bold", fontSize: "0.75rem" }}>
-                    Month
+                <TableRow sx={{ backgroundColor: '#f0f0f0' }}>
+                  <TableCell sx={{ 
+                    border: '1px solid #333', 
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    padding: '8px'
+                  }}>
+                    Academic Month
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "white", fontWeight: "bold", fontSize: "0.75rem" }}>
-                    Total Classes
+                  <TableCell sx={{ 
+                    border: '1px solid #333', 
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    padding: '8px'
+                  }}>
+                    Total Working Days
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "white", fontWeight: "bold", fontSize: "0.75rem" }}>
-                    Present
+                  <TableCell sx={{ 
+                    border: '1px solid #333', 
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    padding: '8px'
+                  }}>
+                    Days Present
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "white", fontWeight: "bold", fontSize: "0.75rem" }}>
-                    Absent
+                  <TableCell sx={{ 
+                    border: '1px solid #333', 
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    padding: '8px'
+                  }}>
+                    Days Absent
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "white", fontWeight: "bold", fontSize: "0.75rem" }}>
-                    Attendance %
+                  <TableCell sx={{ 
+                    border: '1px solid #333', 
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    padding: '8px'
+                  }}>
+                    Attendance Percentage
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedData.map((row, index) => (
+                {summaryData.slice(0, 6).map((row) => (
                   <TableRow 
                     key={row.monthYear}
                     sx={{ 
-                      '&:last-child td, &:last-child th': { border: 0 },
-                      backgroundColor: row.error ? 'error.light' : 'transparent',
                       '&:hover': {
-                        backgroundColor: row.error ? 'error.light' : 'action.hover'
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
                       }
                     }}
                   >
-                    <TableCell 
-                      component="th" 
-                      scope="row"
-                      sx={{ fontSize: "0.75rem", fontWeight: "medium" }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <CalendarToday sx={{ fontSize: 16, color: "primary.main" }} />
-                        <Box>
-                          <Typography variant="body2" fontWeight="medium">
-                            {row.monthName}
-                          </Typography>
-                          {row.holidayCount > 0 && (
-                            <Typography variant="caption" color="warning.main">
-                              {row.holidayCount} holiday{row.holidayCount > 1 ? 's' : ''}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
+                    <TableCell sx={{ 
+                      border: '1px solid #333',
+                      padding: '8px',
+                      fontWeight: '500'
+                    }}>
+                      {row.monthName}
                     </TableCell>
-                    <TableCell align="center" sx={{ fontSize: "0.75rem", fontWeight: "medium" }}>
+                    <TableCell sx={{ 
+                      border: '1px solid #333',
+                      padding: '8px',
+                      textAlign: 'center',
+                      fontWeight: '500'
+                    }}>
                       {row.totalClasses}
                     </TableCell>
-                    <TableCell 
-                      align="center" 
-                      sx={{ 
-                        fontSize: "0.75rem", 
-                        fontWeight: "bold",
-                        color: "success.main"
-                      }}
-                    >
+                    <TableCell sx={{ 
+                      border: '1px solid #333',
+                      padding: '8px',
+                      textAlign: 'center',
+                      color: '#2e7d32',
+                      fontWeight: 'bold'
+                    }}>
                       {row.present}
                     </TableCell>
-                    <TableCell 
-                      align="center" 
-                      sx={{ 
-                        fontSize: "0.75rem",
-                        color: "error.main",
-                        fontWeight: "medium"
-                      }}
-                    >
+                    <TableCell sx={{ 
+                      border: '1px solid #333',
+                      padding: '8px',
+                      textAlign: 'center',
+                      color: '#d32f2f'
+                    }}>
                       {row.absent}
                     </TableCell>
-                    <TableCell 
-                      align="center" 
-                      sx={{ 
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        color: getPercentageColor(row.percentage)
-                      }}
-                    >
-                      {row.percentage}%
+                    <TableCell sx={{ 
+                      border: '1px solid #333',
+                      padding: '8px',
+                      textAlign: 'center'
+                    }}>
+                      <Box sx={{
+                        display: 'inline-block',
+                        padding: '2px 12px',
+                        backgroundColor: 
+                          row.percentage >= 75 ? '#e8f5e8' :
+                          row.percentage >= 60 ? '#fff8e1' : '#ffebee',
+                        border: '1px solid',
+                        borderColor: 
+                          row.percentage >= 75 ? '#4caf50' :
+                          row.percentage >= 60 ? '#ff9800' : '#f44336',
+                        borderRadius: '2px',
+                        fontWeight: 'bold',
+                        minWidth: '60px'
+                      }}>
+                        {row.percentage}%
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
-                
-                {summaryData.length === 0 && !loading && !holidayLoading && (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        No attendance data found
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
-          {summaryData.length > itemsPerPage && (
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-                size="small"
-                showFirstButton
-                showLastButton
-              />
+          {/* Overall Summary */}
+          {summaryData.length > 0 && (
+            <Box sx={{ 
+              mt: 3, 
+              pt: 2, 
+              borderTop: '1px solid #333',
+              backgroundColor: '#f5f5f5',
+              padding: '15px',
+              borderRadius: '2px'
+            }}>
+              <Grid container spacing={2}>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="body2" sx={{ fontFamily: '"Courier New", monospace' }}>
+                    <strong>Total Months:</strong> {summaryData.length}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="body2" sx={{ fontFamily: '"Courier New", monospace' }}>
+                    <strong>Total Holidays:</strong> {holidays.length}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="body2" sx={{ fontFamily: '"Courier New", monospace' }}>
+                    <strong>Student ID:</strong> {EmpId}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="body2" sx={{ 
+                    fontFamily: '"Courier New", monospace',
+                    color: '#1976d2',
+                    fontWeight: 'bold'
+                  }}>
+                    <strong>Latest:</strong> {summaryData[0]?.percentage}%
+                  </Typography>
+                </Grid>
+              </Grid>
             </Box>
           )}
-        </>
-      )}
 
-      {/* Footer with quick stats */}
-      {summaryData.length > 0 && (
-        <Box sx={{ mt: 2, pt: 1, borderTop: 1, borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.secondary">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, summaryData.length)} of {summaryData.length} months • 
-            Student ID: <strong>{EmpId}</strong> • 
-            Total No. of Classes days exclude Sundays and {holidays.length} holiday{holidays.length !== 1 ? 's' : ''}
+          {/* Legend */}
+          <Box sx={{ 
+            mt: 2, 
+            pt: 1, 
+            borderTop: '1px dashed #999',
+            fontFamily: '"Courier New", monospace'
+          }}>
+            <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
+              <strong>Note:</strong> Working days exclude Sundays and declared institute holidays
+            </Typography>
+            <Typography variant="caption" sx={{ display: 'block', fontStyle: 'italic' }}>
+              Academic year follows July to June cycle
+            </Typography>
+          </Box>
+        </>
+      ) : !(loading || holidayLoading) && summaryData.length === 0 ? (
+        <Box sx={{ 
+          textAlign: 'center', 
+          py: 3,
+          fontFamily: '"Courier New", monospace'
+        }}>
+          <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#666' }}>
+            No attendance records found for this student
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#999' }}>
+            Attendance data may not be available for the current academic session
           </Typography>
         </Box>
-      )}
-    </Paper>
+      ) : null}
+    </Box>
   )
 }
+
+// Add the missing Grid import
 
 export default AttendanceSummary

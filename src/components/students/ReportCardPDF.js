@@ -7,15 +7,24 @@ import jsPDF from "jspdf"
 import {
   Box,
   Button,
-  Divider,
   Paper,
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Typography,
+  Grid,
+  Divider,
 } from "@mui/material"
+import DownloadIcon from '@mui/icons-material/Download'
+import PrintIcon from '@mui/icons-material/Print'
+import SchoolIcon from '@mui/icons-material/School'
+import PersonIcon from '@mui/icons-material/Person'
+import GradeIcon from '@mui/icons-material/Grade'
+import DateRangeIcon from '@mui/icons-material/DateRange'
+import AssessmentIcon from '@mui/icons-material/Assessment'
 import AttendanceSummary from "./AttendanceSummary"
 
 const fetchJSON = async (url) => {
@@ -34,12 +43,18 @@ const fetchReportArray = async (url) => {
   return json?.success && json?.data ? json.data : []
 }
 
-// Grade calculation function
 const calculateGrade = (percentage) => {
   if (percentage >= 80) return "A"
   if (percentage >= 60) return "B"
   if (percentage >= 45) return "C"
   return "D"
+}
+
+const calculateGPA = (percentage) => {
+  if (percentage >= 80) return "4.0"
+  if (percentage >= 60) return "3.0"
+  if (percentage >= 45) return "2.0"
+  return "1.0"
 }
 
 export default function ReportCardPDF({ studentId }) {
@@ -123,34 +138,7 @@ export default function ReportCardPDF({ studentId }) {
     return { totalMax, totalObtained, pct }
   }
 
-  const calcAttendanceTotals = (rows) => {
-    let totalClasses = 0
-    let totalPresent = 0
-    rows?.forEach((r) => {
-      totalClasses += Number.parseInt(r?.NoOfClasses || 0, 10)
-      totalPresent += Number.parseInt(r?.PresentClass || 0, 10)
-    })
-    const pct = totalClasses > 0 ? (totalPresent / totalClasses) * 100 : 0
-    return { totalClasses, totalPresent, pct }
-  }
-
   const formatPct = (n) => `${(n || 0).toFixed(1)}%`
-
-  const attendanceSummary = useMemo(() => {
-    if (!assignment || assignment.length === 0) return []
-    return assignment.map((r) => {
-      const classes = Number.parseInt(r?.NoOfClasses || 0, 10)
-      const present = Number.parseInt(r?.PresentClass || 0, 10)
-      const pct = classes > 0 ? (present / classes) * 100 : 0
-      return {
-        month: r?.Month || "",
-        totalClasses: classes,
-        present,
-        absent: Math.max(0, classes - present),
-        pct,
-      }
-    })
-  }, [assignment])
 
   const generatedOn = useMemo(() => {
     const d = new Date()
@@ -160,17 +148,12 @@ export default function ReportCardPDF({ studentId }) {
     return `${day}/${month}/${year}`
   }, [])
 
-  const guardian = student?.GuardianName || student?.Guardian || student?.FatherName || student?.ParentName || "-"
-
-  const contact = student?.Contact || student?.GuardianContactNo || student?.Phone || student?.GuardianMobile || "-"
-
   const onDownloadPDF = async () => {
     if (!reportRef.current) return
     setIsGenerating(true)
     try {
-      // Increase scale for better resolution and larger text
       const canvas = await html2canvas(reportRef.current, {
-        scale: 3, // Increased from 2 to 3 for larger text
+        scale: 3,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -179,12 +162,6 @@ export default function ReportCardPDF({ studentId }) {
           Array.from(imgs).forEach((img) => {
             img.setAttribute("crossorigin", "anonymous")
           })
-          
-          // Apply PDF-specific styles for larger text
-          const reportElement = clonedDoc.getElementById('reportCard')
-          if (reportElement) {
-            reportElement.style.fontSize = '14px'; // Base font size increase
-          }
         },
       })
       const imgData = canvas.toDataURL("image/png")
@@ -224,396 +201,526 @@ export default function ReportCardPDF({ studentId }) {
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Student Report Card
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Download as PDF for records and sharing
-          </Typography>
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button
           onClick={onDownloadPDF}
           disabled={loading || hasError || isGenerating}
           variant="contained"
-          aria-label="Download Report Card as PDF"
+          startIcon={<DownloadIcon />}
+          sx={{ 
+            backgroundColor: '#1976d2',
+            '&:hover': {
+              backgroundColor: '#1565c0'
+            }
+          }}
         >
-          {isGenerating ? "Generating..." : "Download PDF"}
+          {isGenerating ? "Generating PDF..." : "Download Report Card"}
         </Button>
       </Box>
 
       {hasError && (
-        <Paper variant="outlined" sx={{ p: 2, borderColor: "error.light", bgcolor: "error.lighter" }}>
-          <Typography variant="body2" color="error.main">
-            Failed to load student data.
+        <Paper sx={{ p: 3, border: '1px solid #d32f2f' }}>
+          <Typography color="error" align="center">
+            Failed to load student data. Please check the student ID.
           </Typography>
         </Paper>
       )}
 
       {loading && (
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Loading data...
-          </Typography>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography>Loading student report data...</Typography>
         </Paper>
       )}
 
-      {/* Report Content */}
       {!loading && !hasError && (
         <Paper
           ref={reportRef}
           id="reportCard"
           elevation={0}
-          variant="outlined"
           sx={{ 
-            p: 3,
-            // Increased font sizes for PDF
-            fontSize: { xs: '14px', sm: '16px' },
-            '& .MuiTypography-body2': {
-              fontSize: { xs: '14px', sm: '16px' },
-            },
-            '& .MuiTypography-body1': {
-              fontSize: { xs: '15px', sm: '17px' },
-            },
-            '& .MuiTypography-subtitle1': {
-              fontSize: { xs: '16px', sm: '18px' },
-            },
-            '& .MuiTypography-h6': {
-              fontSize: { xs: '18px', sm: '20px' },
-            },
-            '& .MuiTableCell-root': {
-              fontSize: { xs: '14px', sm: '16px' },
-              py: 1.5, // Increased padding for better readability
-            },
+            p: 0,
+            fontFamily: '"Courier New", Courier, monospace',
+            background: 'linear-gradient(to bottom, #ffffff 0%, #f9f9f9 100%)',
+            border: '2px solid #333',
+            position: 'relative',
+            overflow: 'visible',
+            minHeight: '29.7cm',
+            boxSizing: 'border-box'
           }}
-          aria-label="Report Card Content"
         >
-          {/* Header / Identity */}
-          <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={2}>
-            <Box>
-              <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '18px', sm: '22px' } }}>
-                LAKSHYA INSTITUTE OF TECHNOLOGY
-              </Typography>
-              <Typography variant="subtitle1" sx={{ mt: 0.5 }} fontWeight={600}>
-                STUDENT REPORT CARD
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Generated on:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {generatedOn}
-                </Typography>
-              </Typography>
-            </Box>
-            <Box
-              component="img"
-              src={"https://lit-connect.vercel.app/static/media/images%20(1).0a5419d3ae0870e1e361.png"}
-              alt="Institute logo"
-              sx={{ width: 80, height: 80, borderRadius: 1, objectFit: "contain" }} // Increased logo size
-              crossOrigin="anonymous"
-            />
-          </Box>
+          {/* Watermark Background */}
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: 0.03,
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Courier New\' font-size=\'14\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ELIT%3C/text%3E%3C/svg%3E")',
+            pointerEvents: 'none',
+            zIndex: 0
+          }} />
 
-          {/* Student Information */}
-          <Box mt={3}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              STUDENT INFORMATION
-            </Typography>
-            <Box mt={1}>
-              <Typography variant="body2">
-                Name:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {student?.CandidateName || "N/A"}
+          {/* Official Letterhead Header */}
+          <Box sx={{ 
+            backgroundColor: '#f5f5f5',
+            borderBottom: '3px double #333',
+            p: 3,
+            position: 'relative',
+            zIndex: 1
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              mb: 2 
+            }}>
+              <Box sx={{ textAlign: 'left' }}>
+                <Box
+                  component="img"
+                  src={"https://lit-connect.vercel.app/static/media/images%20(1).0a5419d3ae0870e1e361.png"}
+                  alt="Institute Seal"
+                  sx={{ 
+                    width: 90, 
+                    height: 90,
+                    objectFit: 'contain',
+                    filter: 'grayscale(100%)',
+                    border: '1px solid #999',
+                    borderRadius: '50%',
+                    padding: '4px'
+                  }}
+                  crossOrigin="anonymous"
+                />
+              </Box>
+              
+              <Box sx={{ 
+                textAlign: 'center',
+                flex: 1,
+                px: 4
+              }}>
+                <Typography variant="h5" sx={{ 
+                  fontWeight: 'bold',
+                  letterSpacing: '1px',
+                  color: '#2c3e50',
+                  textTransform: 'uppercase',
+                  fontFamily: '"Georgia", serif'
+                }}>
+                  Lakshya Institute of Technology
                 </Typography>
-              </Typography>
-              <Typography variant="body2">
-                Student ID:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {studCode || studentId || "N/A"}
+                <Typography variant="subtitle2" sx={{ 
+                  color: '#7f8c8d',
+                  fontStyle: 'italic',
+                  mt: 0.5
+                }}>
+                  (Approved by AICTE, New Delhi & Affiliated to BPUT, Rourkela)
                 </Typography>
-              </Typography>
-              <Typography variant="body2">
-                Course:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {course || "N/A"}
+                <Typography variant="body2" sx={{ 
+                  color: '#666',
+                  mt: 1,
+                  fontFamily: '"Courier New", monospace'
+                }}>
+                  Plot No. 239, Badagada, Bhubaneswar, Odisha - 751030
                 </Typography>
-              </Typography>
-              <Typography variant="body2">
-                Semester:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {semester || "N/A"}
+                <Typography variant="body2" sx={{ 
+                  color: '#666',
+                  fontFamily: '"Courier New", monospace'
+                }}>
+                  Phone: 0674-2541234 | Email: info@lit.edu.in
                 </Typography>
-              </Typography>
-              <Typography variant="body2">
-                Guardian:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {guardian}
-                </Typography>
-              </Typography>
-              <Typography variant="body2">
-                Contact:{" "}
-                <Typography component="span" fontWeight={600}>
-                  {contact}
-                </Typography>
-              </Typography>
-            </Box>
-          </Box>
-
-          <AttendanceSummary EmpId={studentId} />
-
-          {/* Academic Performance Summary */}
-          <Box mt={4}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              ACADEMIC PERFORMANCE SUMMARY
-            </Typography>
-            <Box mt={1}>
-              {(() => {
-                const { totalMax, totalObtained, pct } = calcMarksTotals(internal || [])
-                return (
-                  <Typography variant="body2">
-                    Internal Exams:{" "}
-                    <Typography component="span" fontWeight={600}>
-                      {totalObtained}
-                    </Typography>
-                    /
-                    <Typography component="span" fontWeight={600}>
-                      {totalMax}
-                    </Typography>{" "}
-                    (
-                    <Typography component="span" fontWeight={600}>
-                      {formatPct(pct)}
-                    </Typography>
-                    )
+              </Box>
+              
+              <Box sx={{ textAlign: 'right' }}>
+                <Box sx={{
+                  border: '2px solid #333',
+                  padding: '8px',
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  minWidth: '100px'
+                }}>
+                  
+                  <Typography variant="caption" sx={{ display: 'block', fontStyle: 'italic' }}>
+                    Date: {generatedOn}
                   </Typography>
-                )
-              })()}
-            </Box>
-          </Box>
-
-          {/* Internal Exam */}
-          <Box mt={4}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              INTERNAL EXAM DETAILS
-            </Typography>
-            {!internal || internal.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                No internal exam data available.
-              </Typography>
-            ) : (
-              <>
-                <Paper variant="outlined" sx={{ mt: 1, overflowX: "auto" }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
-                        <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                        <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {internal.map((row, idx) => {
-                        const max = Number.parseInt(row?.MaxMarks || 0, 10)
-                        const got = Number.parseInt(row?.ObtainedMarks || 0, 10)
-                        const pct = max > 0 ? (got / max) * 100 : 0
-                        return (
-                          <TableRow key={idx}>
-                            <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
-                            <TableCell align="center" sx={{ fontSize: '14px' }}>
-                              {got} / {max}
-                            </TableCell>
-                            <TableCell align="center" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </Paper>
-                <Box mt={1} display="flex" justifyContent="flex-end">
-                  {(() => {
-                    const { totalMax, totalObtained, pct } = calcMarksTotals(internal || [])
-                    return (
-                      <Typography variant="body2" color="text.secondary">
-                        Total:{" "}
-                        <Typography component="span" fontWeight={600}>
-                          {totalObtained}
-                        </Typography>{" "}
-                        /{" "}
-                        <Typography component="span" fontWeight={600}>
-                          {totalMax}
-                        </Typography>{" "}
-                        (
-                        <Typography component="span" fontWeight={600}>
-                          {formatPct(pct)}
-                        </Typography>
-                        )
-                      </Typography>
-                    )
-                  })()}
                 </Box>
-              </>
-            )}
-          </Box>
-
-          {/* Class Test (CT1..CT6) */}
-          <Box mt={4}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              Class Tests (CT)
-            </Typography>
-            {!ctAll || ctAll.every((s) => !s.rows || s.rows.length === 0) ? (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                No class test data available.
-              </Typography>
-            ) : (
-              <Box mt={1} display="flex" flexDirection="column" gap={2}>
-                {ctAll.map((section) => {
-                  if (!section.rows || section.rows.length === 0) return null
-                  const totals = calcMarksTotals(section.rows)
-                  return (
-                    <Paper key={section.category} variant="outlined">
-                      <Box borderBottom="1px solid" borderColor="divider" px={2} py={1.25}>
-                        <Typography variant="body2" fontWeight={600} sx={{ fontSize: '16px' }}>
-                          {section.category}
-                        </Typography>
-                      </Box>
-                      <Box overflow="auto">
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
-                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Percentage</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {section.rows.map((row, idx) => {
-                              const max = Number.parseInt(row?.MaxMarks || 0, 10)
-                              const got = Number.parseInt(row?.ObtainedMarks || 0, 10)
-                              const pct = max > 0 ? (got / max) * 100 : 0
-                              return (
-                                <TableRow key={idx}>
-                                  <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
-                                  <TableCell align="center" sx={{ fontSize: '14px' }}>
-                                    {got} / {max}
-                                  </TableCell>
-                                  <TableCell align="center" sx={{ fontSize: '14px' }}>{formatPct(pct)}</TableCell>
-                                </TableRow>
-                              )
-                            })}
-                            <TableRow selected>
-                              <TableCell sx={{ fontWeight: 600, fontSize: '15px' }}>Total</TableCell>
-                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
-                                {totals.totalObtained} / {totals.totalMax}
-                              </TableCell>
-                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
-                                {formatPct(totals.pct)}
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </Box>
-                    </Paper>
-                  )
-                })}
               </Box>
-            )}
+            </Box>
+            
+            {/* Decorative Line */}
+            <Box sx={{
+              height: '2px',
+              background: 'linear-gradient(to right, transparent, #333, transparent)',
+              margin: '10px 0'
+            }} />
+            
+            <Typography variant="h4" align="center" sx={{
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '3px',
+              color: '#2c3e50',
+              textDecoration: 'underline',
+              mt: 2,
+              fontFamily: '"Times New Roman", serif'
+            }}>
+              Report Card
+            </Typography>
+            <Typography variant="h6" align="center" sx={{
+              color: '#7f8c8d',
+              fontStyle: 'italic',
+              mt: 1,
+              fontFamily: '"Courier New", monospace'
+            }}>
+              Academic Session: {student?.Session || "2024-2025"}
+            </Typography>
           </Box>
 
-          {/* CBT (1..6) */}
-          <Box mt={4}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              CBT
-            </Typography>
-            {!cbtAll || cbtAll.every((s) => !s.rows || s.rows.length === 0) ? (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                No CBT data available.
-              </Typography>
-            ) : (
-              <Box mt={1} display="flex" flexDirection="column" gap={2}>
-                {cbtAll.map((section) => {
-                  if (!section.rows || section.rows.length === 0) return null
-                  const totals = calcMarksTotals(section.rows)
-                  const totalGrade = calculateGrade(totals.pct)
-                  return (
-                    <Paper key={section.category} variant="outlined">
-                      <Box borderBottom="1px solid" borderColor="divider" px={2} py={1.25}>
-                        <Typography variant="body2" fontWeight={600} sx={{ fontSize: '16px' }}>
-                          CBT {section.category}
-                        </Typography>
-                      </Box>
-                      <Box overflow="auto">
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell sx={{ fontSize: '15px', fontWeight: 600 }}>Subject</TableCell>
-                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Marks</TableCell>
-                              <TableCell align="center" sx={{ fontSize: '15px', fontWeight: 600 }}>Grade</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {section.rows.map((row, idx) => {
-                              const max = Number.parseInt(row?.MaxMarks || 0, 10)
-                              const got = Number.parseInt(row?.ObtainedMarks || 0, 10)
-                              const pct = max > 0 ? (got / max) * 100 : 0
-                              const grade = calculateGrade(pct)
-                              return (
-                                <TableRow key={idx}>
-                                  <TableCell sx={{ fontSize: '14px' }}>{row?.Subject || "-"}</TableCell>
-                                  <TableCell align="center" sx={{ fontSize: '14px' }}>
-                                    {got} / {max}
-                                  </TableCell>
-                                  <TableCell align="center" sx={{ fontSize: '14px', fontWeight: 600 }}>
-                                    {grade}
-                                  </TableCell>
-                                </TableRow>
-                              )
-                            })}
-                            <TableRow selected>
-                              <TableCell sx={{ fontWeight: 600, fontSize: '15px' }}>Total</TableCell>
-                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
-                                {totals.totalObtained} / {totals.totalMax}
-                              </TableCell>
-                              <TableCell align="center" sx={{ fontWeight: 600, fontSize: '15px' }}>
-                                {totalGrade}
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </Box>
-                    </Paper>
-                  )
-                })}
+          {/* Main Content */}
+          <Box sx={{ p: 4, position: 'relative', zIndex: 1 }}>
+            {/* Student Information Box */}
+            <Box sx={{
+              border: '2px solid #333',
+              padding: '20px',
+              marginBottom: '30px',
+              backgroundColor: '#fafafa',
+              position: 'relative'
+            }}>
+              {/* Corner Decorations */}
+              <Box sx={{
+                position: 'absolute',
+                top: '-10px',
+                left: '20px',
+                backgroundColor: '#f5f5f5',
+                padding: '0 10px',
+                fontFamily: '"Courier New", monospace',
+                fontWeight: 'bold',
+                fontSize: '14px'
+              }}>
+                STUDENT PARTICULARS
               </Box>
-            )}
-          </Box>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={6}>
+                  <Typography sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>Name:</span>
+                    {student?.CandidateName || "N/A"}
+                  </Typography>
+                  <Typography sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>Father's Name:</span>
+                    {student?.FatherName || student?.GuardianName || "-"}
+                  </Typography>
+                  <Typography sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>Course:</span>
+                    {course || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>Roll No:</span>
+                    {studCode || studentId || "N/A"}
+                  </Typography>
+                  <Typography sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>Semester:</span>
+                    {semester || "N/A"}
+                  </Typography>
+                  <Typography sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>Contact:</span>
+                    {student?.Contact || student?.GuardianContactNo || "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+<Box mb={4}>
+  <AttendanceSummary EmpId={studentId} />
+</Box>
+            {/* Internal Examination Results */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{
+                backgroundColor: '#333',
+                color: 'white',
+                padding: '8px 16px',
+                display: 'inline-block',
+                marginBottom: '15px',
+                fontFamily: '"Courier New", monospace',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
+              }}>
+                Internal Examination Results
+              </Typography>
+              
+              {!internal || internal.length === 0 ? (
+                <Box sx={{
+                  border: '1px dashed #999',
+                  padding: '20px',
+                  textAlign: 'center',
+                  fontStyle: 'italic',
+                  color: '#666'
+                }}>
+                  No internal examination data available for this semester.
+                </Box>
+              ) : (
+                <>
+                  <TableContainer sx={{
+                    border: '1px solid #333',
+                    fontFamily: '"Courier New", monospace'
+                  }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: '#f0f0f0' }}>
+                          <TableCell sx={{ border: '1px solid #333', fontWeight: 'bold', textAlign: 'center' }}>
+                            Subject Code
+                          </TableCell>
+                          <TableCell sx={{ border: '1px solid #333', fontWeight: 'bold', textAlign: 'center' }}>
+                            Subject Name
+                          </TableCell>
+                          <TableCell sx={{ border: '1px solid #333', fontWeight: 'bold', textAlign: 'center' }}>
+                            Max Marks
+                          </TableCell>
+                          <TableCell sx={{ border: '1px solid #333', fontWeight: 'bold', textAlign: 'center' }}>
+                            Marks Obtained
+                          </TableCell>
+                          <TableCell sx={{ border: '1px solid #333', fontWeight: 'bold', textAlign: 'center' }}>
+                            Percentage
+                          </TableCell>
+                          <TableCell sx={{ border: '1px solid #333', fontWeight: 'bold', textAlign: 'center' }}>
+                            Grade
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {internal.map((row, idx) => {
+                          const max = Number.parseInt(row?.MaxMarks || 0, 10)
+                          const got = Number.parseInt(row?.ObtainedMarks || 0, 10)
+                          const pct = max > 0 ? (got / max) * 100 : 0
+                          const grade = calculateGrade(pct)
+                          return (
+                            <TableRow key={idx} hover>
+                              <TableCell sx={{ border: '1px solid #333', textAlign: 'center' }}>
+                                {row?.SubjectCode || "-"}
+                              </TableCell>
+                              <TableCell sx={{ border: '1px solid #333' }}>
+                                {row?.Subject || "-"}
+                              </TableCell>
+                              <TableCell sx={{ border: '1px solid #333', textAlign: 'center' }}>
+                                {max}
+                              </TableCell>
+                              <TableCell sx={{ border: '1px solid #333', textAlign: 'center', fontWeight: 'bold' }}>
+                                {got}
+                              </TableCell>
+                              <TableCell sx={{ border: '1px solid #333', textAlign: 'center' }}>
+                                {formatPct(pct)}
+                              </TableCell>
+                              <TableCell sx={{ border: '1px solid #333', textAlign: 'center' }}>
+                                <Box sx={{
+                                  display: 'inline-block',
+                                  padding: '2px 8px',
+                                  backgroundColor: 
+                                    grade === 'A' ? '#e8f5e8' :
+                                    grade === 'B' ? '#e3f2fd' :
+                                    grade === 'C' ? '#fff8e1' : '#ffebee',
+                                  border: '1px solid',
+                                  borderColor: 
+                                    grade === 'A' ? '#4caf50' :
+                                    grade === 'B' ? '#2196f3' :
+                                    grade === 'C' ? '#ff9800' : '#f44336',
+                                  borderRadius: '2px',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {grade}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
 
-          {/* Grade Legend */}
-          <Box mt={3} p={2} sx={{ backgroundColor: 'grey.50', borderRadius: 1 }}>
-            <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-              Grade Legend:
-            </Typography>
-            <Box display="flex" gap={3} flexWrap="wrap">
-              <Typography variant="body2">
-                <strong>A:</strong> 80-100%
+                  {/* Summary Box */}
+                  <Box sx={{
+                    border: '2px solid #333',
+                    marginTop: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f9f9f9'
+                  }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: 'bold' }}>
+                          Total Marks:
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontFamily: '"Courier New", monospace', fontWeight: 'bold' }}>
+                          {calcMarksTotals(internal).totalObtained} / {calcMarksTotals(internal).totalMax}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: 'bold' }}>
+                          Overall Percentage:
+                        </Typography>
+                        <Typography variant="h6" sx={{ 
+                          fontFamily: '"Courier New", monospace', 
+                          fontWeight: 'bold',
+                          color: '#1976d2'
+                        }}>
+                          {formatPct(calcMarksTotals(internal).pct)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: 'bold' }}>
+                          Final Grade:
+                        </Typography>
+                        <Box sx={{
+                          display: 'inline-block',
+                          padding: '4px 16px',
+                          backgroundColor: '#333',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '18px',
+                          borderRadius: '2px'
+                        }}>
+                          {calculateGrade(calcMarksTotals(internal).pct)}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </>
+              )}
+            </Box>
+
+            {/* Class Tests Section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{
+                backgroundColor: '#555',
+                color: 'white',
+                padding: '8px 16px',
+                display: 'inline-block',
+                marginBottom: '15px',
+                fontFamily: '"Courier New", monospace',
+                fontWeight: 'bold'
+              }}>
+                Class Test Performance (CT1-CT6)
               </Typography>
-              <Typography variant="body2">
-                <strong>B:</strong> 60-79%
+              
+              {!ctAll || ctAll.every((s) => !s.rows || s.rows.length === 0) ? (
+                <Typography sx={{ fontStyle: 'italic', color: '#666', fontFamily: '"Courier New", monospace' }}>
+                  No class test data recorded.
+                </Typography>
+              ) : (
+                <Grid container spacing={2}>
+                  {ctAll.map((section) => {
+                    if (!section.rows || section.rows.length === 0) return null
+                    const totals = calcMarksTotals(section.rows)
+                    const grade = calculateGrade(totals.pct)
+                    return (
+                      <Grid item xs={6} md={4} key={section.category}>
+                        <Box sx={{
+                          border: '1px solid #999',
+                          padding: '12px',
+                          backgroundColor: '#fff',
+                          fontFamily: '"Courier New", monospace'
+                        }}>
+                          <Typography sx={{ fontWeight: 'bold', mb: 1 }}>
+                            {section.category}
+                          </Typography>
+                          <Divider sx={{ my: 1 }} />
+                          <Typography variant="body2">
+                            Marks: {totals.totalObtained}/{totals.totalMax}
+                          </Typography>
+                          <Typography variant="body2">
+                            Percentage: {formatPct(totals.pct)}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            Grade: <span style={{ fontWeight: 'bold' }}>{grade}</span>
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )
+                  })}
+                </Grid>
+              )}
+            </Box>
+
+            {/* CBT Section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{
+                backgroundColor: '#555',
+                color: 'white',
+                padding: '8px 16px',
+                display: 'inline-block',
+                marginBottom: '15px',
+                fontFamily: '"Courier New", monospace',
+                fontWeight: 'bold'
+              }}>
+                Computer Based Tests
               </Typography>
-              <Typography variant="body2">
-                <strong>C:</strong> 45-59%
+              
+              {!cbtAll || cbtAll.every((s) => !s.rows || s.rows.length === 0) ? (
+                <Typography sx={{ fontStyle: 'italic', color: '#666', fontFamily: '"Courier New", monospace' }}>
+                  No CBT data recorded.
+                </Typography>
+              ) : (
+                <Grid container spacing={2}>
+                  {cbtAll.map((section) => {
+                    if (!section.rows || section.rows.length === 0) return null
+                    const totals = calcMarksTotals(section.rows)
+                    const grade = calculateGrade(totals.pct)
+                    return (
+                      <Grid item xs={6} md={4} key={section.category}>
+                        <Box sx={{
+                          border: '1px solid #999',
+                          padding: '12px',
+                          backgroundColor: '#fff',
+                          fontFamily: '"Courier New", monospace'
+                        }}>
+                          <Typography sx={{ fontWeight: 'bold', mb: 1 }}>
+                            CBT Test {section.category}
+                          </Typography>
+                          <Divider sx={{ my: 1 }} />
+                          <Typography variant="body2">
+                            Score: {totals.totalObtained}/{totals.totalMax}
+                          </Typography>
+                          <Typography variant="body2">
+                            Percentage: {formatPct(totals.pct)}
+                          </Typography>
+                          <Box sx={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            backgroundColor: '#e8f5e8',
+                            border: '1px solid #4caf50',
+                            borderRadius: '2px',
+                            mt: 1
+                          }}>
+                            Grade: {grade}
+                          </Box>
+                        </Box>
+                      </Grid>
+                    )
+                  })}
+                </Grid>
+              )}
+            </Box>
+
+            
+
+            {/* Footer */}
+            <Box sx={{ 
+              mt: 4, 
+              pt: 2, 
+              borderTop: '2px solid #333',
+              textAlign: 'center'
+            }}>
+              <Typography variant="caption" sx={{ 
+                fontFamily: '"Courier New", monospace',
+                color: '#666'
+              }}>
+                This is a computer generated document. No signature is required.
               </Typography>
-              <Typography variant="body2">
-                <strong>D:</strong> Below 45%
+              <Typography variant="caption" sx={{ 
+                display: 'block',
+                fontFamily: '"Courier New", monospace',
+                color: '#999',
+                mt: 1
+              }}>
+                Report ID: {studCode || studentId}-{semester || "NA"}-{generatedOn.replace(/\//g, '')}
               </Typography>
             </Box>
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Footer note */}
-          <Box textAlign="center">
-            <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ fontSize: '16px' }}>
-              Official Report Card - Lakshya Institute Of Technology
-            </Typography>
           </Box>
         </Paper>
       )}
