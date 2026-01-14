@@ -66,18 +66,19 @@ function Sidebar() {
   if (user?.role === "HR") {
     allowedRoutes.push(
       { path: "/teachers", name: "Teachers", icon: <Person /> },
-      { path: '/students', name: 'Students', icon: <Person /> },
-      { path: '/time-table', name: 'Time Table', icon: <CalendarMonthIcon /> },
-      { path: '/subjects', name: 'Subjects', icon: <LibraryBooksIcon /> },
+      { path: "/students", name: "Students", icon: <Person /> },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
+      { path: "/time-table", name: "Time Table", icon: <CalendarMonthIcon /> },
+      { path: "/subjects", name: "Subjects", icon: <LibraryBooksIcon /> },
       {
         path: "/certificate",
         name: "Certificate",
         icon: <WorkspacePremiumIcon />,
       },
-      { path: '/variable', name: 'Variable Fees', icon: <AppsIcon /> },
-      { path: '/hr-report', name: 'Reports', icon: <MenuIcon /> },
-      { path: '/notices', name: 'Notices', icon: <MarkUnreadChatAltIcon /> },
-      { path: '/news', name: 'News', icon: <NewspaperIcon /> },
+      { path: "/variable", name: "Variable Fees", icon: <AppsIcon /> },
+      { path: "/hr-report", name: "Reports", icon: <MenuIcon /> },
+      { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
+      { path: "/news", name: "News", icon: <NewspaperIcon /> }
     );
 
   }

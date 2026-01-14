@@ -112,9 +112,7 @@ const navigate = useNavigate();
               >
                 Lakshya Institute Of Technology
               </Typography>
-              <Typography variant="subtitle1">
-                Student Info: {student.StudentID}
-              </Typography>
+              
             </Box>
           </Box>
           <Avatar
@@ -129,7 +127,7 @@ const navigate = useNavigate();
         <Paper sx={{ p: 2, mb: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={3}>
-              <b>ID:</b> {student.StudentID}
+              <b>Student ID:</b> {student.StudentID}
             </Grid>
             <Grid item xs={3}>
               <b>Name:</b> {student.CandidateName}

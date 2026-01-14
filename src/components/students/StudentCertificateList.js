@@ -343,363 +343,411 @@ const StudentsCertificateList = () => {
     const inactiveCount = transactions.length - activeCount;
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2>Students</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Tooltip title="Export to Excel">
-                        <IconButton 
-                            onClick={exportToExcel} 
-                            disabled={isExporting}
-                            color="primary"
-                        >
-                            <FileDownloadIcon />
-                        </IconButton>
-                    </Tooltip>
-                    
-                    <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
-                        <IconButton 
-                            onClick={() => setShowFilters(!showFilters)}
-                            color={hasActiveFilters() ? "primary" : "default"}
-                            sx={{ 
-                                border: hasActiveFilters() ? '2px solid #1976d2' : 'none',
-                                borderRadius: 1
-                            }}
-                        >
-                            <FilterListIcon />
-                            {hasActiveFilters() && (
-                                <Chip 
-                                    label={getActiveFilterCount()}
-                                    size="small"
-                                    sx={{ 
-                                        position: 'absolute', 
-                                        top: -8, 
-                                        right: -8,
-                                        height: 20,
-                                        minWidth: 20,
-                                        fontSize: '0.75rem'
-                                    }}
-                                />
-                            )}
-                        </IconButton>
-                    </Tooltip>
-                    
-                    <TextField
-                        label="Search by Student ID or Name"
-                        variant="outlined"
-                        size="small"
-                        value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        sx={{ width: 300 }}
-                    />
-                </div>
-            </div>
+      <div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <h2>Students Certificate List</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            
 
-            {/* Filter Section */}
-            {showFilters && (
-                <Paper sx={{ p: 2, mb: 2, backgroundColor: '#f5f5f5' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <h4 style={{ margin: 0 }}>Filters</h4>
-                        <Button
-                            startIcon={<ClearIcon />}
-                            onClick={handleClearFilters}
-                            size="small"
-                            disabled={!hasActiveFilters()}
-                        >
-                            Clear All
-                        </Button>
-                    </Box>
-                    
-                    <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-                        <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <InputLabel>Course</InputLabel>
-                            <Select
-                                value={courseFilter}
-                                onChange={(e) => setCourseFilter(e.target.value)}
-                                label="Course"
-                            >
-                                <MenuItem value="">All Courses</MenuItem>
-                                {uniqueCourses.map(course => (
-                                    <MenuItem key={course} value={course}>{course}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        
-                        <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <InputLabel>Batch</InputLabel>
-                            <Select
-                                value={batchFilter}
-                                onChange={(e) => setBatchFilter(e.target.value)}
-                                label="Batch"
-                            >
-                                <MenuItem value="">All Batches</MenuItem>
-                                {uniqueBatches.map(batch => (
-                                    <MenuItem key={batch} value={batch}>{batch}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        
-                        <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <InputLabel>Semester</InputLabel>
-                            <Select
-                                value={semesterFilter}
-                                onChange={(e) => setSemesterFilter(e.target.value)}
-                                label="Semester"
-                            >
-                                <MenuItem value="">All Semesters</MenuItem>
-                                {uniqueSemesters.map(sem => (
-                                    <MenuItem key={sem} value={sem}>{sem}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        
-                        <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={isActiveFilter}
-                                onChange={(e) => setIsActiveFilter(e.target.value)}
-                                label="Status"
-                            >
-                                <MenuItem value="all">All Status</MenuItem>
-                                <MenuItem value="active">Active Only</MenuItem>
-                                <MenuItem value="inactive">Inactive Only</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Stack>
-                    
-                    {/* Active Filters Display */}
-                    {hasActiveFilters() && (
-                        <Box sx={{ mt: 2 }}>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                {searchQuery && (
-                                    <Chip
-                                        label={`Search: "${searchQuery}"`}
-                                        onDelete={() => setSearchQuery('')}
-                                        size="small"
-                                    />
-                                )}
-                                {courseFilter && (
-                                    <Chip
-                                        label={`Course: ${courseFilter}`}
-                                        onDelete={() => setCourseFilter('')}
-                                        size="small"
-                                    />
-                                )}
-                                {batchFilter && (
-                                    <Chip
-                                        label={`Batch: ${batchFilter}`}
-                                        onDelete={() => setBatchFilter('')}
-                                        size="small"
-                                    />
-                                )}
-                                {semesterFilter && (
-                                    <Chip
-                                        label={`Semester: ${semesterFilter}`}
-                                        onDelete={() => setSemesterFilter('')}
-                                        size="small"
-                                    />
-                                )}
-                                {isActiveFilter !== 'all' && (
-                                    <Chip
-                                        label={`Status: ${isActiveFilter === 'active' ? 'Active' : 'Inactive'}`}
-                                        onDelete={() => setIsActiveFilter('all')}
-                                        size="small"
-                                    />
-                                )}
-                            </Stack>
-                        </Box>
-                    )}
-                </Paper>
-            )}
-
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead style={{ backgroundColor: "#CC7A00" }}>
-                        <TableRow>
-                            <TableCell style={{ color: "white" }}>Student ID</TableCell>
-                            <TableCell style={{ color: "white" }}>Student Name</TableCell>
-                            <TableCell style={{ color: "white" }}>Course</TableCell>
-                            <TableCell style={{ color: "white" }}>Batch</TableCell>
-                            <TableCell style={{ color: "white" }}>Semester</TableCell>
-                            <TableCell style={{ color: "white" }}>Status</TableCell>
-                            <TableCell style={{ color: "white" }}>View</TableCell>
-                            {user && user.role === 'HR' && (
-                                <>
-                                    <TableCell style={{ color: "white" }}>Reset Mobile ID</TableCell>
-                                    <TableCell style={{ color: "white" }}>Disable/Enable</TableCell>
-                                </>
-                            )}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredTransactions.length > 0 ? (
-                            filteredTransactions
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((tx) => {
-                                    const isActive = getStudentStatus(tx.StudentID);
-                                    return (
-                                        <TableRow 
-                                            key={tx.TransactionId || tx.StudentID}
-                                            sx={{ 
-                                                backgroundColor: !isActive ? '#f5f5f5' : 'inherit',
-                                                opacity: !isActive ? 0.7 : 1
-                                            }}
-                                        >
-                                            <TableCell>{tx.StudentID}</TableCell>
-                                            <TableCell>{tx.CandidateName}</TableCell>
-                                            <TableCell>{tx.Course}</TableCell>
-                                            <TableCell>{tx.Session}</TableCell>
-                                            <TableCell>{tx.Sem}</TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={isActive ? "Active" : "Inactive"}
-                                                    color={isActive ? "success" : "error"}
-                                                    size="small"
-                                                    icon={isActive ? <CheckCircleIcon /> : <BlockIcon />}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Tooltip title="View Student Details">
-                                                    <VisibilityIcon
-                                                        color="primary"
-                                                        sx={{ cursor: 'pointer' }}
-                                                        onClick={() => handleViewClick(tx.StudentID)}
-                                                    />
-                                                </Tooltip>
-                                            </TableCell>
-                                            {user && user.role === 'HR' && (
-                                                <>
-                                                    <TableCell>
-                                                        <Tooltip title="Reset Mobile ID">
-                                                            <IconButton
-                                                                sx={{ 
-                                                                    backgroundColor: "red", 
-                                                                    color: "white", 
-                                                                    ":hover": { backgroundColor: "darkred" }
-                                                                }}
-                                                                onClick={() => handleRemoveMobileID(tx.StudentID)}
-                                                            >
-                                                                <RestartAltIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Tooltip title={isActive ? "Disable Student" : "Enable Student"}>
-                                                            <FormControlLabel
-                                                                control={
-                                                                    <Switch
-                                                                        checked={isActive}
-                                                                        onChange={() => handleToggleActive(tx)}
-                                                                        disabled={loading}
-                                                                        color={isActive ? "primary" : "secondary"}
-                                                                    />
-                                                                }
-                                                                label=""
-                                                            />
-                                                        </Tooltip>
-                                                    </TableCell>
-                                                </>
-                                            )}
-                                        </TableRow>
-                                    );
-                                })
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={user && user.role === 'HR' ? 9 : 7} align="center">
-                                    No students found
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TablePagination
-                                rowsPerPageOptions={[5, 10, 25]}
-                                count={filteredTransactions.length}
-                                rowsPerPage={rowsPerPage}
-                                page={page}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                labelRowsPerPage="Rows per page:"
-                            />
-                        </TableRow>
-                    </TableFooter>
-                </Table>
-            </TableContainer>
-
-            {/* Summary information */}
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Chip 
-                        label={`Total Students: ${transactions.length}`} 
-                        color="primary" 
-                        variant="outlined"
-                    />
-                    <Chip 
-                        label={`Active: ${activeCount}`} 
-                        color="success" 
-                        variant="outlined"
-                    />
-                    <Chip 
-                        label={`Inactive: ${inactiveCount}`} 
-                        color="error" 
-                        variant="outlined"
-                    />
-                </Box>
+            <Tooltip title={showFilters ? "Hide Filters" : "Show Filters"}>
+              <IconButton
+                onClick={() => setShowFilters(!showFilters)}
+                color={hasActiveFilters() ? "primary" : "default"}
+                sx={{
+                  border: hasActiveFilters() ? "2px solid #1976d2" : "none",
+                  borderRadius: 1,
+                }}
+              >
+                <FilterListIcon />
                 {hasActiveFilters() && (
-                    <Chip 
-                        label={`Filtered: ${filteredTransactions.length}`} 
-                        color="secondary" 
-                        variant="outlined"
-                    />
+                  <Chip
+                    label={getActiveFilterCount()}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: -8,
+                      right: -8,
+                      height: 20,
+                      minWidth: 20,
+                      fontSize: "0.75rem",
+                    }}
+                  />
                 )}
+              </IconButton>
+            </Tooltip>
+
+            <TextField
+              label="Search by Student ID or Name"
+              variant="outlined"
+              size="small"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              sx={{ width: 300 }}
+            />
+          </div>
+        </div>
+
+        {/* Filter Section */}
+        {showFilters && (
+          <Paper sx={{ p: 2, mb: 2, backgroundColor: "#f5f5f5" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <h4 style={{ margin: 0 }}>Filters</h4>
+              <Button
+                startIcon={<ClearIcon />}
+                onClick={handleClearFilters}
+                size="small"
+                disabled={!hasActiveFilters()}
+              >
+                Clear All
+              </Button>
             </Box>
 
-            <Snackbar
-                open={openSnackbar}
-                autoHideDuration={6000}
-                onClose={() => setOpenSnackbar(false)}
-                message={snackbarMessage}
-            />
+            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Course</InputLabel>
+                <Select
+                  value={courseFilter}
+                  onChange={(e) => setCourseFilter(e.target.value)}
+                  label="Course"
+                >
+                  <MenuItem value="">All Courses</MenuItem>
+                  {uniqueCourses.map((course) => (
+                    <MenuItem key={course} value={course}>
+                      {course}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                <DialogTitle>Add Variable Fee</DialogTitle>
-                <DialogContent>
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Student</InputLabel>
-                        <Select
-                            value={selectedStudent}
-                            onChange={(e) => setSelectedStudent(e.target.value)}
-                        >
-                            {transactions.map((student) => (
-                                <MenuItem key={student.StudentID} value={student.StudentID}>
-                                    {student.StudentID} - {student.CandidateName}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Particular"
-                        value={particular}
-                        onChange={(e) => setParticular(e.target.value)}
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Batch</InputLabel>
+                <Select
+                  value={batchFilter}
+                  onChange={(e) => setBatchFilter(e.target.value)}
+                  label="Batch"
+                >
+                  <MenuItem value="">All Batches</MenuItem>
+                  {uniqueBatches.map((batch) => (
+                    <MenuItem key={batch} value={batch}>
+                      {batch}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Semester</InputLabel>
+                <Select
+                  value={semesterFilter}
+                  onChange={(e) => setSemesterFilter(e.target.value)}
+                  label="Semester"
+                >
+                  <MenuItem value="">All Semesters</MenuItem>
+                  {uniqueSemesters.map((sem) => (
+                    <MenuItem key={sem} value={sem}>
+                      {sem}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={isActiveFilter}
+                  onChange={(e) => setIsActiveFilter(e.target.value)}
+                  label="Status"
+                >
+                  <MenuItem value="all">All Status</MenuItem>
+                  <MenuItem value="active">Active Only</MenuItem>
+                  <MenuItem value="inactive">Inactive Only</MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
+
+            {/* Active Filters Display */}
+            {hasActiveFilters() && (
+              <Box sx={{ mt: 2 }}>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {searchQuery && (
+                    <Chip
+                      label={`Search: "${searchQuery}"`}
+                      onDelete={() => setSearchQuery("")}
+                      size="small"
                     />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Amount"
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                  )}
+                  {courseFilter && (
+                    <Chip
+                      label={`Course: ${courseFilter}`}
+                      onDelete={() => setCourseFilter("")}
+                      size="small"
                     />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-                    <Button onClick={handleSubmit} color="primary">Submit</Button>
-                </DialogActions>
-            </Dialog>
-        </div>
+                  )}
+                  {batchFilter && (
+                    <Chip
+                      label={`Batch: ${batchFilter}`}
+                      onDelete={() => setBatchFilter("")}
+                      size="small"
+                    />
+                  )}
+                  {semesterFilter && (
+                    <Chip
+                      label={`Semester: ${semesterFilter}`}
+                      onDelete={() => setSemesterFilter("")}
+                      size="small"
+                    />
+                  )}
+                  {isActiveFilter !== "all" && (
+                    <Chip
+                      label={`Status: ${
+                        isActiveFilter === "active" ? "Active" : "Inactive"
+                      }`}
+                      onDelete={() => setIsActiveFilter("all")}
+                      size="small"
+                    />
+                  )}
+                </Stack>
+              </Box>
+            )}
+          </Paper>
+        )}
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead style={{ backgroundColor: "#CC7A00" }}>
+              <TableRow>
+                <TableCell style={{ color: "white" }}>Student</TableCell>
+                <TableCell style={{ color: "white" }}>Course</TableCell>
+                <TableCell style={{ color: "white" }}>
+                  Received Status
+                </TableCell>
+                <TableCell style={{ color: "white" }}>
+                  Returned Status
+                </TableCell>
+                <TableCell style={{ color: "white" }}>View</TableCell>
+                {user && user.role === "HR" && (
+                  <>
+                    <TableCell style={{ color: "white" }}>
+                      Reset Mobile ID
+                    </TableCell>
+                    <TableCell style={{ color: "white" }}>
+                      Disable/Enable
+                    </TableCell>
+                  </>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((tx) => {
+                    const isActive = getStudentStatus(tx.StudentID);
+                    return (
+                      <TableRow
+                        key={tx.TransactionId || tx.StudentID}
+                        sx={{
+                          backgroundColor: !isActive ? "#f5f5f5" : "inherit",
+                          opacity: !isActive ? 0.7 : 1,
+                        }}
+                      >
+                        <TableCell>
+                          {tx.CandidateName} - {tx.StudentID}
+                        </TableCell>
+                        <TableCell>
+                          {tx.Course} - {tx.Sem} ({tx.Session})
+                        </TableCell>
+
+                        <TableCell>{tx.receive_status}</TableCell>
+                        <TableCell>{tx.return_status}</TableCell>
+                        {/* <TableCell>
+                          <Chip
+                            label={isActive ? "Active" : "Inactive"}
+                            color={isActive ? "success" : "error"}
+                            size="small"
+                            icon={
+                              isActive ? <CheckCircleIcon /> : <BlockIcon />
+                            }
+                          />
+                        </TableCell> */}
+                        <TableCell>
+                          <Tooltip title="View Student Details">
+                            <VisibilityIcon
+                              color="primary"
+                              sx={{ cursor: "pointer" }}
+                              onClick={() => handleViewClick(tx.StudentID)}
+                            />
+                          </Tooltip>
+                        </TableCell>
+                        {user && user.role === "HR" && (
+                          <>
+                            <TableCell>
+                              <Tooltip title="Reset Mobile ID">
+                                <IconButton
+                                  sx={{
+                                    backgroundColor: "red",
+                                    color: "white",
+                                    ":hover": {
+                                      backgroundColor: "darkred",
+                                    },
+                                  }}
+                                  onClick={() =>
+                                    handleRemoveMobileID(tx.StudentID)
+                                  }
+                                >
+                                  <RestartAltIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                            <TableCell>
+                              <Tooltip
+                                title={
+                                  isActive
+                                    ? "Disable Student"
+                                    : "Enable Student"
+                                }
+                              >
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      checked={isActive}
+                                      onChange={() => handleToggleActive(tx)}
+                                      disabled={loading}
+                                      color={isActive ? "primary" : "secondary"}
+                                    />
+                                  }
+                                  label=""
+                                />
+                              </Tooltip>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    );
+                  })
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={user && user.role === "HR" ? 9 : 7}
+                    align="center"
+                  >
+                    No students found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  count={filteredTransactions.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  labelRowsPerPage="Rows per page:"
+                />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </TableContainer>
+
+        {/* Summary information */}
+        <Box
+          sx={{
+            mt: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Chip
+              label={`Total Students: ${transactions.length}`}
+              color="primary"
+              variant="outlined"
+            />
+            <Chip
+              label={`Active: ${activeCount}`}
+              color="success"
+              variant="outlined"
+            />
+            <Chip
+              label={`Inactive: ${inactiveCount}`}
+              color="error"
+              variant="outlined"
+            />
+          </Box>
+          {hasActiveFilters() && (
+            <Chip
+              label={`Filtered: ${filteredTransactions.length}`}
+              color="secondary"
+              variant="outlined"
+            />
+          )}
+        </Box>
+
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={6000}
+          onClose={() => setOpenSnackbar(false)}
+          message={snackbarMessage}
+        />
+
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>Add Variable Fee</DialogTitle>
+          <DialogContent>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Student</InputLabel>
+              <Select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+              >
+                {transactions.map((student) => (
+                  <MenuItem key={student.StudentID} value={student.StudentID}>
+                    {student.StudentID} - {student.CandidateName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Particular"
+              value={particular}
+              onChange={(e) => setParticular(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Amount"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} color="primary">
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
     );
 };
 
