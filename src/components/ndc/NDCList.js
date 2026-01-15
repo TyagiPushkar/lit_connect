@@ -39,8 +39,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { useAuth } from "../auth/AuthContext";
 
 const NDCList = () => {
+  const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -89,6 +91,12 @@ const NDCList = () => {
   const [existingExamForms, setExistingExamForms] = useState([]);
   const [issueFormLoading, setIssueFormLoading] = useState(false);
   const [issueFormSubmitting, setIssueFormSubmitting] = useState(false);
+
+  // Pagination for dialogs
+  const [adminApprovalPage, setAdminApprovalPage] = useState(0);
+  const [adminApprovalRowsPerPage, setAdminApprovalRowsPerPage] = useState(5);
+  const [examFormsPage, setExamFormsPage] = useState(0);
+  const [examFormsRowsPerPage, setExamFormsRowsPerPage] = useState(5);
 
   // Extract unique values for filters
   const uniqueCourses = [
@@ -212,6 +220,25 @@ const NDCList = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(Number.parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  // Dialog pagination handlers
+  const handleAdminApprovalPageChange = (event, newPage) => {
+    setAdminApprovalPage(newPage);
+  };
+
+  const handleAdminApprovalRowsPerPageChange = (event) => {
+    setAdminApprovalRowsPerPage(Number.parseInt(event.target.value, 10));
+    setAdminApprovalPage(0);
+  };
+
+  const handleExamFormsPageChange = (event, newPage) => {
+    setExamFormsPage(newPage);
+  };
+
+  const handleExamFormsRowsPerPageChange = (event) => {
+    setExamFormsRowsPerPage(Number.parseInt(event.target.value, 10));
+    setExamFormsPage(0);
   };
 
   const handleViewClick = (studentId) => {
@@ -349,7 +376,7 @@ const NDCList = () => {
     try {
       const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth() + 1;
-      const semester = currentMonth >= 8 ? 1 : 2;
+      const semester = selectedStudent.Sem;
       const sessionYear =
         currentMonth >= 8
           ? `${currentYear}-${currentYear + 1}`
@@ -455,6 +482,32 @@ const NDCList = () => {
         color={overallStatus === "Clear" ? "success" : "error"}
         size="medium"
         icon={overallStatus === "Clear" ? <CheckCircleIcon /> : <CancelIcon />}
+      />
+    );
+  };
+
+  const getStatusChipForApproval = (status) => {
+    const statusValue = status || "Pending"; // Default to "Pending" if undefined/null
+    const isApproved = statusValue.toLowerCase() === "approved";
+    return (
+      <Chip
+        label={statusValue}
+        color={isApproved ? "success" : "error"} 
+        size="small"
+        icon={isApproved ? <CheckCircleIcon /> : <CancelIcon />}
+        variant="outlined"
+      />
+    );
+  };
+
+  const getFormTypeChip = (formType) => {
+    const isRegular = formType.toLowerCase() === "regular";
+    return (
+      <Chip
+        label={formType}
+        color={isRegular ? "primary" : "warning"}
+        size="small"
+        variant="outlined"
       />
     );
   };
@@ -566,7 +619,7 @@ const NDCList = () => {
             <TextField
               select
               size="small"
-              label="Course"
+              label=""
               value={courseFilter}
               onChange={(e) => setCourseFilter(e.target.value)}
               sx={{ minWidth: 150 }}
@@ -585,7 +638,7 @@ const NDCList = () => {
             <TextField
               select
               size="small"
-              label="Batch"
+              label=""
               value={batchFilter}
               onChange={(e) => setBatchFilter(e.target.value)}
               sx={{ minWidth: 150 }}
@@ -604,7 +657,7 @@ const NDCList = () => {
             <TextField
               select
               size="small"
-              label="Semester"
+              label=""
               value={semesterFilter}
               onChange={(e) => setSemesterFilter(e.target.value)}
               sx={{ minWidth: 150 }}
@@ -777,13 +830,18 @@ const NDCList = () => {
                         }
                         onClose={handleCloseMenu}
                       >
-                        <MenuItem
-                          onClick={() =>
-                            handleOpenAdminApproval(selectedStudentForMenu)
-                          }
-                        >
-                          Admin Approval
-                        </MenuItem>
+                        {/* Show Admin Approval only for specific users */}
+                        {user &&
+                          (user.emp_id === "NI003" ||
+                            user.emp_id === "LIT0001") && (
+                            <MenuItem
+                              onClick={() =>
+                                handleOpenAdminApproval(selectedStudentForMenu)
+                              }
+                            >
+                              Admin Approval
+                            </MenuItem>
+                          )}
                         <MenuItem
                           onClick={() =>
                             handleOpenAdminApprovalList(selectedStudentForMenu)
@@ -838,17 +896,20 @@ const NDCList = () => {
         </Table>
       </TableContainer>
 
+      {/* Admin Approval Dialog */}
       <Dialog
         open={openAdminApprovalDialog}
         onClose={() => setOpenAdminApprovalDialog(false)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Admin Approval</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: "#CC7A00", color: "white" }}>
+          Admin Approval
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
           {selectedStudent && (
             <Box sx={{ pt: 2, space: 2 }}>
-              <Paper sx={{ p: 2, mb: 2, backgroundColor: "#e3f2fd" }}>
+              <Paper sx={{ p: 2, mb: 3, backgroundColor: "#fff3e0" }}>
                 <Typography variant="body2">
                   <strong>{selectedStudent.CandidateName}</strong> (
                   {selectedStudent.StudentID})
@@ -857,7 +918,7 @@ const NDCList = () => {
 
               <Typography
                 variant="subtitle2"
-                sx={{ mb: 2, fontWeight: "bold" }}
+                sx={{ mb: 2, fontWeight: "bold", color: "#CC7A00" }}
               >
                 Select Due Types to Approve:
               </Typography>
@@ -868,8 +929,9 @@ const NDCList = () => {
                   sx={{
                     mb: 2,
                     p: 1.5,
-                    border: "1px solid #ddd",
+                    border: "1px solid #e0e0e0",
                     borderRadius: 1,
+                    backgroundColor: "#f9f9f9",
                   }}
                 >
                   <FormControlLabel
@@ -882,9 +944,10 @@ const NDCList = () => {
                             [type]: e.target.checked,
                           })
                         }
+                        sx={{ color: "#CC7A00" }}
                       />
                     }
-                    label={type}
+                    label={<Typography variant="subtitle2">{type}</Typography>}
                   />
                   {approvalChecks[type] && (
                     <TextField
@@ -905,32 +968,20 @@ const NDCList = () => {
                   )}
                 </Box>
               ))}
-
-              <TextField
-                fullWidth
-                select
-                label="Approval Status"
-                value={approvalStatus}
-                onChange={(e) => setApprovalStatus(e.target.value)}
-                sx={{ mt: 2 }}
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-              </TextField>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, backgroundColor: "#f5f5f5" }}>
           <Button onClick={() => setOpenAdminApprovalDialog(false)}>
             Cancel
           </Button>
           <Button
             onClick={handleSubmitAdminApproval}
             variant="contained"
-            color="primary"
+            sx={{
+              backgroundColor: "#CC7A00",
+              "&:hover": { backgroundColor: "#b36b00" },
+            }}
             disabled={approvalLoading}
           >
             {approvalLoading ? "Submitting..." : "Submit"}
@@ -938,139 +989,246 @@ const NDCList = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Admin Approval List Dialog */}
       <Dialog
         open={openAdminApprovalListDialog}
         onClose={() => setOpenAdminApprovalListDialog(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Admin Approval History</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: "#CC7A00", color: "white" }}>
+          Admin Approval History
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          {selectedStudent && (
+            <Paper sx={{ p: 2, mb: 2, backgroundColor: "#fff3e0" }}>
+              <Typography variant="body2">
+                <strong>{selectedStudent.CandidateName}</strong> (
+                {selectedStudent.StudentID}) - {selectedStudent.Course}
+              </Typography>
+            </Paper>
+          )}
+
           {adminApprovalLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
+              <CircularProgress sx={{ color: "#CC7A00" }} />
             </Box>
           ) : adminApprovalList.length > 0 ? (
-            <Box sx={{ pt: 2, space: 2 }}>
-              {adminApprovalList.map((approval, index) => (
-                <Paper key={index} sx={{ p: 2, mb: 2 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      mb: 1,
-                    }}
-                  >
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        {approval.due_type} - Semester {approval.sem}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "#666" }}>
-                        {approval.remark}
-                      </Typography>
-                    </Box>
-                    
-                  </Box>
-                 
-                </Paper>
-              ))}
-            </Box>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead style={{ backgroundColor: "#CC7A00" }}>
+                  <TableRow>
+                    <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                      Due Type
+                    </TableCell>
+                    <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                      Semester
+                    </TableCell>
+                    <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                      Remarks
+                    </TableCell>
+
+                    <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                      Date
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {adminApprovalList
+                    .slice(
+                      adminApprovalPage * adminApprovalRowsPerPage,
+                      adminApprovalPage * adminApprovalRowsPerPage +
+                        adminApprovalRowsPerPage
+                    )
+                    .map((approval, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{approval.due_type}</TableCell>
+                        <TableCell>Semester {approval.sem}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {approval.remark}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>{approval.action_datetime}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TablePagination
+                      rowsPerPageOptions={[5, 10, 25]}
+                      count={adminApprovalList.length}
+                      rowsPerPage={adminApprovalRowsPerPage}
+                      page={adminApprovalPage}
+                      onPageChange={handleAdminApprovalPageChange}
+                      onRowsPerPageChange={handleAdminApprovalRowsPerPageChange}
+                      labelRowsPerPage="Rows per page:"
+                      SelectProps={{
+                        native: true,
+                      }}
+                    />
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </TableContainer>
           ) : (
-            <Typography sx={{ py: 4, textAlign: "center" }}>
-              No approvals found for this student
-            </Typography>
+            <Paper sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="body1" sx={{ color: "#666" }}>
+                No approvals found for this student
+              </Typography>
+            </Paper>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, backgroundColor: "#f5f5f5" }}>
           <Button onClick={() => setOpenAdminApprovalListDialog(false)}>
             Close
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Issue Exam Form Dialog */}
       <Dialog
         open={openIssueFormDialog}
         onClose={() => setOpenIssueFormDialog(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Issue Exam Form</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: "#CC7A00", color: "white" }}>
+          Issue Exam Form
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
           {selectedStudent && (
             <Box sx={{ pt: 2, space: 2 }}>
-              <Paper sx={{ p: 2, mb: 2, backgroundColor: "#e3f2fd" }}>
+              <Paper sx={{ p: 2, mb: 2, backgroundColor: "#fff3e0" }}>
                 <Typography variant="body2">
                   <strong>{selectedStudent.CandidateName}</strong> (
-                  {selectedStudent.StudentID})
+                  {selectedStudent.StudentID}) - {selectedStudent.Course}
                 </Typography>
               </Paper>
 
               <Typography
                 variant="subtitle2"
-                sx={{ mb: 2, fontWeight: "bold" }}
+                sx={{ mb: 2, fontWeight: "bold", color: "#CC7A00" }}
               >
                 Existing Exam Forms:
               </Typography>
 
               {issueFormLoading ? (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                  <CircularProgress size={32} />
+                  <CircularProgress sx={{ color: "#CC7A00" }} size={32} />
                 </Box>
               ) : existingExamForms.length > 0 ? (
-                <Box sx={{ mb: 2, maxHeight: 200, overflow: "auto" }}>
-                  {existingExamForms.map((form, index) => (
-                    <Paper
-                      key={index}
-                      sx={{ p: 1.5, mb: 1, backgroundColor: "#f5f5f5" }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          {form.form_type}
-                        </Typography>
-                        <Typography variant="body2">{form.session}</Typography>
-                      </Box>
-                      <Typography variant="caption">
-                        Semester {form.sem}
-                      </Typography>
-                    </Paper>
-                  ))}
-                </Box>
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead style={{ backgroundColor: "#CC7A00" }}>
+                      <TableRow>
+                        <TableCell
+                          style={{ color: "white", fontWeight: "bold" }}
+                        >
+                          Form Type
+                        </TableCell>
+
+                        <TableCell
+                          style={{ color: "white", fontWeight: "bold" }}
+                        >
+                          Semester
+                        </TableCell>
+
+                        <TableCell
+                          style={{ color: "white", fontWeight: "bold" }}
+                        >
+                          Issue Date
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {existingExamForms
+                        .slice(
+                          examFormsPage * examFormsRowsPerPage,
+                          examFormsPage * examFormsRowsPerPage +
+                            examFormsRowsPerPage
+                        )
+                        .map((form, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              {getFormTypeChip(form.form_type)}
+                            </TableCell>
+
+                            <TableCell>Semester {form.sem}</TableCell>
+
+                            <TableCell>{form.issue_datetime}</TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TablePagination
+                          rowsPerPageOptions={[5, 10, 25]}
+                          count={existingExamForms.length}
+                          rowsPerPage={examFormsRowsPerPage}
+                          page={examFormsPage}
+                          onPageChange={handleExamFormsPageChange}
+                          onRowsPerPageChange={handleExamFormsRowsPerPageChange}
+                          labelRowsPerPage="Rows per page:"
+                          SelectProps={{
+                            native: true,
+                          }}
+                        />
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
+                </TableContainer>
               ) : (
-                <Typography variant="body2" sx={{ mb: 2, color: "#666" }}>
-                  No exam forms issued yet
-                </Typography>
+                <Paper sx={{ p: 3, textAlign: "center" }}>
+                  <Typography variant="body1" sx={{ color: "#666" }}>
+                    No exam forms issued yet
+                  </Typography>
+                </Paper>
               )}
 
               <Paper
                 sx={{
                   p: 2,
+                  mt: 3,
                   backgroundColor: "#fff3cd",
-                  borderLeft: "4px solid #ffc107",
+                  borderLeft: "4px solid #CC7A00",
                 }}
               >
-                <Typography variant="body2">
-                  A new <strong>Regular</strong> exam form will be issued for
-                  the current semester.
+                <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                  New Exam Form Details:
                 </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2">
+                    <strong>Form Type:</strong> Regular
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Semester:</strong> {selectedStudent.Sem}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Session:</strong>{" "}
+                    {new Date().getMonth() + 1 >= 8
+                      ? `${new Date().getFullYear()}-${
+                          new Date().getFullYear() + 1
+                        }`
+                      : `${
+                          new Date().getFullYear() - 1
+                        }-${new Date().getFullYear()}`}
+                  </Typography>
+                </Box>
               </Paper>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, backgroundColor: "#f5f5f5" }}>
           <Button onClick={() => setOpenIssueFormDialog(false)}>Cancel</Button>
           <Button
             onClick={handleSubmitIssueForm}
             variant="contained"
-            color="primary"
+            sx={{
+              backgroundColor: "#CC7A00",
+              "&:hover": { backgroundColor: "#b36b00" },
+            }}
             disabled={issueFormSubmitting}
           >
             {issueFormSubmitting ? "Issuing..." : "Issue Form"}
