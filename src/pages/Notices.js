@@ -16,7 +16,7 @@ function Notices() {
             </Box>
             <Box component="main" sx={{ flexGrow: 1, p: 0, ml: drawerWidth }}>
                 <Navbar />
-                <div style={{ marginTop: "20px", marginLeft: "10px" }}>
+                <div style={{ padding:"10px" }}>
                     <ViewNotices/>
                 </div>
 

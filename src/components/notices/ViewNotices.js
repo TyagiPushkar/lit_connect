@@ -1,25 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Typography, CircularProgress, Button, Box
-} from '@mui/material';
-import axios from 'axios';
-import { useAuth } from '../auth/AuthContext';
-import AddNotices from './AddNotices';
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  CircularProgress,
+  Button,
+  Box,
+  Chip,
+} from "@mui/material";
+import axios from "axios";
+import { useAuth } from "../auth/AuthContext";
+import AddNotices from "./AddNotices";
 
 function ViewNotices() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const { user } = useAuth();
 
   const fetchNotices = async () => {
     try {
-      const response = await axios.get('https://namami-infotech.com/LIT/src/notification/get_notice.php');
+      const response = await axios.get(
+        "https://namami-infotech.com/LIT/src/notification/get_notice.php?role=HR",
+      );
       setNotices(response.data.notices || []);
     } catch (err) {
-      setError('Failed to fetch notices');
+      setError("Failed to fetch notices");
     } finally {
       setLoading(false);
     }
@@ -29,65 +41,166 @@ function ViewNotices() {
     fetchNotices();
   }, []);
 
-  const handleOpenDialog = () => setDialogOpen(true);
-  const handleCloseDialog = () => setDialogOpen(false);
   const handleNoticeAdded = () => {
     setLoading(true);
     fetchNotices();
   };
 
+  const toggleStatus = async (notice) => {
+    try {
+      await axios.post(
+        "https://namami-infotech.com/LIT/src/notification/update_notice_status.php",
+        {
+          id: notice.Id,
+          status: notice.Status === "Active" ? "Inactive" : "Active",
+        },
+      );
+
+      fetchNotices(); // refresh list
+    } catch (error) {
+      console.error("Status update failed");
+    }
+  };
+
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" mt={6}>
+        <CircularProgress sx={{ color: "#CC7A00" }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" mt={4}>
+      <Box display="flex" justifyContent="center" mt={6}>
         <Typography color="error">{error}</Typography>
       </Box>
     );
   }
 
   return (
-    <Box p={0}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-      <Typography variant="h5" gutterBottom>
-        Notices
-      </Typography>
+    <>
+      {/* Header */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+      >
+        <Typography variant="h5" fontWeight={600}>
+          📢 College Notices
+        </Typography>
 
-      {user?.role === 'HR' && (
-        <Button
-          variant="contained"
-          onClick={handleOpenDialog}
-          sx={{ mb: 2, backgroundColor: '#CC7A00', '&:hover': { backgroundColor: '#b86a00' } }}
-        >
-          Add Notice
-        </Button>
-      )}
-</div>
-      <TableContainer component={Paper}>
+        {user?.role === "HR" && (
+          <Button
+            variant="contained"
+            onClick={() => setDialogOpen(true)}
+            sx={{
+              backgroundColor: "#CC7A00",
+              px: 3,
+              borderRadius: 2,
+              "&:hover": { backgroundColor: "#b86a00" },
+            }}
+          >
+            Add Notice
+          </Button>
+        )}
+      </Box>
+
+      {/* Table */}
+      <TableContainer sx={{ borderRadius: 2 }}>
         <Table>
-          <TableHead sx={{ backgroundColor: '#CC7A00' }}>
-            <TableRow>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Notice</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date</TableCell>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#CC7A00" }}>
+              <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                Notice
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: 600, width: 150 }}>
+                Date
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: 600, width: 100 }}>
+                Status
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: 600, width: 140 }}>
+                Action
+              </TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
             {notices.length > 0 ? (
               notices.map((notice) => (
-                <TableRow key={notice.Id}>
-                  <TableCell>{notice.Text}</TableCell>
-                  <TableCell>{notice.Date}</TableCell>
+                <TableRow
+                  key={notice.Id}
+                  hover
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "#FFF4E5",
+                    },
+                  }}
+                >
+                  <TableCell>
+                    <Typography variant="body1" fontWeight={500}>
+                      {notice.Text}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <Chip
+                      label={notice.Date}
+                      size="small"
+                      sx={{
+                        backgroundColor: "#FFF0D9",
+                        color: "#CC7A00",
+                        fontWeight: 500,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body1"
+                      fontWeight={500}
+                      style={{
+                        color: notice.Status == "Active" ? "green" : "red",
+                      }}
+                    >
+                      {notice.Status}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    {user?.role === "HR" && (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => toggleStatus(notice)}
+                        sx={{
+                          backgroundColor:
+                            notice.Status === "Active"
+                              ? "error.main"
+                              : "success.main",
+                          "&:hover": {
+                            backgroundColor:
+                              notice.Status === "Active"
+                                ? "error.dark"
+                                : "success.dark",
+                          },
+                          textTransform: "none",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {notice.Status === "Active" ? "Deactivate" : "Activate"}
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={2}>No notices available.</TableCell>
+                <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">
+                    No notices available
+                  </Typography>
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -96,10 +209,10 @@ function ViewNotices() {
 
       <AddNotices
         open={dialogOpen}
-        onClose={handleCloseDialog}
+        onClose={() => setDialogOpen(false)}
         onNoticeAdded={handleNoticeAdded}
       />
-    </Box>
+    </>
   );
 }
 

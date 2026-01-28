@@ -8,7 +8,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 
-const courseOptions = ['BCA', 'BSc.CS (H)','BSc.ITM (H)'];
+const courseOptions = ["BCA", "BSc.CS (H)", "BSc.ITM (H)", "BSc. DS"];
 const semesterOptions = ['1', '2', '3', '4', '5', '6'];
 
 function AddHoliday({ open, onClose, onHolidayAdded }) {

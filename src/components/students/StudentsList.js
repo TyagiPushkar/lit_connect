@@ -81,7 +81,7 @@ const StudentsList = () => {
 
     const fetchEmployeeStatus = async () => {
         try {
-            const response = await axios.get('https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=1');
+            const response = await axios.get('https://namami-infotech.com/LIT/src/employee/list_students.php?Tenent_Id=1');
             if (response.data.success) {
                 // Create a map of employee/student IDs to their IsActive status
                 const statusMap = {};
