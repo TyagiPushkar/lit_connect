@@ -29,6 +29,7 @@ import {
   Tooltip,
   Switch,
   FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit";
@@ -37,12 +38,12 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
-import { CheckBox } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DownloadIcon from "@mui/icons-material/Download";
 import BlockIcon from '@mui/icons-material/Block';
 import Papa from "papaparse";
+
 function EmployeeList() {
   const { user } = useAuth();
   const [error, setError] = useState("");
@@ -53,6 +54,8 @@ function EmployeeList() {
   const [openDetail, setOpenDetail] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [formMode, setFormMode] = useState("add"); // 'add' or 'edit'
+  const [nextEmpId, setNextEmpId] = useState(""); // State to store the next EmpId
+  
   const [formData, setFormData] = useState({
     EmpId: "",
     Name: "",
@@ -72,6 +75,8 @@ function EmployeeList() {
     OfficeIsActive: 1,
     RM: "",
     Shift: "",
+    DOB: "",
+    JoinDate: "",
     WeekOff: "",
     Designation: "",
     Category: "",
@@ -96,9 +101,14 @@ function EmployeeList() {
       const response = await axios.get(
         `https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
       );
-      console.log("Employees response:", response.data); // Debugging line
+      console.log("Employees response:", response.data);
       if (response.data.success) {
         setEmployees(response.data.data);
+        
+        // Extract last EmpId from message and generate next one
+        if (response.data.message && response.data.message.match(/[A-Z]+\d+/)) {
+          generateNextEmpId(response.data.message);
+        }
       } else {
         console.error("Error fetching employees:", response.data.message);
       }
@@ -109,12 +119,38 @@ function EmployeeList() {
     }
   };
 
+  // Function to generate next EmpId by incrementing the last one
+  const generateNextEmpId = (lastEmpId) => {
+    try {
+      // Extract the numeric part from the EmpId
+      const match = lastEmpId.match(/([A-Z]+)(\d+)/);
+      if (match) {
+        const prefix = match[1]; // Alphabetic prefix (e.g., "LIT")
+        const number = parseInt(match[2], 10); // Numeric part (e.g., 87)
+        const nextNumber = number + 1;
+        const nextEmpId = `${prefix}${nextNumber.toString().padStart(4, '0')}`;
+        setNextEmpId(nextEmpId);
+        
+        // Update formData with the new EmpId if in add mode
+        if (formMode === 'add') {
+          setFormData(prev => ({
+            ...prev,
+            EmpId: nextEmpId
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error generating next EmpId:", error);
+      setNextEmpId("");
+    }
+  };
+
   const fetchOffices = async () => {
     try {
       const response = await axios.get(
         "https://namami-infotech.com/LIT/src/employee/get_office.php",
       );
-      console.log("Offices response:", response.data); // Debugging line
+      console.log("Offices response:", response.data);
       if (response.data.success) {
         setOffices(response.data.data);
       } else {
@@ -138,37 +174,63 @@ function EmployeeList() {
     setPage(0);
   };
 
-  const handleOpenForm = (mode, employee = null) => {
+  const handleOpenForm = async (mode, employee = null) => {
     setFormMode(mode);
+    
     if (mode === "edit" && employee) {
+      // Format dates for input fields (YYYY-MM-DD)
+      const formattedDOB = employee.DOB ? formatDateForInput(employee.DOB) : "";
+      const formattedJoinDate = employee.JoinDate ? formatDateForInput(employee.JoinDate) : "";
+      
+      // Parse WeekOff from string to array
+      const weekOffArray = employee.WeekOff ? employee.WeekOff.split(",").map(item => item.trim()) : [];
+      
+      // Get selected office IDs from the employee data
+      const selectedOfficeIds = employee.OfficeId ? 
+        employee.OfficeId.toString().split(",").map(id => id.trim()) : [];
+      
+      console.log("Editing employee data:", {
+        ...employee,
+        DOB: formattedDOB,
+        JoinDate: formattedJoinDate,
+        WeekOff: weekOffArray,
+        OfficeId: selectedOfficeIds
+      });
+
       setFormData({
         EmpId: employee.EmpId,
-        Name: employee.Name,
-        Password: "", // Assuming Password is not updated on edit
-        Mobile: employee.Mobile,
-        EmailId: employee.EmailId,
-        Role: employee.Role,
-        OTP: employee.OTP,
+        Name: employee.Name || "",
+        Password: "", // Password field is blank for edit
+        Mobile: employee.Mobile || "",
+        EmailId: employee.EmailId || "",
+        Role: employee.Role || "",
+        OTP: employee.OTP || "123456",
         IsOTPExpired: employee.IsOTPExpired || 1,
         IsGeofence: employee.IsGeofence || 0,
         Tenent_Id: user.tenent_id,
-        IsActive: employee.IsActive || 1, // Use the IsActive from API
-        OfficeId: employee.OfficeId || null,
+        IsActive: employee.IsActive === 1 ? 1 : 0,
+        OfficeId: selectedOfficeIds, // Store as array for Select component
         OfficeName: employee.OfficeName || "",
         LatLong: employee.LatLong || "",
         Distance: employee.Distance || "",
         OfficeIsActive: employee.OfficeIsActive || 1,
-        RM: employee.RM,
-        Shift: employee.Shift,
-        DOB: employee.DOB || "", // Ensure DOB is included
-        JoinDate: employee.JoinDate || "", // Ensure JoinDate is included
-        WeekOff: employee.WeekOff || "",
+        RM: employee.RM || "",
+        Shift: employee.Shift || "",
+        DOB: formattedDOB,
+        JoinDate: formattedJoinDate,
+        WeekOff: weekOffArray, // Store as array for Select component
         Designation: employee.Designation || "",
         Category: employee.Category || "",
       });
     } else {
+      // For add mode, generate new EmpId
+      if (!nextEmpId) {
+        // If nextEmpId is not set, fetch employees to get the last EmpId
+        await fetchEmployees();
+      }
+      
       setFormData({
-        EmpId: "",
+        EmpId: nextEmpId,
         Name: "",
         Password: "",
         Mobile: "",
@@ -179,16 +241,16 @@ function EmployeeList() {
         IsGeofence: 0,
         Tenent_Id: user.tenent_id,
         IsActive: 1,
-        OfficeId: null,
+        OfficeId: [],
         OfficeName: "",
         LatLong: "",
         Distance: "",
         OfficeIsActive: 1,
         RM: "",
         Shift: "",
-        DOB: "", // Initialize DOB
-        JoinDate: "", // Initialize JoinDate
-        WeekOff: "",
+        DOB: "",
+        JoinDate: "",
+        WeekOff: [], // Initialize as empty array
         Designation: "",
         Category: "",
       });
@@ -196,73 +258,98 @@ function EmployeeList() {
     setOpenForm(true);
   };
 
+  // Helper function to format date for input field (YYYY-MM-DD)
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    
+    try {
+      // Remove time part if present
+      const dateOnly = dateString.split(' ')[0];
+      const date = new Date(dateOnly);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+      
+      // Format as YYYY-MM-DD for input[type="date"]
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Ensure all required fields are populated
-    const requiredFields = [
-      "EmpId",
-      "Name",
-      "Mobile",
-      "EmailId",
-      "Role",
-      "OfficeName",
-      "LatLong",
-      "Distance",
-    ];
-    for (let field of requiredFields) {
-      if (!formData[field]) {
-        alert(`Please fill in all required fields. Missing: ${field}`);
-        return;
-      }
-    }
-
+    // Prepare data for API
     const formattedFormData = {
       EmpId: formData.EmpId,
       Name: formData.Name,
-      Password: formData.Password,
       Mobile: formData.Mobile,
       EmailId: formData.EmailId,
       Role: formData.Role,
-      OTP: formData.OTP || "123456", // Provide a default OTP if not provided
-      IsOTPExpired: formData.IsOTPExpired || 1,
-      IsGeofence: formData.IsGeofence || 0,
       Tenent_Id: user.tenent_id,
       IsActive: formData.IsActive || 1,
-      RM: formData.RM,
+      RM: formData.RM || "",
       Shift: formData.Shift,
-      DOB: formData.DOB || "", // Default value if DOB is not provided
-      JoinDate: formData.JoinDate || "", // Default value if JoinDate is not provided
-      WeekOff: formData.WeekOff || "Sunday",
-      Designation: formData.Designation,
-      Category: formData.Category,
-      Offices: [
-        {
-          OfficeName: formData.OfficeName,
-          LatLong: formData.LatLong,
-        },
-      ],
+      DOB: formData.DOB || "",
+      JoinDate: formData.JoinDate || "",
+      WeekOff: Array.isArray(formData.WeekOff) ? formData.WeekOff.join(",") : formData.WeekOff || "",
+      Designation: formData.Designation || "",
+      Category: formData.Category || "",
     };
 
-    console.log("Formatted Form Data:", formattedFormData); // Log formatted data
+    // Prepare office data
+    const selectedOfficeIds = Array.isArray(formData.OfficeId) ? formData.OfficeId : [];
+    const officeData = [];
+    
+    if (selectedOfficeIds.length > 0) {
+      selectedOfficeIds.forEach(officeId => {
+        const office = offices.find(o => o.Id.toString() === officeId.toString());
+        if (office) {
+          officeData.push({
+            OfficeName: office.OfficeName,
+            LatLong: office.LatLong
+          });
+        }
+      });
+    }
+    
+    if (officeData.length > 0) {
+      formattedFormData.Offices = officeData;
+    }
 
-    const url =
-      formMode === "add"
-        ? "https://namami-infotech.com/LIT/src/employee/add_employee.php"
-        : "https://namami-infotech.com/LIT/src/employee/edit_employee.php";
+    // Only include Password for add mode
+    if (formMode === "add") {
+      formattedFormData.Password = formData.Password;
+      formattedFormData.OTP = formData.OTP || "123456";
+      formattedFormData.IsOTPExpired = formData.IsOTPExpired || 1;
+      formattedFormData.IsGeofence = formData.IsGeofence || 0;
+    }
+
+    console.log("Submitting form data:", formattedFormData);
+
+    const url = formMode === "add"
+      ? "https://namami-infotech.com/LIT/src/employee/add_employee.php"
+      : "https://namami-infotech.com/LIT/src/employee/edit_employee.php";
 
     try {
       const response = await axios.post(url, formattedFormData);
-      console.log("Response:", response.data); // Log response data
-      alert(response.data);
-
+      console.log("Response:", response.data);
+      
       if (response.data.success) {
+        alert(response.data.message || "Operation successful!");
         handleCloseForm();
-        fetchEmployees();
+        fetchEmployees(); // Refresh the list
       } else {
-        console.error("Error:", response.data.message);
+        alert(response.data.message || "Operation failed!");
       }
-      handleCloseForm();
     } catch (error) {
       console.error(
         "Error:",
@@ -273,66 +360,63 @@ function EmployeeList() {
       );
     }
   };
-const handleExportCSV = () => {
-  // Prepare data for export
-  const dataToExport = filteredEmployees.map((employee) => ({
-    "Employee ID": employee.EmpId,
-    Name: employee.Name,
-    Mobile: employee.Mobile,
-    Email: employee.EmailId,
-    Role: employee.Role,
-    Category: employee.Category,
-    Designation: employee.Designation,
-    Shift: employee.Shift,
-    "Week Off": employee.WeekOff,
-    "Date of Birth": employee.DOB,
-    "Date of Joining": employee.JoinDate,
-    Status: employee.IsActive === 1 ? "Active" : "Inactive",
-    Office: employee.OfficeName,
-    "Reporting Manager": employee.RM,
-    "Geofence Enabled": employee.IsGeofence === 1 ? "Yes" : "No",
-  }));
 
-  // Convert to CSV
-  const csv = Papa.unparse(dataToExport);
+  const handleExportCSV = () => {
+    // Prepare data for export
+    const dataToExport = filteredEmployees.map((employee) => ({
+      "Employee ID": employee.EmpId,
+      Name: employee.Name,
+      Mobile: employee.Mobile,
+      Email: employee.EmailId,
+      Role: employee.Role,
+      Category: employee.Category,
+      Designation: employee.Designation,
+      Shift: employee.Shift,
+      "Week Off": employee.WeekOff,
+      "Date of Birth": employee.DOB,
+      "Date of Joining": employee.JoinDate,
+      Status: employee.IsActive === 1 ? "Active" : "Inactive",
+      Office: employee.OfficeName,
+      "Reporting Manager": employee.RM,
+      "Geofence Enabled": employee.IsGeofence === 1 ? "Yes" : "No",
+    }));
 
-  // Create and download file
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
+    // Convert to CSV
+    const csv = Papa.unparse(dataToExport);
 
-  link.setAttribute("href", url);
-  link.setAttribute(
-    "download",
-    `employees_${new Date().toISOString().split("T")[0]}.csv`,
-  );
-  link.style.visibility = "hidden";
+    // Create and download file
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Revoke the object URL
-  URL.revokeObjectURL(url);
-};
-  const handleOfficeChange = (event) => {
-    const selectedOfficeIds = event.target.value; // Array of selected IDs
-
-    console.log("Selected Office IDs:", selectedOfficeIds); // Debugging line
-
-    // Find the selected offices' details
-    const selectedOffices = offices.filter((o) =>
-      selectedOfficeIds.includes(o.Id),
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `employees_${new Date().toISOString().split("T")[0]}.csv`,
     );
+    link.style.visibility = "hidden";
 
-    console.log("Selected Offices:", selectedOffices); // Debugging line
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      OfficeId: selectedOfficeIds.join(","), // Store IDs as comma-separated string
-      OfficeName: selectedOffices.map((o) => o.OfficeName).join(","), // Store names as comma-separated string
-      LatLong: selectedOffices.map((o) => o.LatLong).join("|"), // Store lat-long as a pipe-separated string
-      Distance: selectedOffices.map((o) => o.Distance).join(","), // Store distances as comma-separated string
+    // Revoke the object URL
+    URL.revokeObjectURL(url);
+  };
+
+  const handleOfficeChange = (event) => {
+    const selectedOfficeIds = event.target.value;
+    setFormData(prev => ({
+      ...prev,
+      OfficeId: selectedOfficeIds
+    }));
+  };
+
+  const handleWeekOffChange = (event) => {
+    const selectedDays = event.target.value;
+    setFormData(prev => ({
+      ...prev,
+      WeekOff: selectedDays
     }));
   };
 
@@ -359,7 +443,6 @@ const handleExportCSV = () => {
       );
 
       if (response.data.success) {
-        // Update local state immediately for better UX
         setEmployees(prevEmployees => 
           prevEmployees.map(emp => 
             emp.EmpId === employee.EmpId 
@@ -397,7 +480,6 @@ const handleExportCSV = () => {
     // Apply status filter
     if (statusFilter !== 'all') {
       const isActiveFilter = statusFilter === 'active';
-      // API returns IsActive as 1/0, convert to boolean
       const isActive = employee.IsActive === 1;
       if (isActive !== isActiveFilter) return false;
     }
@@ -454,10 +536,20 @@ const handleExportCSV = () => {
   const activeCount = employees.filter(emp => emp.IsActive === 1).length;
   const inactiveCount = employees.filter(emp => emp.IsActive === 0).length;
 
-  // Helper function to check if employee is active
   const isEmployeeActive = (employee) => {
     return employee.IsActive === 1;
   };
+
+  // Days of the week for WeekOff dropdown
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
 
   return (
     <div>
@@ -515,7 +607,6 @@ const handleExportCSV = () => {
             </IconButton>
           </Tooltip>
 
-          {/* Add Export Button here */}
           <Button
             variant="outlined"
             color="success"
@@ -814,7 +905,7 @@ const handleExportCSV = () => {
         />
       </Box>
 
-      <Dialog open={openForm} onClose={handleCloseForm}>
+      <Dialog open={openForm} onClose={handleCloseForm} maxWidth="md" fullWidth>
         <DialogTitle>
           {formMode === "add" ? "Add Employee" : "Edit Employee"}
         </DialogTitle>
@@ -827,11 +918,12 @@ const handleExportCSV = () => {
                   fullWidth
                   label="Employee ID"
                   value={formData.EmpId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, EmpId: e.target.value })
+                  disabled
+                  helperText={
+                    formMode === "add" 
+                      ? "Auto-generated from last Employee ID" 
+                      : "Employee ID cannot be changed"
                   }
-                  required
-                  disabled={formMode === "edit"}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -845,19 +937,24 @@ const handleExportCSV = () => {
                   required
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Password"
-                  type="password"
-                  value={formData.Password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, Password: e.target.value })
-                  }
-                  required
-                  disabled={formMode === "edit"}
-                />
-              </Grid>
+              
+              {/* Password field only shown in add mode */}
+              {formMode === "add" && (
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Password"
+                    type="password"
+                    value={formData.Password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Password: e.target.value })
+                    }
+                    required
+                    helperText="Enter password for new employee"
+                  />
+                </Grid>
+              )}
+              
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -887,6 +984,7 @@ const handleExportCSV = () => {
                   required
                 />
               </Grid>
+              
               <Grid item xs={12} md={6}>
                 <TextField
                   select
@@ -898,10 +996,12 @@ const handleExportCSV = () => {
                   }
                   required
                 >
+                  <MenuItem value="">Select Category</MenuItem>
                   <MenuItem value="Teaching">Teaching</MenuItem>
                   <MenuItem value="Non Teaching">Non Teaching</MenuItem>
                 </TextField>
               </Grid>
+              
               <Grid item xs={12} md={6}>
                 <TextField
                   select
@@ -913,6 +1013,7 @@ const handleExportCSV = () => {
                   }
                   required
                 >
+                  <MenuItem value="">Select Role</MenuItem>
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Employee">Employee</MenuItem>
                   <MenuItem value="Librarian">Librarian</MenuItem>
@@ -920,6 +1021,7 @@ const handleExportCSV = () => {
                   <MenuItem value="Front Desk">Front Desk</MenuItem>
                 </TextField>
               </Grid>
+              
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -932,32 +1034,33 @@ const handleExportCSV = () => {
                   required
                 />
               </Grid>
+              
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth required>
+                <TextField
+                  fullWidth
+                  label="Reporting Manager ID (RM)"
+                  value={formData.RM}
+                  onChange={(e) =>
+                    setFormData({ ...formData, RM: e.target.value })
+                  }
+                  helperText="Optional: Enter Reporting Manager's EmpId"
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
                   <InputLabel>Week Off</InputLabel>
                   <Select
                     multiple
-                    value={formData.WeekOff ? formData.WeekOff.split(",") : []}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        WeekOff: e.target.value.join(","),
-                      })
-                    }
+                    value={Array.isArray(formData.WeekOff) ? formData.WeekOff : []}
+                    onChange={handleWeekOffChange}
+                    label="Week Off"
                     renderValue={(selected) => selected.join(", ")}
                   >
-                    {[
-                      "Sunday",
-                      "Monday",
-                      "Tuesday",
-                      "Wednesday",
-                      "Thursday",
-                      "Friday",
-                      "Saturday",
-                    ].map((day) => (
+                    {daysOfWeek.map((day) => (
                       <MenuItem key={day} value={day}>
-                        <CheckBox
-                          checked={formData.WeekOff?.split(",").includes(day)}
+                        <Checkbox
+                          checked={formData.WeekOff?.includes(day) || false}
                         />
                         <ListItemText primary={day} />
                       </MenuItem>
@@ -976,10 +1079,14 @@ const handleExportCSV = () => {
                     setFormData({ ...formData, DOB: e.target.value })
                   }
                   InputLabelProps={{
-                    shrink: true, // Keeps the label above the input when a date is selected
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    max: new Date().toISOString().split("T")[0]
                   }}
                 />
               </Grid>
+              
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -991,6 +1098,9 @@ const handleExportCSV = () => {
                   }
                   InputLabelProps={{
                     shrink: true,
+                  }}
+                  inputProps={{
+                    max: new Date().toISOString().split("T")[0]
                   }}
                 />
               </Grid>
@@ -1005,6 +1115,7 @@ const handleExportCSV = () => {
                     }
                     label="Shift"
                   >
+                    <MenuItem value="">Select Shift</MenuItem>
                     <MenuItem value="9:00 AM - 6:00 PM">
                       9:00 AM - 6:00 PM
                     </MenuItem>
@@ -1026,15 +1137,13 @@ const handleExportCSV = () => {
                   <InputLabel>Office</InputLabel>
                   <Select
                     multiple
-                    value={
-                      formData.OfficeId ? formData.OfficeId.split(",") : []
-                    }
+                    value={Array.isArray(formData.OfficeId) ? formData.OfficeId : []}
                     onChange={handleOfficeChange}
                     label="Office"
                     renderValue={(selected) =>
                       selected
                         .map((id) => {
-                          const office = offices.find((o) => o.Id === id);
+                          const office = offices.find(o => o.Id.toString() === id.toString());
                           return office ? office.OfficeName : id;
                         })
                         .join(", ")
@@ -1042,7 +1151,10 @@ const handleExportCSV = () => {
                   >
                     {offices.map((office) => (
                       <MenuItem key={office.Id} value={office.Id}>
-                        {office.OfficeName}
+                        <Checkbox
+                          checked={formData.OfficeId?.includes(office.Id.toString()) || false}
+                        />
+                        <ListItemText primary={office.OfficeName} />
                       </MenuItem>
                     ))}
                   </Select>
@@ -1073,16 +1185,17 @@ const handleExportCSV = () => {
               <Button onClick={handleCloseForm} color="primary">
                 Cancel
               </Button>
-              <Button type="submit" color="primary">
-                Submit
+              <Button type="submit" color="primary" variant="contained">
+                {formMode === "add" ? "Add Employee" : "Update Employee"}
               </Button>
             </DialogActions>
           </form>
         </DialogContent>
       </Dialog>
+      
       <Dialog open={openDetail} onClose={handleCloseDetail}>
         <DialogTitle>Employee Details</DialogTitle>
-        <DialogContent>{/* You can add employee details here */}</DialogContent>
+        <DialogContent></DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDetail} color="primary">
             Close
