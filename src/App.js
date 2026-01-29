@@ -24,8 +24,6 @@ import StudentFees from './pages/StudentFees';
 import StuLibrary from './pages/StuLibrary';
 import LibraryDash from './pages/LibraryDash';
 import StudentReport from './pages/StudentReport';
-import Menus from './pages/Menus';
-import Checkpoints from './pages/Checkpoints';
 import Form from './pages/Form';
 import Certificate from './pages/Certificate';
 import Students from './pages/Students';
@@ -252,12 +250,7 @@ function App() {
               path="/ndc"
               element={<PrivateRoute element={NDC} />}
             />
-            {/* Optional Routes */}
-            {/* <Route path="/menus" element={<PrivateRoute element={Menus} />} />
-            <Route path="/add-menu" element={<PrivateRoute element={Menus} />} />
-
-            <Route path="/checkpoints" element={<PrivateRoute element={Checkpoints} />} />
-            <Route path="/add-checkpoint" element={<PrivateRoute element={Checkpoints} />} /> */}
+           
           </Routes>
         </Router>
       </AuthProvider>

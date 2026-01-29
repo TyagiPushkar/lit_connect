@@ -8,15 +8,10 @@ import {
   ListItemIcon,
   Typography,
 } from "@mui/material";
-import { HolidayVillage, Policy, Person, BarChart } from "@mui/icons-material";
+import { HolidayVillage, Person, BarChart } from "@mui/icons-material";
 import { useAuth } from "./auth/AuthContext";
 import AppsIcon from "@mui/icons-material/Apps";
-import AddLocationAltIcon from "@mui/icons-material/AddLocationAlt";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import LocalAirportIcon from "@mui/icons-material/LocalAirport";
-import HowToRegIcon from "@mui/icons-material/HowToReg";
-import MapIcon from "@mui/icons-material/Map";
-import ChecklistIcon from "@mui/icons-material/Checklist";
+
 import MenuIcon from "@mui/icons-material/Menu";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import AddHomeWorkIcon from "@mui/icons-material/AddHomeWork";
