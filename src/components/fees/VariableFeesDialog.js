@@ -178,10 +178,12 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
           {writeOffConfirm.variableFee && (
             <Box mt={2}>
               <Typography variant="subtitle1">
-                <strong>Particular:</strong> {writeOffConfirm.variableFee.particular}
+                <strong>Particular:</strong>{" "}
+                {writeOffConfirm.variableFee.particular}
               </Typography>
               <Typography variant="subtitle1">
-                <strong>Amount:</strong> ₹{writeOffConfirm.variableFee.amount || "0.00"}
+                <strong>Amount:</strong> ₹
+                {writeOffConfirm.variableFee.amount || "0.00"}
               </Typography>
             </Box>
           )}
@@ -190,7 +192,12 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setWriteOffConfirm({ open: false, variableFee: null })} color="primary">
+          <Button
+            onClick={() =>
+              setWriteOffConfirm({ open: false, variableFee: null })
+            }
+            color="primary"
+          >
             Cancel
           </Button>
           <Button
@@ -205,10 +212,19 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
       </Dialog>
 
       {/* Main Variable Fees Dialog */}
-      <Dialog open={open} onClose={() => onClose(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={open}
+        onClose={() => onClose(false)}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>
-          <Typography variant="h6">Variable Fees for {student?.CandidateName}</Typography>
-          <Typography variant="subtitle2">Student ID: {student?.StudentID}</Typography>
+          <Typography variant="h6">
+            Variable Fees for {student?.CandidateName}
+          </Typography>
+          <Typography variant="subtitle2">
+            Student ID: {student?.StudentID}
+          </Typography>
         </DialogTitle>
         <DialogContent sx={{ maxHeight: "70vh", overflowY: "auto" }}>
           {successMsg && (
@@ -254,13 +270,20 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                       {unpaidVariableFees.map((vf) => (
                         <TableRow key={vf.id}>
                           <TableCell>{vf.particular}</TableCell>
-                          <TableCell align="right">{Number(vf.amount).toFixed(2)}</TableCell>
+                          <TableCell align="right">
+                            {Number(vf.amount).toFixed(2)}
+                          </TableCell>
                           <TableCell align="right">
                             <TextField
                               size="small"
                               type="number"
                               value={payments[`variable_${vf.id}`] || 0}
-                              onChange={(e) => handlePaymentChange(`variable_${vf.id}`, e.target.value)}
+                              onChange={(e) =>
+                                handlePaymentChange(
+                                  `variable_${vf.id}`,
+                                  e.target.value,
+                                )
+                              }
                               inputProps={{
                                 min: 0,
                                 max: Number(vf.amount),
@@ -269,23 +292,25 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                               sx={{ width: 120 }}
                             />
                           </TableCell>
-                          <TableCell>
-                            <Tooltip title="Write Off (Set amount to 0)">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() =>
-                                  setWriteOffConfirm({
-                                    open: true,
-                                    variableFee: vf,
-                                  })
-                                }
-                                disabled={submitting}
-                              >
-                                <CloseIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
+                          {user.role === "Accounts" && (
+                            <TableCell>
+                              <Tooltip title="Write Off (Set amount to 0)">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() =>
+                                    setWriteOffConfirm({
+                                      open: true,
+                                      variableFee: vf,
+                                    })
+                                  }
+                                  disabled={submitting}
+                                >
+                                  <CloseIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -297,12 +322,14 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                     <Grid container spacing={2}>
                       <Grid item xs={6}>
                         <Typography variant="body1">
-                          <strong>Total Variable Fees:</strong> ₹{totalAmount.toFixed(2)}
+                          <strong>Total Variable Fees:</strong> ₹
+                          {totalAmount.toFixed(2)}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body1" color="primary">
-                          <strong>Total Payment:</strong> ₹{totalPayment.toFixed(2)}
+                          <strong>Total Payment:</strong> ₹
+                          {totalPayment.toFixed(2)}
                         </Typography>
                       </Grid>
                     </Grid>
@@ -336,7 +363,11 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                   onChange={(e) => setModeId(e.target.value)}
                   required
                   error={mode !== "Cash" && !modeId.trim()}
-                  helperText={mode !== "Cash" && !modeId.trim() ? "This field is required" : ""}
+                  helperText={
+                    mode !== "Cash" && !modeId.trim()
+                      ? "This field is required"
+                      : ""
+                  }
                 />
               )}
 
@@ -357,7 +388,7 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
           <Button onClick={() => onClose(false)} disabled={submitting}>
             Cancel
           </Button>
-          {unpaidVariableFees.length > 0 && (
+          {unpaidVariableFees.length > 0 && user.role != "HR" && (
             <Button
               onClick={handleSubmit}
               disabled={submitting || totalPayment <= 0}
@@ -370,7 +401,7 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
         </DialogActions>
       </Dialog>
     </>
-  )
+  );
 }
 
 export default VariableFeesDialog
