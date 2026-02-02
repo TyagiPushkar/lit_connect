@@ -292,25 +292,26 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                               sx={{ width: 120 }}
                             />
                           </TableCell>
-                          {user.role === "Accounts" && (
-                            <TableCell>
-                              <Tooltip title="Write Off (Set amount to 0)">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() =>
-                                    setWriteOffConfirm({
-                                      open: true,
-                                      variableFee: vf,
-                                    })
-                                  }
-                                  disabled={submitting}
-                                >
-                                  <CloseIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </TableCell>
-                          )}
+                          {user.role === "Accounts" ||
+                            (user.role === "HR" && (
+                              <TableCell>
+                                <Tooltip title="Write Off (Set amount to 0)">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() =>
+                                      setWriteOffConfirm({
+                                        open: true,
+                                        variableFee: vf,
+                                      })
+                                    }
+                                    disabled={submitting}
+                                  >
+                                    <CloseIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </TableCell>
+                            ))}
                         </TableRow>
                       ))}
                     </TableBody>
