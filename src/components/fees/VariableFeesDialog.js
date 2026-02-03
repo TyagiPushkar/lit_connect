@@ -293,7 +293,7 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                             />
                           </TableCell>
                           {user.role === "Accounts" ||
-                            (user.role === "HR" && (
+                            user.role === "HR" && (
                               <TableCell>
                                 <Tooltip title="Write Off (Set amount to 0)">
                                   <IconButton
@@ -311,7 +311,7 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
                                   </IconButton>
                                 </Tooltip>
                               </TableCell>
-                            ))}
+                            )}
                         </TableRow>
                       ))}
                     </TableBody>
