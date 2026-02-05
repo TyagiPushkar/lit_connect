@@ -29,10 +29,11 @@ const AttendanceReport = () => {
   const [employees, setEmployees] = useState([])
   const [filteredEmployees, setFilteredEmployees] = useState([])
   const [attendance, setAttendance] = useState([])
-  const [students, setStudents] = useState([]) // New state for student data
+  const [students, setStudents] = useState([])
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [roleFilter, setRoleFilter] = useState("all") // 'all', 'student', 'staff'
+  const [statusFilter, setStatusFilter] = useState("all") // 'all', 'active', 'inactive'
   const [filteredAttendance, setFilteredAttendance] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -48,7 +49,7 @@ const AttendanceReport = () => {
             `https://namami-infotech.com/LIT/src/employee/all_members.php?Tenent_Id=${user.tenent_id}`,
           ),
           axios.get("https://namami-infotech.com/LIT/src/attendance/get_attendance.php"),
-          axios.get("https://namami-infotech.com/LIT/src/students/get_student.php") // Fetch student data
+          axios.get("https://namami-infotech.com/LIT/src/students/get_student.php")
         ])
 
         if (employeesResponse.data.success) {
@@ -75,15 +76,29 @@ const AttendanceReport = () => {
   }, [user.tenent_id])
 
   useEffect(() => {
-    // Filter employees based on role selection
-    if (roleFilter === "all") {
-      setFilteredEmployees(employees)
-    } else if (roleFilter === "student") {
-      setFilteredEmployees(employees.filter(emp => emp.Role === "Student"))
-    } else {
-      setFilteredEmployees(employees.filter(emp => emp.Role !== "Student"))
+    // Filter employees based on role and status selection
+    let filtered = employees
+    
+    // Apply role filter
+    if (roleFilter !== "all") {
+      if (roleFilter === "student") {
+        filtered = filtered.filter(emp => emp.Role === "Student")
+      } else {
+        filtered = filtered.filter(emp => emp.Role !== "Student")
+      }
     }
-  }, [roleFilter, employees])
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      if (statusFilter === "active") {
+        filtered = filtered.filter(emp => emp.IsActive === 1)
+      } else {
+        filtered = filtered.filter(emp => emp.IsActive === 0)
+      }
+    }
+    
+    setFilteredEmployees(filtered)
+  }, [roleFilter, statusFilter, employees])
 
   useEffect(() => {
     const filterAttendance = () => {
@@ -108,10 +123,9 @@ const AttendanceReport = () => {
 
   const isSunday = (dateString) => {
     const date = new Date(dateString)
-    return date.getDay() === 0 // Sunday is 0 in JavaScript
+    return date.getDay() === 0
   }
 
-  // Function to get student details by matching EmpId with StudentID
   const getStudentDetails = (empId) => {
     const student = students.find(student => student.StudentID === empId.toString())
     if (student) {
@@ -128,20 +142,17 @@ const AttendanceReport = () => {
     }
   }
 
-  // Function to calculate attendance percentage for an employee
   const calculateAttendancePercentage = (employeeId) => {
     if (!filteredAttendance.length || !fromDate || !toDate) return 0
     
-    // Get all unique dates excluding Sundays
     const startDate = new Date(fromDate)
     const endDate = new Date(toDate)
     
-    // Calculate total working days (excluding Sundays)
     const totalDays = []
     const currentDate = new Date(startDate)
     
     while (currentDate <= endDate) {
-      if (currentDate.getDay() !== 0) { // Not Sunday
+      if (currentDate.getDay() !== 0) {
         totalDays.push(new Date(currentDate).toISOString().split('T')[0])
       }
       currentDate.setDate(currentDate.getDate() + 1)
@@ -150,16 +161,14 @@ const AttendanceReport = () => {
     const totalWorkingDays = totalDays.length
     if (totalWorkingDays === 0) return 0
     
-    // Count attendance days for this employee
     const attendanceDays = new Set(
       filteredAttendance
         .filter(record => record.EmpId === employeeId)
         .map(record => record.InTime.split(" ")[0])
     ).size
     
-    // Calculate percentage
     const percentage = (attendanceDays / totalWorkingDays) * 100
-    return Math.round(percentage * 100) / 100 // Round to 2 decimal places
+    return Math.round(percentage * 100) / 100
   }
 
   const exportAttendanceToCSV = () => {
@@ -168,21 +177,21 @@ const AttendanceReport = () => {
       return
     }
 
-    // Get all unique dates excluding Sundays
     const uniqueDates = [...new Set(filteredAttendance.map((record) => record.InTime.split(" ")[0]))]
       .filter(date => !isSunday(date))
       .sort()
 
-    // Updated CSV header with Attendance % column
     const csvHeader = [
       "S. No.", 
       "Employee ID", 
       "Employee Name", 
+      "Role",
+      "Status",
       "RefrenceBy", 
       "Course", 
       "Guardian Name", 
       "Guardian Contact No.",
-      "Attendance %", // New column
+      "Attendance %",
       ...uniqueDates.flatMap((date) => [date])
     ]
 
@@ -194,11 +203,13 @@ const AttendanceReport = () => {
         index + 1, 
         employee.EmpId, 
         employee.Name, 
-        employee.RefrenceBy,
+        employee.Role || "N/A",
+        employee.IsActive === 1 ? "Active" : "Inactive",
+        employee.RefrenceBy || "N/A",
         studentDetails.course,
         studentDetails.guardianName,
         studentDetails.guardianContactNo,
-        `${attendancePercentage}%`, // Add attendance percentage
+        `${attendancePercentage}%`,
       ]
 
       uniqueDates.forEach((date) => {
@@ -240,7 +251,11 @@ const AttendanceReport = () => {
   return (
     <Card sx={{ boxShadow: 3 }}>
       <CardContent>
-        <Typography variant="h5" component="h2" sx={{ mb: 3, color: "primary.main", fontWeight: 600 }}>
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{ mb: 3, color: "#CC7A00", fontWeight: 600 }}
+        >
           <Schedule sx={{ mr: 1, verticalAlign: "middle" }} />
           Attendance Report
         </Typography>
@@ -263,6 +278,21 @@ const AttendanceReport = () => {
           </Grid>
 
           <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="active">Active Only</MenuItem>
+                <MenuItem value="inactive">Inactive Only</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
             <TextField
               label="From Date"
               type="date"
@@ -273,7 +303,9 @@ const AttendanceReport = () => {
               fullWidth
               InputLabelProps={{ shrink: true }}
               InputProps={{
-                startAdornment: <DateRange sx={{ mr: 1, color: "action.active" }} />,
+                startAdornment: (
+                  <DateRange sx={{ mr: 1, color: "action.active" }} />
+                ),
               }}
             />
           </Grid>
@@ -289,20 +321,26 @@ const AttendanceReport = () => {
               fullWidth
               InputLabelProps={{ shrink: true }}
               InputProps={{
-                startAdornment: <DateRange sx={{ mr: 1, color: "action.active" }} />,
+                startAdornment: (
+                  <DateRange sx={{ mr: 1, color: "action.active" }} />
+                ),
               }}
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Stack direction={isMobile ? "column" : "row"} spacing={2} justifyContent="flex-end">
+          <Grid item xs={12} md={4}>
+            <Stack
+              direction={isMobile ? "column" : "row"}
+              spacing={2}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="contained"
                 onClick={exportAttendanceToCSV}
                 startIcon={<GetApp />}
                 disabled={!filteredAttendance.length || loading}
                 sx={{
-                  bgcolor: "primary.main",
+                  bgcolor: "#CC7A00",
                   "&:hover": { bgcolor: "primary.dark" },
                 }}
               >
@@ -312,9 +350,58 @@ const AttendanceReport = () => {
           </Grid>
         </Grid>
 
+        {/* Stats Summary */}
+        {filteredEmployees.length > 0 && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              bgcolor: "#CC7A00",
+              borderRadius: 1,
+              color: "info.contrastText",
+            }}
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={3}>
+                <Typography variant="body2">
+                  <strong>Total Employees:</strong> {filteredEmployees.length}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Typography variant="body2">
+                  <strong>Active:</strong>{" "}
+                  {filteredEmployees.filter((emp) => emp.IsActive === 1).length}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Typography variant="body2">
+                  <strong>Inactive:</strong>{" "}
+                  {filteredEmployees.filter((emp) => emp.IsActive === 0).length}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Typography variant="body2">
+                  <strong>Students:</strong>{" "}
+                  {
+                    filteredEmployees.filter((emp) => emp.Role === "Student")
+                      .length
+                  }
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+
         {/* Loading State */}
         {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 4 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              py: 4,
+            }}
+          >
             <CircularProgress size={40} sx={{ mr: 2 }} />
             <Typography variant="body1" color="text.secondary">
               Loading attendance data...
@@ -335,25 +422,9 @@ const AttendanceReport = () => {
             No attendance records found for the selected date range.
           </Alert>
         )}
-
-        {/* Summary Info */}
-        {fromDate && toDate && filteredAttendance.length > 0 && (
-          <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Report Period:</strong> {new Date(fromDate).toLocaleDateString()} to{" "}
-              {new Date(toDate).toLocaleDateString()}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Role Filter:</strong> {roleFilter === "all" ? "All Roles" : roleFilter === "student" ? "Students Only" : "Staff Only"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Generated:</strong> {new Date().toLocaleDateString()}
-            </Typography>
-          </Box>
-        )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default AttendanceReport

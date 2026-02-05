@@ -801,13 +801,17 @@ function EmployeeList() {
                             <IconButton
                               color="primary"
                               onClick={() => handleOpenForm("edit", employee)}
+                              disabled={!isActive} // optional: block edit too
                             >
                               <EditIcon />
                             </IconButton>
                           </Tooltip>
+
                           <Tooltip
                             title={
-                              isActive ? "Disable Employee" : "Enable Employee"
+                              isActive
+                                ? "Disable Employee"
+                                : "Employee Disabled Permanently"
                             }
                           >
                             <FormControlLabel
@@ -817,13 +821,15 @@ function EmployeeList() {
                                   onChange={() =>
                                     handleToggleEmployeeStatus(employee)
                                   }
-                                  color={isActive ? "primary" : "secondary"}
+                                  color="primary"
+                                  disabled={!isActive} // 🔥 key line
                                 />
                               }
                               label=""
                             />
                           </Tooltip>
                         </TableCell>
+
                         {user && user.role === "HR" && (
                           <TableCell>
                             <Tooltip title="Reset Mobile ID">
