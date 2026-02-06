@@ -248,10 +248,7 @@ function App() {
               element={<PrivateRoute element={Dashboard} />}
             />
             <Route path="/ndc" element={<PrivateRoute element={NDC} />} />
-            <Route
-              path="/task/:empId"
-              element={TaskList} />
-            
+            <Route path="/task/:empId" element={<TaskList />} />
           </Routes>
         </Router>
       </AuthProvider>
