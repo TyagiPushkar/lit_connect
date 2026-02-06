@@ -42,6 +42,7 @@ import VariableFees from './pages/VariableFees';
 import StudentCertificate from "./pages/StudentCretificate";
 import StudentCertificateDetail from "./pages/StudentCertificateDetail";
 import NDC from "./pages/NDC";
+import TaskList from "./pages/TaskList";
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -246,11 +247,11 @@ function App() {
               path="/dashboard"
               element={<PrivateRoute element={Dashboard} />}
             />
+            <Route path="/ndc" element={<PrivateRoute element={NDC} />} />
             <Route
-              path="/ndc"
-              element={<PrivateRoute element={NDC} />}
+              path="/task/:empId"
+              element={<PrivateRoute element={TaskList} />}
             />
-           
           </Routes>
         </Router>
       </AuthProvider>
