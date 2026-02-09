@@ -155,43 +155,73 @@ function StudentDetail() {
   return (
     <Box sx={{ p: 2, background: "#fff", pb: 6 }}>
       {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Button variant="outlined" onClick={() => navigate(-1)} sx={{ color: "#CC7A00", borderColor: "#CC7A00" }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate(-1)}
+            sx={{ color: "#CC7A00", borderColor: "#CC7A00" }}
+          >
             Back
           </Button>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 700, color: "#CC7A00" }}>
               Lakshya Institute Of Technology
             </Typography>
-            <Typography variant="subtitle1">Student Info: {student.StudentID}</Typography>
+            <Typography variant="subtitle1">
+              Student Info: {student.StudentID}
+            </Typography>
           </Box>
         </Box>
-        <Avatar src={logo} alt="Logo" variant="rounded" sx={{ width: 80, height: 80 }} />
+        <Avatar
+          src={logo}
+          alt="Logo"
+          variant="rounded"
+          sx={{ width: 80, height: 80 }}
+        />
       </Box>
 
       <StudentFeesTransaction />
 
       {/* Actions */}
-      {user.role == "HR" && (
-        <Box sx={{ mb: 2, textAlign: "right" }}>
-          {!editMode ? (
-            <Button variant="contained" onClick={() => setEditMode(true)} sx={{ backgroundColor: "#CC7A00" }}>
-              Edit
-            </Button>
-          ) : (
-            <Button variant="contained" onClick={handleSave} sx={{ backgroundColor: "#2e7d32" }}>
-              Save
-            </Button>
-          )}
-        </Box>
-      )}
+      {user.role == "HR" ||
+        (user.role == "Examination" && (
+          <Box sx={{ mb: 2, textAlign: "right" }}>
+            {!editMode ? (
+              <Button
+                variant="contained"
+                onClick={() => setEditMode(true)}
+                sx={{ backgroundColor: "#CC7A00" }}
+              >
+                Edit
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleSave}
+                sx={{ backgroundColor: "#2e7d32" }}
+              >
+                Save
+              </Button>
+            )}
+          </Box>
+        ))}
 
       {/* Content */}
       <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
         {fieldGroups.map((group, idx) => (
           <Box key={idx} sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ color: "#CC7A00", fontWeight: 700, mb: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{ color: "#CC7A00", fontWeight: 700, mb: 1 }}
+            >
               {group.title}
             </Typography>
             <Divider sx={{ mb: 2 }} />
@@ -217,8 +247,15 @@ function StudentDetail() {
                           }}
                           onClick={() => handleImageClick(student[f.key])}
                         />
-                        <Typography variant="caption" sx={{ display: "block", mt: 1 }}>
-                          <a href={student[f.key]} target="_blank" rel="noopener noreferrer">
+                        <Typography
+                          variant="caption"
+                          sx={{ display: "block", mt: 1 }}
+                        >
+                          <a
+                            href={student[f.key]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             Open in new tab
                           </a>
                         </Typography>
@@ -227,7 +264,9 @@ function StudentDetail() {
                       <Typography variant="body1">Not uploaded</Typography>
                     )
                   ) : !editMode ? (
-                    <Typography variant="body1">{student[f.key] || "—"}</Typography>
+                    <Typography variant="body1">
+                      {student[f.key] || "—"}
+                    </Typography>
                   ) : (
                     <TextField
                       size="small"
@@ -245,7 +284,11 @@ function StudentDetail() {
       </Paper>
 
       {/* Image Dialog */}
-      <Dialog open={Boolean(openImage)} onClose={handleCloseImage} maxWidth="md">
+      <Dialog
+        open={Boolean(openImage)}
+        onClose={handleCloseImage}
+        maxWidth="md"
+      >
         <DialogContent>
           <img
             src={openImage}
@@ -257,9 +300,7 @@ function StudentDetail() {
 
       <StudentReports />
       <ReportCardPDF studentId={studentId} />
-      <Box sx={{ mb: 3 }}>
-          {/* <AttendanceSummary EmpId={studentId} /> */}
-      </Box>
+      <Box sx={{ mb: 3 }}>{/* <AttendanceSummary EmpId={studentId} /> */}</Box>
     </Box>
   );
 }

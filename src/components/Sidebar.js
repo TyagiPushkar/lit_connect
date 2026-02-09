@@ -62,7 +62,7 @@ function Sidebar() {
     allowedRoutes.push(
       { path: "/teachers", name: "Teachers", icon: <Person /> },
       { path: "/students", name: "Students", icon: <Person /> },
-      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
+
       { path: "/time-table", name: "Time Table", icon: <CalendarMonthIcon /> },
       { path: "/subjects", name: "Subjects", icon: <LibraryBooksIcon /> },
       {
@@ -73,21 +73,20 @@ function Sidebar() {
       { path: "/variable", name: "Variable Fees", icon: <AppsIcon /> },
       { path: "/hr-report", name: "Reports", icon: <MenuIcon /> },
       { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
-      { path: "/news", name: "News", icon: <NewspaperIcon /> }
+      { path: "/news", name: "News", icon: <NewspaperIcon /> },
     );
-
   }
-  if (user?.role === "Accounts" ) {
+  if (user?.role === "Accounts") {
     allowedRoutes.push(
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
       { path: "/fees-summary", name: "Fees Summary", icon: <SummarizeIcon /> },
-      { path: '/other-fees', name: 'Other Fees', icon: <AppsIcon /> },
-      { path: '/students', name: 'Students', icon: <Person /> },
+      { path: "/other-fees", name: "Other Fees", icon: <AppsIcon /> },
+      { path: "/students", name: "Students", icon: <Person /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );
   }
-  if (user?.role === "Front Desk" ) {
+  if (user?.role === "Front Desk") {
     allowedRoutes.push(
       {
         path: "/student-certificate",
@@ -96,29 +95,32 @@ function Sidebar() {
       },
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
-      { path: "/other-fees", name: "Other Fees", icon: <AppsIcon /> }
+      { path: "/other-fees", name: "Other Fees", icon: <AppsIcon /> },
     );
   }
-   if (user?.role === "Admin" ) {
-    allowedRoutes.push(
-      { path: '/students', name: 'Students', icon: <Person /> },
-    
-    );
+  if (user?.role === "Admin") {
+    allowedRoutes.push({
+      path: "/students",
+      name: "Students",
+      icon: <Person />,
+    });
   }
   // HR-specific routes
   if (user?.role === "Teacher") {
     allowedRoutes.push(
       { path: "/report", name: "Report", icon: <SummarizeIcon /> },
-     
+
       // { path: '/hr-report', name: 'Menus', icon: <MenuIcon /> },
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );
   }
 
-   if (user?.role === "Librarian") {
-    allowedRoutes.push(
-       { path: "/library", name: "Library", icon: <LibraryBooksIcon /> },
-    );
+  if (user?.role === "Librarian") {
+    allowedRoutes.push({
+      path: "/library",
+      name: "Library",
+      icon: <LibraryBooksIcon />,
+    });
   }
   if (user?.role === "Examination") {
     allowedRoutes.push(
@@ -137,6 +139,7 @@ function Sidebar() {
         name: "Certificate",
         icon: <WorkspacePremiumIcon />,
       },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   // Combine all available routes
