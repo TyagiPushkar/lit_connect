@@ -315,7 +315,8 @@ const handleOpenVariableFeesDialog = () => {
         </Box>
        
         {variableFees.length > 0 && (
-  <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+          <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+            
     <Button
       variant="contained"
       color="secondary"

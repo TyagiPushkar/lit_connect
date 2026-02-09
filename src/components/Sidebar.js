@@ -120,6 +120,25 @@ function Sidebar() {
        { path: "/library", name: "Library", icon: <LibraryBooksIcon /> },
     );
   }
+  if (user?.role === "Examination") {
+    allowedRoutes.push(
+      {
+        path: "/students",
+        name: "Students",
+        icon: <Person />,
+      },
+      {
+        path: "/student-certificate",
+        name: "Student Certificate",
+        icon: <WorkspacePremiumIcon />,
+      },
+      {
+        path: "/certificate",
+        name: "Certificate",
+        icon: <WorkspacePremiumIcon />,
+      },
+    );
+  }
   // Combine all available routes
   const routes = [...defaultRoutes, ...allowedRoutes];
 

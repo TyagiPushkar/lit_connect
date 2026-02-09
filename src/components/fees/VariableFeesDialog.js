@@ -388,16 +388,20 @@ const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
           <Button onClick={() => onClose(false)} disabled={submitting}>
             Cancel
           </Button>
-          {unpaidVariableFees.length > 0 && user.role != "HR" && (
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting || totalPayment <= 0}
-              variant="contained"
-              color="primary"
-            >
-              {submitting ? "Processing..." : `Pay ₹${totalPayment.toFixed(2)}`}
-            </Button>
-          )}
+          {unpaidVariableFees.length > 0 &&
+            user.role != "HR" &&
+            user.role != "Examination" && (
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting || totalPayment <= 0}
+                variant="contained"
+                color="primary"
+              >
+                {submitting
+                  ? "Processing..."
+                  : `Pay ₹${totalPayment.toFixed(2)}`}
+              </Button>
+            )}
         </DialogActions>
       </Dialog>
     </>
