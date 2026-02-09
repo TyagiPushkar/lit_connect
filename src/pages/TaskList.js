@@ -1,20 +1,30 @@
-import { useParams } from "react-router-dom";
-import { useEffect } from "react";
+import React from "react";
+import { Box, useMediaQuery } from "@mui/material";
+import ViewTask from "../components/task/ViewTask";
 
 function TaskList() {
-  const { empId } = useParams();
-
-  useEffect(() => {
-    if (empId) {
-      console.log("Employee ID:", empId);
-      // call API here
-    }
-  }, [empId]);
+  const isMobile = useMediaQuery("(max-width:768px)");
 
   return (
-    <div>
-      <h2>Tasks for Employee: {empId}</h2>
-    </div>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100vh",
+        backgroundColor: "#f5f5f5",
+      }}
+    >
+      <Box
+        component="main"
+        sx={{
+          width: "95%",
+          p: isMobile ? 0 : 2,
+          maxWidth: "100%",
+          overflowX: "hidden",
+        }}
+      >
+        <ViewTask />
+      </Box>
+    </Box>
   );
 }
 
