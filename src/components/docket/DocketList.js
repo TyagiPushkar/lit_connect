@@ -17,7 +17,7 @@ function DocketList() {
         const fetchData = async () => {
             try {
                 const menuResponse = await axios.get(`https://namami-infotech.com/LIT/src/menu/get_menu.php`);
-                const menuData = menuResponse.data.data[0];
+                const menuData = menuResponse.data.data[1];
                 setMenu(menuData);
 
                 const checkpointsResponse = await axios.get(`https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`);

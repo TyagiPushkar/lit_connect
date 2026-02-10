@@ -8,7 +8,14 @@ import {
   ListItemIcon,
   Typography,
 } from "@mui/material";
-import { HolidayVillage, Person, BarChart } from "@mui/icons-material";
+import {
+  HolidayVillage,
+  Person,
+  BarChart,
+  AddLocationAlt,
+  Map,
+  HowToReg,
+} from "@mui/icons-material";
 import { useAuth } from "./auth/AuthContext";
 import AppsIcon from "@mui/icons-material/Apps";
 
@@ -20,9 +27,9 @@ import HRSmileLogo from "../assets/images (1).png";
 import MenuBookIcon from "@mui/icons-material/MenuBook"; // Import the icon
 import DynamicFormIcon from "@mui/icons-material/DynamicForm";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
-import NewspaperIcon from '@mui/icons-material/Newspaper';
-import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import NewspaperIcon from "@mui/icons-material/Newspaper";
+import MarkUnreadChatAltIcon from "@mui/icons-material/MarkUnreadChatAlt";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 // import ChecklistIcon from '@mui/icons-material/Checklist';
 // import MenuIcon from '@mui/icons-material/Menu';
 function Sidebar() {
@@ -35,7 +42,7 @@ function Sidebar() {
     3: { path: "/leave", name: "Leave", icon: <Person /> },
     // 10: { path: '/policy', name: 'Policy', icon: <Policy /> },
     8: { path: "/holiday", name: "Holiday", icon: <HolidayVillage /> },
-    
+
     22: {
       path: "/library-dashboard",
       name: "Book List",
@@ -46,7 +53,7 @@ function Sidebar() {
     18: { path: "/teachers", name: "Teachers", icon: <Person /> },
     24: { path: "/form", name: "Admission Form", icon: <DynamicFormIcon /> },
     25: { path: "/admissions", name: "Admissions", icon: <AddHomeWorkIcon /> },
-    100 :{ path: "/dashboard", name: "Dashboard", icon: <MenuIcon /> },
+    100: { path: "/dashboard", name: "Dashboard", icon: <MenuIcon /> },
   };
 
   // Default routes visible to everyone
@@ -74,6 +81,7 @@ function Sidebar() {
       { path: "/hr-report", name: "Reports", icon: <MenuIcon /> },
       { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
       { path: "/news", name: "News", icon: <NewspaperIcon /> },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   if (user?.role === "Accounts") {
@@ -114,7 +122,14 @@ function Sidebar() {
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );
   }
+  if (user?.role === "Sales") {
+    allowedRoutes.push(
+      { path: "/leads", name: "Leads", icon: <HowToReg /> },
 
+      { path: "/visit", name: "Visit", icon: <AddLocationAlt /> },
+      { path: "/maps", name: "Maps", icon: <Map /> },
+    );
+  }
   if (user?.role === "Librarian") {
     allowedRoutes.push({
       path: "/library",
@@ -139,7 +154,6 @@ function Sidebar() {
         name: "Certificate",
         icon: <WorkspacePremiumIcon />,
       },
-      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   // Combine all available routes

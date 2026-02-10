@@ -43,6 +43,9 @@ import StudentCertificate from "./pages/StudentCretificate";
 import StudentCertificateDetail from "./pages/StudentCertificateDetail";
 import NDC from "./pages/NDC";
 import TaskList from "./pages/TaskList";
+import Visit from "./pages/Dealer";
+import Docket from "./pages/Docket";
+import Maps from './pages/Maps';
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -255,6 +258,13 @@ function App() {
             />
             <Route path="/ndc" element={<PrivateRoute element={NDC} />} />
             <Route path="/task/:empId" element={<TaskList />} />
+            <Route path="/visit" element={<PrivateRoute element={Visit} />} />
+            <Route
+              path="/plan-visit"
+              element={<PrivateRoute element={Visit} />}
+            />
+            <Route path="/leads" element={<PrivateRoute element={Docket} />} />
+            <Route path="/maps" element={<PrivateRoute element={Maps} />} />
           </Routes>
         </Router>
       </AuthProvider>

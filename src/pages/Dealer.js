@@ -15,19 +15,19 @@ function Visit() {
     const location = useLocation()
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh' }}>
-            {/* Sidebar with fixed width */}
-            <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
-                <Sidebar />
-            </Box>
-            <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
-                <Navbar />
-                <Box sx={{ mt: 1, p:1 }}>
-                  {location.pathname === '/visit' ? <VisitTable /> : <PlanVisit/>}
-                   
-                </Box>
-            </Box>
+      <Box sx={{ display: "flex", height: "100vh" }}>
+        {/* Sidebar with fixed width */}
+        <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
+          <Sidebar />
         </Box>
+        <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
+          <Navbar />
+          <Box sx={{ mt: 1, p: 1 }}>
+            {location.pathname === "/visit" && <VisitTable />}
+            {location.pathname === "/plan-visit" && <PlanVisit />}
+          </Box>
+        </Box>
+      </Box>
     );
 }
 
