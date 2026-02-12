@@ -32,7 +32,7 @@ function PlanVisit() {
     const [markers, setMarkers] = useState([]);
    
     const [employees, setEmployees] = useState([]);
-    const [selectedEmpId, setSelectedEmpId] = useState(user.role === 'HR' ? '' : user.emp_id);
+    const [selectedEmpId, setSelectedEmpId] = useState(user.role === 'Admin' ? '' : user.emp_id);
     const [loading, setLoading] = useState(false);
     const [address, setAddress] = useState('');
         const [noData, setNoData] = useState(false);
@@ -47,7 +47,7 @@ const handleReadMore = (visitId) => {
     const [rotation, setRotation] = useState(0);
 
     useEffect(() => {
-        if (user.role === 'HR') {
+        if (user.role === 'Admin') {
             const fetchEmployees = async () => {
                 try {
                     const response = await axios.get(`https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);

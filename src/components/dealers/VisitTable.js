@@ -39,7 +39,7 @@ function VisitTable() {
     // const [directions, setDirections] = useState(null);
     // const [distances, setDistances] = useState([]);
     const [employees, setEmployees] = useState([]);
-    const [selectedEmpId, setSelectedEmpId] = useState(user.role === 'HR' ? '' : user.emp_id);
+    const [selectedEmpId, setSelectedEmpId] = useState(user.role === 'Admin' ? '' : user.emp_id);
     // const [showMap, setShowMap] = useState(false);
     const [loading, setLoading] = useState(false);
     const [address, setAddress] = useState('');
@@ -51,7 +51,7 @@ function VisitTable() {
     const [rotation, setRotation] = useState(0);
 
     useEffect(() => {
-        if (user.role === 'HR') {
+        if (user.role === 'Admin') {
             const fetchEmployees = async () => {
                 try {
                     const response = await axios.get(`https://namami-infotech.com/LIT/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`);
@@ -160,7 +160,7 @@ const handleViewImage = async (visitId) => {
         <>
             <div style={{display:'flex', justifyContent:"space-between"}}>
             <div style={{display:'flex', gap:'10px'}}>
-            {user.role === 'HR' && (
+            {user.role === 'Admin' && (
                 <FormControl variant="outlined" sx={{ mb: 2, width: "200px" }}>
                     
                             <Autocomplete

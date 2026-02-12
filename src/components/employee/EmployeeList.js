@@ -1025,6 +1025,7 @@ function EmployeeList() {
                   <MenuItem value="Librarian">Librarian</MenuItem>
                   <MenuItem value="Accounts">Accounts</MenuItem>
                   <MenuItem value="Front Desk">Front Desk</MenuItem>
+                  <MenuItem value="Sales">Sales</MenuItem>
                 </TextField>
               </Grid>
               

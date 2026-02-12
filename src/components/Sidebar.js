@@ -122,7 +122,7 @@ function Sidebar() {
       // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
     );
   }
-  if (user?.role === "Sales") {
+  if (user?.role === "Sales" || user?.role === "Admin") {
     allowedRoutes.push(
       { path: "/leads", name: "Leads", icon: <HowToReg /> },
 
