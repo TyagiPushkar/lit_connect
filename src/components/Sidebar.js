@@ -50,7 +50,7 @@ function Sidebar() {
     },
     17: { path: "/fee-structure", name: "Fees Structure", icon: <AppsIcon /> },
     23: { path: "/fees-payment", name: "Fees Payment", icon: <AppsIcon /> },
-    18: { path: "/teachers", name: "Teachers", icon: <Person /> },
+    18: { path: "/teachers", name: "Staff", icon: <Person /> },
     24: { path: "/form", name: "Admission Form", icon: <DynamicFormIcon /> },
     25: { path: "/admissions", name: "Admissions", icon: <AddHomeWorkIcon /> },
     100: { path: "/dashboard", name: "Dashboard", icon: <MenuIcon /> },
@@ -67,7 +67,7 @@ function Sidebar() {
     .filter(Boolean);
   if (user?.role === "HR") {
     allowedRoutes.push(
-      { path: "/teachers", name: "Teachers", icon: <Person /> },
+      { path: "/teachers", name: "Staff", icon: <Person /> },
       { path: "/students", name: "Students", icon: <Person /> },
 
       { path: "/time-table", name: "Time Table", icon: <CalendarMonthIcon /> },
@@ -128,6 +128,7 @@ function Sidebar() {
 
       { path: "/visit", name: "Visit", icon: <AddLocationAlt /> },
       { path: "/maps", name: "Maps", icon: <Map /> },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   if (user?.role === "Librarian") {
