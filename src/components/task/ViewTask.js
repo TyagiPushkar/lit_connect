@@ -36,6 +36,16 @@ import {
   Alert,
   Snackbar,
   Badge,
+  Autocomplete,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormLabel,
+  InputAdornment,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  List,
 } from "@mui/material";
 import {
   Add,
@@ -54,6 +64,10 @@ import {
   CalendarToday,
   Person,
   Description,
+  AssignmentInd,
+  Group,
+  PersonAdd,
+  Search,
 } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -65,6 +79,8 @@ function ViewTask() {
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
     priority: "",
@@ -90,6 +106,9 @@ function ViewTask() {
     Priority: "Medium",
     DueDate: "",
     Status: "Pending",
+    assignedToType: "self", // "self" or "other"
+    assignedToEmpId: "",
+    assignedToName: "",
   });
 
   // Extract unique values for filters
@@ -104,6 +123,12 @@ function ViewTask() {
       fetchTasks();
     }
   }, [empId]);
+
+  useEffect(() => {
+    if (newTask.assignedToType === "other" && empId) {
+      fetchEmployees();
+    }
+  }, [newTask.assignedToType, empId]);
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -122,6 +147,23 @@ function ViewTask() {
     }
   };
 
+  const fetchEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      const response = await axios.get(
+        `https://namami-infotech.com/LIT/src/employee/list_employee_hod.php?Tenent_Id=1&EmpId=${empId}`,
+      );
+      if (response.data.success) {
+        setEmployees(response.data.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to load employees:", err);
+      showSnackbar("Failed to load employees list", "error");
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
@@ -132,16 +174,36 @@ function ViewTask() {
 
   const handleAddTask = async () => {
     try {
-      const assignedByEmpId = empId;
-      const assignedByName = "Self";
+      let assignedToEmpId,
+        assignedToName,
+        assignedByEmpId,
+        assignedByName,
+        assignedByType;
+
+      if (newTask.assignedToType === "self") {
+        // Self assignment
+        assignedToEmpId = empId;
+        assignedToName = "Self";
+        assignedByEmpId = empId;
+        assignedByName = "Self";
+        assignedByType = "Self";
+      } else {
+        // Assign to other employee
+        assignedToEmpId = newTask.assignedToEmpId;
+        assignedToName = newTask.assignedToName;
+        assignedByEmpId = empId;
+        assignedByName = "Self";
+        assignedByType = "HOD";
+      }
 
       const taskPayload = {
         title: newTask.Title,
         description: newTask.Description,
-        assignedToEmpId: empId,
+        assignedToEmpId: assignedToEmpId,
+        assignedToName: assignedToName,
         assignedByEmpId: assignedByEmpId,
         assignedByName: assignedByName,
-        assignedByType: "Self",
+        assignedByType: assignedByType,
         priority: newTask.Priority,
         dueDate: newTask.DueDate,
         status: newTask.Status,
@@ -161,6 +223,9 @@ function ViewTask() {
           Priority: "Medium",
           DueDate: "",
           Status: "Pending",
+          assignedToType: "self",
+          assignedToEmpId: "",
+          assignedToName: "",
         });
         showSnackbar("Task added successfully", "success");
       }
@@ -286,6 +351,7 @@ function ViewTask() {
         borderRadius: 2,
         position: "relative",
         overflow: "visible",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         "&:active": {
           backgroundColor: "#f5f5f5",
         },
@@ -345,7 +411,12 @@ function ViewTask() {
         )}
 
         {/* Details Row */}
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{ mb: 1.5, flexWrap: "wrap", gap: 0.5 }}
+        >
           <Chip
             label={task.Priority}
             color={getPriorityColor(task.Priority)}
@@ -372,9 +443,22 @@ function ViewTask() {
               color="text.secondary"
               sx={{ fontSize: "0.7rem" }}
             >
-              {task.AssignedByName}
+              {task.AssignedByName === "Self" ? "Self" : task.AssignedByName}
             </Typography>
           </Box>
+
+          {task.AssignedToName && task.AssignedToName !== "Self" && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <AssignmentInd sx={{ fontSize: 14, color: "action.active" }} />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: "0.7rem" }}
+              >
+                to: {task.AssignedToName}
+              </Typography>
+            </Box>
+          )}
         </Stack>
 
         {/* Footer with Dates and Actions */}
@@ -385,7 +469,14 @@ function ViewTask() {
             alignItems: "center",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <Schedule
                 sx={{
@@ -775,7 +866,7 @@ function ViewTask() {
               )}
             </Box>
           ) : (
-            // Desktop Table View (keep existing table code)
+            // Desktop Table View
             <TableContainer
               component={Paper}
               elevation={2}
@@ -794,7 +885,7 @@ function ViewTask() {
                       "Priority",
                       "Status",
                       "Due Date",
-                      "Assigned By",
+                      "Assigned By/To",
                       "Created",
                       "Actions",
                     ].map((header) => (
@@ -880,23 +971,55 @@ function ViewTask() {
                           <Box
                             sx={{
                               display: "flex",
-                              alignItems: "center",
-                              gap: 1,
+                              flexDirection: "column",
+                              gap: 0.5,
                             }}
                           >
-                            <Avatar
+                            <Box
                               sx={{
-                                width: 28,
-                                height: 28,
-                                bgcolor: "#CC7A00",
-                                fontSize: "0.875rem",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
                               }}
                             >
-                              {task.AssignedByName?.charAt(0) || "?"}
-                            </Avatar>
-                            <Typography variant="body2">
-                              {task.AssignedByName}
-                            </Typography>
+                              <Avatar
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "#CC7A00",
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {task.AssignedByName?.charAt(0) || "?"}
+                              </Avatar>
+                              <Typography variant="body2">
+                                {task.AssignedByName}
+                              </Typography>
+                            </Box>
+                            {task.AssignedToName &&
+                              task.AssignedToName !== "Self" && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    ml: 0.5,
+                                  }}
+                                >
+                                  <AssignmentInd
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "action.active",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    to: {task.AssignedToName}
+                                  </Typography>
+                                </Box>
+                              )}
                           </Box>
                         </TableCell>
                         <TableCell sx={{ fontSize: "0.875rem" }}>
@@ -976,8 +1099,11 @@ function ViewTask() {
                 required
                 size="small"
                 autoFocus
+                placeholder="Enter task title"
+                style={{marginTop:"20px"}}
               />
             </Grid>
+
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -989,8 +1115,191 @@ function ViewTask() {
                 multiline
                 rows={isMobile ? 2 : 3}
                 size="small"
+                placeholder="Enter task description (optional)"
               />
             </Grid>
+
+            {/* Assignment Type Selection */}
+            <Grid item xs={12}>
+              <FormControl component="fieldset" sx={{ width: "100%" }}>
+                <FormLabel
+                  component="legend"
+                  sx={{ fontSize: "0.85rem", mb: 1 }}
+                >
+                  Assign To
+                </FormLabel>
+                <RadioGroup
+                  row={!isMobile}
+                  value={newTask.assignedToType}
+                  onChange={(e) => {
+                    setNewTask({
+                      ...newTask,
+                      assignedToType: e.target.value,
+                      assignedToEmpId: "",
+                      assignedToName: "",
+                    });
+                  }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? 1 : 2,
+                  }}
+                >
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1,
+                      flex: 1,
+                      borderColor:
+                        newTask.assignedToType === "self"
+                          ? "primary.main"
+                          : "divider",
+                      bgcolor:
+                        newTask.assignedToType === "self"
+                          ? "primary.50"
+                          : "transparent",
+                    }}
+                  >
+                    <FormControlLabel
+                      value="self"
+                      control={<Radio size="small" />}
+                      label={
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Person fontSize="small" />
+                          <Typography variant="body2">
+                            Assign to Self
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ m: 0, width: "100%" }}
+                    />
+                  </Paper>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1,
+                      flex: 1,
+                      borderColor:
+                        newTask.assignedToType === "other"
+                          ? "primary.main"
+                          : "divider",
+                      bgcolor:
+                        newTask.assignedToType === "other"
+                          ? "primary.50"
+                          : "transparent",
+                    }}
+                  >
+                    <FormControlLabel
+                      value="other"
+                      control={<Radio size="small" />}
+                      label={
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Group fontSize="small" />
+                          <Typography variant="body2">
+                            Assign to Department
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ m: 0, width: "100%" }}
+                    />
+                  </Paper>
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+
+            {/* Employee Selection - Only shown when "other" is selected */}
+            {newTask.assignedToType === "other" && (
+              <Grid item xs={12}>
+                {loadingEmployees ? (
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", py: 2 }}
+                  >
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Autocomplete
+                    fullWidth
+                    options={employees}
+                    getOptionLabel={(option) =>
+                      typeof option === "string"
+                        ? option
+                        : `${option.Name} (${option.EmpId})`
+                    }
+                    value={
+                      employees.find(
+                        (emp) => emp.EmpId === newTask.assignedToEmpId,
+                      ) || null
+                    }
+                    onChange={(event, newValue) => {
+                      setNewTask({
+                        ...newTask,
+                        assignedToEmpId: newValue?.EmpId || "",
+                        assignedToName: newValue?.Name || "",
+                      });
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Select Employee"
+                        size="small"
+                        required
+                        placeholder="Search by name or ID"
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <>
+                              <InputAdornment position="start">
+                                <Search fontSize="small" />
+                              </InputAdornment>
+                              {params.InputProps.startAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <ListItem {...props} dense>
+                        <ListItemAvatar>
+                          <Avatar
+                            sx={{ width: 32, height: 32, bgcolor: "#CC7A00" }}
+                          >
+                            {option.Name?.charAt(0)}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={option.Name}
+                          secondary={
+                            <React.Fragment>
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                color="text.primary"
+                              >
+                                {option.EmpId}
+                              </Typography>
+                              {option.Designation && ` • ${option.Designation}`}
+                            </React.Fragment>
+                          }
+                        />
+                      </ListItem>
+                    )}
+                    loading={loadingEmployees}
+                    noOptionsText="No employees found"
+                    isOptionEqualToValue={(option, value) =>
+                      option.EmpId === value.EmpId
+                    }
+                    ListboxProps={{
+                      sx: { maxHeight: 300 },
+                    }}
+                  />
+                )}
+              </Grid>
+            )}
+
             <Grid item xs={isMobile ? 12 : 6}>
               <FormControl fullWidth size="small">
                 <InputLabel>Priority</InputLabel>
@@ -1009,6 +1318,7 @@ function ViewTask() {
                 </Select>
               </FormControl>
             </Grid>
+
             <Grid item xs={isMobile ? 12 : 6}>
               <FormControl fullWidth size="small">
                 <InputLabel>Status</InputLabel>
@@ -1027,6 +1337,7 @@ function ViewTask() {
                 </Select>
               </FormControl>
             </Grid>
+
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -1038,6 +1349,9 @@ function ViewTask() {
                 }
                 InputLabelProps={{ shrink: true }}
                 size="small"
+                inputProps={{
+                  min: new Date().toISOString().split("T")[0],
+                }}
               />
             </Grid>
           </Grid>
@@ -1060,7 +1374,10 @@ function ViewTask() {
           <Button
             onClick={handleAddTask}
             variant="contained"
-            disabled={!newTask.Title}
+            disabled={
+              !newTask.Title ||
+              (newTask.assignedToType === "other" && !newTask.assignedToEmpId)
+            }
             fullWidth={isMobile}
             size={isMobile ? "medium" : "small"}
             sx={{
@@ -1131,12 +1448,12 @@ function ViewTask() {
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ fontSize: "0.9rem" }}
+                    sx={{ fontSize: "0.9rem", mb: 1 }}
                   >
                     {selectedTask.Description}
                   </Typography>
                 )}
-                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
                   <Chip
                     label={selectedTask.Priority}
                     color={getPriorityColor(selectedTask.Priority)}
@@ -1147,6 +1464,15 @@ function ViewTask() {
                     color={getStatusColor(selectedTask.Status)}
                     size="small"
                   />
+                  {selectedTask.AssignedToName &&
+                    selectedTask.AssignedToName !== "Self" && (
+                      <Chip
+                        icon={<AssignmentInd />}
+                        label={`Assigned to: ${selectedTask.AssignedToName}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
                 </Box>
               </Paper>
 
