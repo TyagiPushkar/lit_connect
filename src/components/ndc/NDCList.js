@@ -766,6 +766,9 @@ const NDCList = () => {
                 Academic Fee Due
               </TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                Mid Term Exam Due
+              </TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>
                 Overall Status
               </TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>
@@ -801,6 +804,9 @@ const NDCList = () => {
                     </TableCell>
                     <TableCell>
                       {getStatusChip(student.academic_fee_status)}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusChip(student.mid_term_exam)}
                     </TableCell>
                     <TableCell>{getOverallStatusChip(student)}</TableCell>
                     <TableCell>
@@ -1038,7 +1044,7 @@ const NDCList = () => {
                     .slice(
                       adminApprovalPage * adminApprovalRowsPerPage,
                       adminApprovalPage * adminApprovalRowsPerPage +
-                        adminApprovalRowsPerPage
+                        adminApprovalRowsPerPage,
                     )
                     .map((approval, index) => (
                       <TableRow key={index}>
@@ -1147,7 +1153,7 @@ const NDCList = () => {
                         .slice(
                           examFormsPage * examFormsRowsPerPage,
                           examFormsPage * examFormsRowsPerPage +
-                            examFormsRowsPerPage
+                            examFormsRowsPerPage,
                         )
                         .map((form, index) => (
                           <TableRow key={index}>
