@@ -576,6 +576,7 @@ const FeesPaymentList = () => {
         "Guardian Contact",
         "Student Contact",
         "Address",
+        "Refer by",
         "COLLEGE FEE (1ST YEAR)",
         "HOSTEL FEE (1ST YEAR)",
         "Total Fees (1ST YEAR)",
@@ -721,6 +722,7 @@ const FeesPaymentList = () => {
           student.guardianContact,
           student.studentContact,
           student.address,
+          student.RefrenceBy,
           // Year 1 data
           years[1].collegeFee,
           years[1].hostelFee,
@@ -771,6 +773,7 @@ const FeesPaymentList = () => {
         { wch: 15 }, // Guardian Contact
         { wch: 15 }, // Student Contact
         { wch: 50 }, // Address
+        { wch: 25 }, // Refer By
         // Year 1 columns
         { wch: 15 },
         { wch: 15 },
@@ -784,7 +787,7 @@ const FeesPaymentList = () => {
         // Year 2 and 3 columns (same as year 1)
         ...Array(14).fill({ wch: 15 }),
         ...Array(36).fill({ wch: 12 }),
-      ]
+      ];
       ws["!cols"] = colWidths
 
       // Add worksheet to workbook
