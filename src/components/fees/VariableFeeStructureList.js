@@ -163,7 +163,7 @@ const VariableFeeStructureList = () => {
       "Student ID": item.student_id,
       Particular: item.particular,
       Amount: item.amount,
-      Paid: item.Paid,
+      // Paid: item.Paid,
       "Date/Time": formatDateTime(item.DateTime),
       // "Payment Status": item.payment_status,
       "Paid Amount": item.paid_amount,
@@ -384,7 +384,7 @@ const VariableFeeStructureList = () => {
                 <TableCell style={{ color: "white" }}>Student ID</TableCell>
                 <TableCell style={{ color: "white" }}>Particular</TableCell>
                 <TableCell style={{ color: "white" }}>Amount</TableCell>
-                <TableCell style={{ color: "white" }}>Paid</TableCell>
+                {/* <TableCell style={{ color: "white" }}>Paid</TableCell> */}
                 <TableCell style={{ color: "white" }}>Date/Time</TableCell>
                 {/* <TableCell style={{ color: "white" }}>Payment Status</TableCell> */}
                 <TableCell style={{ color: "white" }}>Paid Amount</TableCell>
@@ -401,7 +401,7 @@ const VariableFeeStructureList = () => {
                     <TableCell>{row.student_id}</TableCell>
                     <TableCell>{row.particular}</TableCell>
                     <TableCell>{row.amount}</TableCell>
-                    <TableCell>{row.Paid}</TableCell>
+                    {/* <TableCell>{row.Paid}</TableCell> */}
                     <TableCell>{formatDateTime(row.DateTime)}</TableCell>
                     {/* <TableCell>{getStatusChip(row.payment_status)}</TableCell> */}
                     <TableCell>{row.paid_amount}</TableCell>
