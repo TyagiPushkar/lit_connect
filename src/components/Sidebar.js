@@ -30,7 +30,7 @@ import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import MarkUnreadChatAltIcon from "@mui/icons-material/MarkUnreadChatAlt";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-// import ChecklistIcon from '@mui/icons-material/Checklist';
+import ChecklistIcon from "@mui/icons-material/Checklist";
 // import MenuIcon from '@mui/icons-material/Menu';
 function Sidebar() {
   const location = useLocation();
@@ -91,7 +91,11 @@ function Sidebar() {
       { path: "/fees-summary", name: "Fees Summary", icon: <SummarizeIcon /> },
       { path: "/other-fees", name: "Other Fees", icon: <AppsIcon /> },
       { path: "/students", name: "Students", icon: <Person /> },
-      // { path: '/checkpoints', name: 'Checkpoints', icon: <ChecklistIcon /> },
+      {
+        path: "/variable-fee-structure",
+        name: "Variable Fees Structure",
+        icon: <ChecklistIcon />,
+      },
     );
   }
   if (user?.role === "Front Desk") {

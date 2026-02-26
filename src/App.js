@@ -46,6 +46,7 @@ import TaskList from "./pages/TaskList";
 import Visit from "./pages/Dealer";
 import Docket from "./pages/Docket";
 import Maps from './pages/Maps';
+import VariableFeeStructure from './pages/VariableFeeStructure';
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -168,6 +169,15 @@ function App() {
               element={
                 <PrivateRoute
                   element={VariableFees}
+                  requiredRoles={["Accounts", "Front Desk", "Admin"]}
+                />
+              }
+            />
+             <Route
+              path="/variable-fee-structure"
+              element={
+                <PrivateRoute
+                  element={VariableFeeStructure}
                   requiredRoles={["Accounts", "Front Desk", "Admin"]}
                 />
               }
