@@ -155,6 +155,7 @@ function Sidebar() {
         name: "Certificate",
         icon: <WorkspacePremiumIcon />,
       },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   // Combine all available routes
