@@ -96,6 +96,7 @@ function Sidebar() {
         name: "Variable Fees Structure",
         icon: <ChecklistIcon />,
       },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> }
     );
   }
   if (user?.role === "Front Desk") {
