@@ -425,14 +425,15 @@ const FeesPaymentList = () => {
         guardianContact: student.GuardianContactNo,
         studentContact: student.StudentContactNo,
         address: student.PermanentAddress,
+        RefrenceBy: student.RefrenceBy,
         totalFees: 0,
         totalScholarship: 0,
         netFees: 0,
         totalPaid: 0,
         totalDue: 0,
         installments: [],
-        hasFeeStructure: false
-      }
+        hasFeeStructure: false,
+      };
     }
 
     // Process installments
@@ -546,14 +547,15 @@ const FeesPaymentList = () => {
       guardianContact: student.GuardianContactNo,
       studentContact: student.StudentContactNo,
       address: student.PermanentAddress,
+      RefrenceBy: student.RefrenceBy,
       totalFees: totalFees,
       totalScholarship: totalScholarship,
       netFees: netFees,
       totalPaid: totalPaid,
       totalDue: totalDue,
       installments: installments,
-      hasFeeStructure: true
-    }
+      hasFeeStructure: true,
+    };
   } catch (error) {
     console.error(`Error processing student ${student.StudentID}:`, error.message)
     return null
