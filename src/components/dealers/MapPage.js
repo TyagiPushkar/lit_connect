@@ -209,7 +209,7 @@ function MapPage() {
 
   // Fetch employees for HR role
   useEffect(() => {
-    if (user.role === "HR") {
+    if (user.role === "Admin") {
       const fetchEmployees = async () => {
         try {
           const response = await axios.get(
@@ -448,7 +448,7 @@ function MapPage() {
 
         {/* Filters */}
         <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
-          {user.role === "HR" && (
+          {user.role === "Admin" && (
             <Grid item xs={12} sm={6} md={4}>
               <Autocomplete
                 size="small"

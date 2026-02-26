@@ -2,15 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   GoogleMap,
   Marker,
-  DirectionsRenderer,
   LoadScript,
   InfoWindow,
 } from "@react-google-maps/api";
 
 function VisitMap({ markers, mapCenter }) {
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const [directions, setDirections] = useState(null);
-  const [error, setError] = useState(null); // New state to handle errors
+  const [mapPolylines, setMapPolylines] = useState([]);
+  const [routeMarkers, setRouteMarkers] = useState([]);
+    const [routePolyline, setRoutePolyline] = useState(null);
+
+  const [error, setError] = useState(null);
   const mapRef = useRef(null);
 
   const mapContainerStyle = {
@@ -28,50 +30,84 @@ function VisitMap({ markers, mapCenter }) {
     }
   }, [markers]);
 
-  const calculateDirections = () => {
+  const calculateDirections = async () => {
+    // Clear previous polyline
+    if (routePolyline) {
+      routePolyline.setMap(null);
+    }
+
     if (markers.length > 1) {
-      const waypoints = markers.slice(1, -1).map((marker) => ({
-        location: { lat: marker.lat, lng: marker.lng },
-        stopover: true,
-      }));
+      try {
+        // Create waypoints for intermediate markers
+        const waypoints = markers.slice(1, -1).map((marker) => ({
+          location: new window.google.maps.LatLng(marker.lat, marker.lng),
+          stopover: true,
+        }));
 
-      const origin = { lat: markers[0].lat, lng: markers[0].lng };
-      const destination = {
-        lat: markers[markers.length - 1].lat,
-        lng: markers[markers.length - 1].lng,
-      };
+        const origin = new window.google.maps.LatLng(
+          markers[0].lat,
+          markers[0].lng,
+        );
+        const destination = new window.google.maps.LatLng(
+          markers[markers.length - 1].lat,
+          markers[markers.length - 1].lng,
+        );
 
-      const service = new window.google.maps.DirectionsService();
-      service.route(
-        {
-          origin,
-          destination,
-          waypoints,
-          travelMode: window.google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === window.google.maps.DirectionsStatus.OK) {
-            setDirections(result);
-            setError(null); // Clear any previous errors
-          } else {
-            setError("Error fetching directions");
-            console.error(`Error fetching directions ${result}`);
-          }
-        },
-      );
+        // Use DirectionsService as it's still supported
+        // The warning is just a deprecation notice, not an error
+        const directionsService = new window.google.maps.DirectionsService();
+
+        directionsService.route(
+          {
+            origin: origin,
+            destination: destination,
+            waypoints: waypoints,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+          },
+          (result, status) => {
+            if (status === window.google.maps.DirectionsStatus.OK) {
+              // Create a custom polyline from the route
+              const route = result.routes[0];
+              const path = route.overview_path;
+
+              // Create a new polyline
+              const polyline = new window.google.maps.Polyline({
+                path: path,
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 3,
+                map: mapRef.current,
+              });
+
+              setRoutePolyline(polyline);
+              setError(null);
+            } else {
+              setError("Error fetching directions: " + status);
+              console.error("Error fetching directions:", status);
+            }
+          },
+        );
+      } catch (err) {
+        setError("Error fetching directions: " + err.message);
+        console.error("Error fetching directions:", err);
+      }
     } else {
       setError("At least two markers are required to calculate directions");
     }
   };
 
   useEffect(() => {
-    calculateDirections();
-  }, [markers]);
+    if (mapRef.current && markers.length > 0) {
+      calculateDirections();
+    }
+  }, [markers, mapRef.current]);
 
   return (
-    <LoadScript googleMapsApiKey="abcd">
-      {" "}
-      {/* Use an environment variable */}
+    <LoadScript
+      googleMapsApiKey="AIzaSyBtEmyBwz_YotZK8Iabl_nQQldaAtN0jhM"
+      libraries={["routes"]} // Add routes library
+    >
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={mapCenter}
@@ -111,8 +147,6 @@ function VisitMap({ markers, mapCenter }) {
             </div>
           </InfoWindow>
         )}
-
-        {directions && <DirectionsRenderer directions={directions} />}
 
         {error && (
           <div
