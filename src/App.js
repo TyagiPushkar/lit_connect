@@ -47,6 +47,7 @@ import Visit from "./pages/Dealer";
 import Docket from "./pages/Docket";
 import Maps from './pages/Maps';
 import VariableFeeStructure from './pages/VariableFeeStructure';
+import MidTerm from "./pages/MidTerm";
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -173,7 +174,7 @@ function App() {
                 />
               }
             />
-             <Route
+            <Route
               path="/variable-fee-structure"
               element={
                 <PrivateRoute
@@ -267,6 +268,10 @@ function App() {
               element={<PrivateRoute element={Dashboard} />}
             />
             <Route path="/ndc" element={<PrivateRoute element={NDC} />} />
+            <Route
+              path="/mid-term"
+              element={<PrivateRoute element={MidTerm} />}
+            />
             <Route path="/task/:empId" element={<TaskList />} />
             <Route path="/visit" element={<PrivateRoute element={Visit} />} />
             <Route

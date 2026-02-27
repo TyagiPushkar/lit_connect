@@ -161,6 +161,7 @@ function Sidebar() {
         icon: <WorkspacePremiumIcon />,
       },
       { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
+      {path:"/mid-term", name:"Mid Term", icon:<MenuIcon />}
     );
   }
   // Combine all available routes
