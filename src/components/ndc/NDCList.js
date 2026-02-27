@@ -855,7 +855,7 @@ const NDCList = () => {
                         >
                           Admin Approval List
                         </MenuItem>
-                        {user.role == "Examinaton" && (
+                        {user.role == "Examination" && (
                           <MenuItem
                             onClick={() =>
                               handleOpenIssueForm(selectedStudentForMenu)
