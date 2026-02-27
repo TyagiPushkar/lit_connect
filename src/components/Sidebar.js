@@ -109,6 +109,7 @@ function Sidebar() {
       { path: "/transactions", name: "Transactions", icon: <SummarizeIcon /> },
 
       { path: "/other-fees", name: "Other Fees", icon: <AppsIcon /> },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   if (user?.role === "Admin") {

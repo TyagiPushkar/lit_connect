@@ -855,13 +855,15 @@ const NDCList = () => {
                         >
                           Admin Approval List
                         </MenuItem>
-                        <MenuItem
-                          onClick={() =>
-                            handleOpenIssueForm(selectedStudentForMenu)
-                          }
-                        >
-                          Issue Exam Form
-                        </MenuItem>
+                        {user.role == "Examinaton" && (
+                          <MenuItem
+                            onClick={() =>
+                              handleOpenIssueForm(selectedStudentForMenu)
+                            }
+                          >
+                            Issue Exam Form
+                          </MenuItem>
+                        )}
                       </Menu>
                     </TableCell>
                   </TableRow>
