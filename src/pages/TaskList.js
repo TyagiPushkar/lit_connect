@@ -16,8 +16,8 @@ function TaskList() {
       <Box
         component="main"
         sx={{
-          width: "95%",
-          p: isMobile ? 0 : 2,
+          width: "100%",
+          p: isMobile ? 0 : 0,
           maxWidth: "100%",
           overflowX: "hidden",
         }}
