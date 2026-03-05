@@ -84,17 +84,17 @@ function PolicyList() {
     return (
         <div>
             {user && user.role === 'HR' ? <Button variant="contained" color="primary" onClick={handleOpenDialog} sx={{ mb: 2 }} style={{ backgroundColor: "#CC7A00" }}>
-                Add Policy
+                Add Timetable
             </Button> : null}
 
             <TableContainer component={Paper}>
                 <Table size='small'> 
                     <TableHead style={{ backgroundColor: "#CC7A00" }}>
                         <TableRow>
-                            <TableCell style={{ color: "white" }}>Policy Name</TableCell>
+                            <TableCell style={{ color: "white" }}> Name</TableCell>
                             <TableCell style={{ color: "white" }}>Description</TableCell>
                             {/* <TableCell style={{ color: "white" }}>URL</TableCell> */}
-                            <TableCell style={{ color: "white" }}>Policy</TableCell>
+                            <TableCell style={{ color: "white" }}>Timetable</TableCell>
                             {user && user.role === 'HR' ? <TableCell style={{ color: "white" }}>Action</TableCell> : null}
 
                         </TableRow>

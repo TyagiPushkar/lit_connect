@@ -70,7 +70,7 @@ function Sidebar() {
       { path: "/teachers", name: "Staff", icon: <Person /> },
       { path: "/students", name: "Students", icon: <Person /> },
 
-      { path: "/time-table", name: "Time Table", icon: <CalendarMonthIcon /> },
+      { path: "/policy", name: "Timetable", icon: <CalendarMonthIcon /> },
       { path: "/subjects", name: "Subjects", icon: <LibraryBooksIcon /> },
       {
         path: "/certificate",
@@ -113,11 +113,13 @@ function Sidebar() {
     );
   }
   if (user?.role === "Admin") {
-    allowedRoutes.push({
-      path: "/students",
-      name: "Students",
-      icon: <Person />,
-    });
+    allowedRoutes.push(
+      {
+        path: "/students",
+        name: "Students",
+        icon: <Person />,
+      },
+    );
   }
   // HR-specific routes
   if (user?.role === "Teacher") {

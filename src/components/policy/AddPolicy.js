@@ -64,7 +64,7 @@ function AddPolicyDialog({ open, onClose, onPolicyAdded }) {
                 <form onSubmit={handleSubmit}>
                     <TextField
                         fullWidth
-                        label="Policy Name"
+                        label="Name"
                         margin="normal"
                         variant="outlined"
                         value={policyName}
@@ -72,7 +72,7 @@ function AddPolicyDialog({ open, onClose, onPolicyAdded }) {
                     />
                     <TextField
                         fullWidth
-                        label="Policy Description"
+                        label="Description"
                         margin="normal"
                         variant="outlined"
                         multiline
