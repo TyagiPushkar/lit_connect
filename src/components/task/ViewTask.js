@@ -88,10 +88,14 @@ import {
   School,
   Book,
   Class,
+  DateRange,
 } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { styled } from "@mui/material/styles";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 // Styled components for professional look
 const StyledTab = styled(Tab)(({ theme }) => ({
@@ -130,12 +134,16 @@ function ViewTask() {
   const isMobile = useMediaQuery("(max-width:768px)");
   const isTablet = useMediaQuery("(max-width:1024px)");
 
+  // Check if current user is LIT0001 (admin)
+  const isAdmin = empId === "LIT0001";
+
   // Tab state
   const [currentTab, setCurrentTab] = useState(0);
 
   // Data states
   const [personalTasks, setPersonalTasks] = useState([]);
   const [teamTasks, setTeamTasks] = useState([]);
+  const [adminTasks, setAdminTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
@@ -146,8 +154,10 @@ function ViewTask() {
   const [filters, setFilters] = useState({
     status: "",
     priority: "",
-    assignedBy: "",
-    assignedTo: "",
+    assignedBy: null,
+    assignedTo: null,
+    dateFrom: null,
+    dateTo: null,
   });
 
   // UI states
@@ -187,6 +197,9 @@ function ViewTask() {
     if (empId) {
       fetchAllTasks();
       fetchTeamMembers();
+      if (isAdmin) {
+        fetchAdminTasks();
+      }
     }
   }, [empId]);
 
@@ -221,6 +234,20 @@ function ViewTask() {
       showSnackbar("Failed to load tasks", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdminTasks = async () => {
+    try {
+      const response = await axios.get(
+        `https://namami-infotech.com/LIT/src/tasklist/get_admin_task.php`,
+      );
+      if (response.data.success) {
+        setAdminTasks(response.data.tasks || []);
+      }
+    } catch (err) {
+      console.error("Failed to load admin tasks:", err);
+      showSnackbar("Failed to load admin tasks", "error");
     }
   };
 
@@ -267,6 +294,34 @@ function ViewTask() {
     setFilters((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleAssignToChange = (event, newValue) => {
+    setFilters((prev) => ({
+      ...prev,
+      assignedTo: newValue,
+    }));
+  };
+
+  const handleAssignByChange = (event, newValue) => {
+    setFilters((prev) => ({
+      ...prev,
+      assignedBy: newValue,
+    }));
+  };
+
+  const handleDateFromChange = (date) => {
+    setFilters((prev) => ({
+      ...prev,
+      dateFrom: date,
+    }));
+  };
+
+  const handleDateToChange = (date) => {
+    setFilters((prev) => ({
+      ...prev,
+      dateTo: date,
     }));
   };
 
@@ -324,6 +379,9 @@ function ViewTask() {
 
       if (response.data.success) {
         fetchAllTasks();
+        if (isAdmin) {
+          fetchAdminTasks();
+        }
         setOpenAddDialog(false);
         setNewTask({
           Title: "",
@@ -359,6 +417,9 @@ function ViewTask() {
 
       if (response.data.success) {
         fetchAllTasks();
+        if (isAdmin) {
+          fetchAdminTasks();
+        }
         setOpenUpdateDialog(false);
         setSelectedTask(null);
         setUpdateData({ status: "", remarks: "" });
@@ -416,16 +477,65 @@ function ViewTask() {
   };
 
   const getTasksForCurrentTab = () => {
-    return currentTab === 0 ? personalTasks : teamTasks;
+    if (currentTab === 0) {
+      return personalTasks;
+    } else {
+      // For admin users (NI003), show admin tasks in team tab
+      // For other users, show regular team tasks
+      return isAdmin ? adminTasks : teamTasks;
+    }
+  };
+
+  // Get unique assignees and assigners for filter options
+  const getUniqueAssignees = () => {
+    const tasks = getTasksForCurrentTab();
+    const assignees = [
+      ...new Set(tasks.map((task) => task.AssignedToName).filter(Boolean)),
+    ];
+    return assignees.map((name) => ({ label: name, value: name }));
+  };
+
+  const getUniqueAssigners = () => {
+    const tasks = getTasksForCurrentTab();
+    const assigners = [
+      ...new Set(tasks.map((task) => task.AssignedByName).filter(Boolean)),
+    ];
+    return assigners.map((name) => ({ label: name, value: name }));
+  };
+
+  const filterTasksByDate = (task) => {
+    if (!filters.dateFrom && !filters.dateTo) return true;
+
+    const taskDate = new Date(task.CreatedDate || task.DueDate);
+    if (!taskDate) return true;
+
+    if (filters.dateFrom && filters.dateTo) {
+      return taskDate >= filters.dateFrom && taskDate <= filters.dateTo;
+    } else if (filters.dateFrom) {
+      return taskDate >= filters.dateFrom;
+    } else if (filters.dateTo) {
+      return taskDate <= filters.dateTo;
+    }
+    return true;
   };
 
   const filteredTasks = getTasksForCurrentTab().filter((task) => {
+    const matchesStatus =
+      filters.status === "" || task.Status === filters.status;
+    const matchesPriority =
+      filters.priority === "" || task.Priority === filters.priority;
+    const matchesAssignBy =
+      !filters.assignedBy || task.AssignedByName === filters.assignedBy.value;
+    const matchesAssignTo =
+      !filters.assignedTo || task.AssignedToName === filters.assignedTo.value;
+    const matchesDate = filterTasksByDate(task);
+
     return (
-      (filters.status === "" || task.Status === filters.status) &&
-      (filters.priority === "" || task.Priority === filters.priority) &&
-      (filters.assignedBy === "" ||
-        task.AssignedByName === filters.assignedBy) &&
-      (filters.assignedTo === "" || task.AssignedToName === filters.assignedTo)
+      matchesStatus &&
+      matchesPriority &&
+      matchesAssignBy &&
+      matchesAssignTo &&
+      matchesDate
     );
   });
 
@@ -433,8 +543,10 @@ function ViewTask() {
     setFilters({
       status: "",
       priority: "",
-      assignedBy: "",
-      assignedTo: "",
+      assignedBy: null,
+      assignedTo: null,
+      dateFrom: null,
+      dateTo: null,
     });
   };
 
@@ -473,7 +585,7 @@ function ViewTask() {
   };
 
   const personalStats = getTaskStats(personalTasks);
-  const teamStats = getTaskStats(teamTasks);
+  const teamStats = getTaskStats(isAdmin ? adminTasks : teamTasks);
 
   // Professional Task Card Component
   const ProfessionalTaskCard = ({ task, onUpdate }) => {
@@ -568,17 +680,34 @@ function ViewTask() {
             >
               Due: {formatDate(task.DueDate)}
             </Typography>
+            {task.CreatedDate && (
+              <>
+                <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+                <DateRange sx={{ fontSize: 16, color: "text.secondary" }} />
+                <Typography variant="body2" color="text.secondary">
+                  Created: {formatDate(task.CreatedDate)}
+                </Typography>
+              </>
+            )}
           </Box>
 
-          {/* Assignment Info */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1.5 }}>
+          {/* Assignment Info - Updated to show both Assign To and Assign By */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              mb: 1.5,
+              flexWrap: "wrap",
+            }}
+          >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <Person sx={{ fontSize: 16, color: "text.secondary" }} />
               <Typography variant="body2" color="text.secondary">
-                By: {task.AssignedByName}
+                By: {task.AssignedByName || "Unknown"}
               </Typography>
             </Box>
-            {task.AssignedToName && task.AssignedToName !== "Self" && (
+            {task.AssignedToName && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Group sx={{ fontSize: 16, color: "text.secondary" }} />
                 <Typography variant="body2" color="text.secondary">
@@ -670,7 +799,7 @@ function ViewTask() {
           </CardContent>
         </StatsCard>
       </Grid>
-
+{/* 
       <Grid item xs={6} sm={4} md={2}>
         <StatsCard>
           <CardContent sx={{ textAlign: "center", p: 2 }}>
@@ -683,7 +812,7 @@ function ViewTask() {
             </Typography>
           </CardContent>
         </StatsCard>
-      </Grid>
+      </Grid> */}
 
       <Grid item xs={6} sm={4} md={2}>
         <StatsCard>
@@ -699,7 +828,7 @@ function ViewTask() {
         </StatsCard>
       </Grid>
 
-      <Grid item xs={6} sm={4} md={2}>
+      {/* <Grid item xs={6} sm={4} md={2}>
         <StatsCard>
           <CardContent sx={{ textAlign: "center", p: 2 }}>
             <Warning sx={{ fontSize: 32, color: "#d32f2f", mb: 1 }} />
@@ -711,624 +840,320 @@ function ViewTask() {
             </Typography>
           </CardContent>
         </StatsCard>
-      </Grid>
+      </Grid> */}
     </Grid>
   );
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "#f5f7fa",
-      }}
-    >
-      {/* App Bar for Mobile */}
-      {isMobile && (
-        <AppBar
-          position="sticky"
-          color="default"
-          elevation={0}
-          sx={{
-            bgcolor: "white",
-            borderBottom: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Toolbar sx={{ minHeight: 64 }}>
-            <Typography
-              variant="h6"
-              sx={{ flex: 1, fontWeight: 600, color: "#333" }}
-            >
-              Task Manager
-            </Typography>
-            <Badge badgeContent={filteredTasks.length} color="primary">
-              <Assignment />
-            </Badge>
-          </Toolbar>
-        </AppBar>
-      )}
-
-      <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 3 }}>
-        {/* Tabs */}
-        <Paper
-          elevation={0}
-          sx={{
-            mb: 3,
-            borderRadius: 2,
-            overflow: "hidden",
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Tabs
-            value={currentTab}
-            onChange={handleTabChange}
-            variant={isMobile ? "fullWidth" : "standard"}
-            indicatorColor="primary"
-            textColor="primary"
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "#f5f7fa",
+        }}
+      >
+        {/* App Bar for Mobile */}
+        {isMobile && (
+          <AppBar
+            position="sticky"
+            color="default"
+            elevation={0}
             sx={{
               bgcolor: "white",
-              "& .MuiTab-root": {
-                py: 2,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Toolbar sx={{ minHeight: 64 }}>
+              <Typography
+                variant="h6"
+                sx={{ flex: 1, fontWeight: 600, color: "#333" }}
+              >
+                Task Manager {isAdmin && "(Admin View)"}
+              </Typography>
+              <Badge badgeContent={filteredTasks.length} color="primary">
+                <Assignment />
+              </Badge>
+            </Toolbar>
+          </AppBar>
+        )}
+
+        <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 3 }}>
+          {/* Tabs */}
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 3,
+              borderRadius: 2,
+              overflow: "hidden",
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Tabs
+              value={currentTab}
+              onChange={handleTabChange}
+              variant={isMobile ? "fullWidth" : "standard"}
+              indicatorColor="primary"
+              textColor="primary"
+              sx={{
+                bgcolor: "white",
+                "& .MuiTab-root": {
+                  py: 2,
+                },
+              }}
+            >
+              <StyledTab
+                icon={<Person />}
+                iconPosition="start"
+                label="My Tasks"
+                sx={{ fontSize: isMobile ? "0.85rem" : "0.95rem" }}
+              />
+              <StyledTab
+                icon={<Group />}
+                iconPosition="start"
+                label={isAdmin ? "Admin Tasks" : "Team Tasks"}
+                sx={{ fontSize: isMobile ? "0.85rem" : "0.95rem" }}
+              />
+            </Tabs>
+          </Paper>
+
+          {/* Statistics */}
+          <Fade in timeout={500}>
+            <Box>
+              <StatisticsCards
+                stats={currentTab === 0 ? personalStats : teamStats}
+                title={
+                  currentTab === 0
+                    ? "Personal Tasks"
+                    : isAdmin
+                      ? "Admin Tasks"
+                      : "Team Tasks"
+                }
+              />
+            </Box>
+          </Fade>
+
+          {/* Header Section */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: isMobile ? 2 : 3,
+              mb: 3,
+              borderRadius: 2,
+              bgcolor: "white",
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                justifyContent: "space-between",
+                alignItems: isMobile ? "stretch" : "center",
+                gap: isMobile ? 2 : 0,
+              }}
+            >
+              <Box>
+                <Typography
+                  variant={isMobile ? "h6" : "h5"}
+                  sx={{ fontWeight: 700, color: "#333", mb: 0.5 }}
+                >
+                  {currentTab === 0
+                    ? "My Tasks"
+                    : isAdmin
+                      ? "Admin Tasks"
+                      : "Team Tasks"}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {currentTab === 0
+                    ? "Tasks assigned to you"
+                    : isAdmin
+                      ? "All tasks in the system"
+                      : "Tasks assigned to your team members"}
+                </Typography>
+              </Box>
+
+              {/* Desktop Controls */}
+              {!isMobile && (
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterAlt />}
+                    onClick={() => setOpenFilterDrawer(true)}
+                  >
+                    Filters
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => setOpenAddDialog(true)}
+                    sx={{
+                      bgcolor: "#1976d2",
+                      "&:hover": { bgcolor: "#1565c0" },
+                    }}
+                  >
+                    Add Task
+                  </Button>
+                </Stack>
+              )}
+
+              {/* Mobile Controls */}
+              {isMobile && (
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterAlt />}
+                    onClick={() => setOpenFilterDrawer(true)}
+                    fullWidth
+                    size="small"
+                  >
+                    Filter
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => setOpenAddDialog(true)}
+                    fullWidth
+                    size="small"
+                  >
+                    Add
+                  </Button>
+                </Stack>
+              )}
+            </Box>
+
+            {/* Active Filters Display */}
+            {Object.values(filters).some((f) => f !== "" && f !== null) && (
+              <Box
+                sx={{
+                  mt: 2,
+                  pt: 2,
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  gap: 1,
+                  flexWrap: "wrap",
+                }}
+              >
+                {filters.status && (
+                  <Chip
+                    label={`Status: ${filters.status}`}
+                    size="small"
+                    onDelete={() => setFilters({ ...filters, status: "" })}
+                    sx={{ height: 28 }}
+                  />
+                )}
+                {filters.priority && (
+                  <Chip
+                    label={`Priority: ${filters.priority}`}
+                    size="small"
+                    onDelete={() => setFilters({ ...filters, priority: "" })}
+                    sx={{ height: 28 }}
+                  />
+                )}
+                {filters.assignedTo && (
+                  <Chip
+                    label={`Assigned To: ${filters.assignedTo.label}`}
+                    size="small"
+                    onDelete={() =>
+                      setFilters({ ...filters, assignedTo: null })
+                    }
+                    sx={{ height: 28 }}
+                  />
+                )}
+                {filters.assignedBy && (
+                  <Chip
+                    label={`Assigned By: ${filters.assignedBy.label}`}
+                    size="small"
+                    onDelete={() =>
+                      setFilters({ ...filters, assignedBy: null })
+                    }
+                    sx={{ height: 28 }}
+                  />
+                )}
+                {filters.dateFrom && (
+                  <Chip
+                    label={`From: ${formatDate(filters.dateFrom)}`}
+                    size="small"
+                    onDelete={() => setFilters({ ...filters, dateFrom: null })}
+                    sx={{ height: 28 }}
+                  />
+                )}
+                {filters.dateTo && (
+                  <Chip
+                    label={`To: ${formatDate(filters.dateTo)}`}
+                    size="small"
+                    onDelete={() => setFilters({ ...filters, dateTo: null })}
+                    sx={{ height: 28 }}
+                  />
+                )}
+                <Button size="small" onClick={resetFilters} sx={{ ml: "auto" }}>
+                  Clear All
+                </Button>
+              </Box>
+            )}
+          </Paper>
+
+          {/* Filter Drawer */}
+          <Drawer
+            anchor={isMobile ? "bottom" : "right"}
+            open={openFilterDrawer}
+            onClose={() => setOpenFilterDrawer(false)}
+            PaperProps={{
+              sx: {
+                width: isMobile ? "100%" : 400,
+                maxHeight: isMobile ? "80vh" : "100%",
+                borderTopLeftRadius: isMobile ? 20 : 0,
+                borderTopRightRadius: isMobile ? 20 : 0,
               },
             }}
           >
-            <StyledTab
-              icon={<Person />}
-              iconPosition="start"
-              label="My Tasks"
-              sx={{ fontSize: isMobile ? "0.85rem" : "0.95rem" }}
-            />
-            <StyledTab
-              icon={<Group />}
-              iconPosition="start"
-              label="Team Tasks"
-              sx={{ fontSize: isMobile ? "0.85rem" : "0.95rem" }}
-            />
-          </Tabs>
-        </Paper>
-
-        {/* Statistics */}
-        <Fade in timeout={500}>
-          <Box>
-            <StatisticsCards
-              stats={currentTab === 0 ? personalStats : teamStats}
-              title={currentTab === 0 ? "Personal Tasks" : "Team Tasks"}
-            />
-          </Box>
-        </Fade>
-
-        {/* Header Section */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: isMobile ? 2 : 3,
-            mb: 3,
-            borderRadius: 2,
-            bgcolor: "white",
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              justifyContent: "space-between",
-              alignItems: isMobile ? "stretch" : "center",
-              gap: isMobile ? 2 : 0,
-            }}
-          >
-            <Box>
-              <Typography
-                variant={isMobile ? "h6" : "h5"}
-                sx={{ fontWeight: 700, color: "#333", mb: 0.5 }}
+            <Box sx={{ p: 3 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
               >
-                {currentTab === 0 ? "My Tasks" : "Team Tasks"}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {currentTab === 0
-                  ? "Tasks assigned to you"
-                  : "Tasks assigned to your team members"}
-              </Typography>
-            </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Filter Tasks
+                </Typography>
+                <IconButton onClick={() => setOpenFilterDrawer(false)}>
+                  <Close />
+                </IconButton>
+              </Box>
 
-            {/* Desktop Controls */}
-            {!isMobile && (
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Button
-                  variant="outlined"
-                  startIcon={<FilterAlt />}
-                  onClick={() => setOpenFilterDrawer(true)}
-                >
-                  Filters
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => setOpenAddDialog(true)}
-                  sx={{
-                    bgcolor: "#1976d2",
-                    "&:hover": { bgcolor: "#1565c0" },
-                  }}
-                >
-                  Add Task
-                </Button>
-              </Stack>
-            )}
-
-            {/* Mobile Controls */}
-            {isMobile && (
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="outlined"
-                  startIcon={<FilterAlt />}
-                  onClick={() => setOpenFilterDrawer(true)}
-                  fullWidth
-                  size="small"
-                >
-                  Filter
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => setOpenAddDialog(true)}
-                  fullWidth
-                  size="small"
-                >
-                  Add
-                </Button>
-              </Stack>
-            )}
-          </Box>
-
-          {/* Active Filters Display */}
-          {Object.values(filters).some((f) => f !== "") && (
-            <Box
-              sx={{
-                mt: 2,
-                pt: 2,
-                borderTop: "1px solid",
-                borderColor: "divider",
-                display: "flex",
-                gap: 1,
-                flexWrap: "wrap",
-              }}
-            >
-              {filters.status && (
-                <Chip
-                  label={`Status: ${filters.status}`}
-                  size="small"
-                  onDelete={() => setFilters({ ...filters, status: "" })}
-                  sx={{ height: 28 }}
-                />
-              )}
-              {filters.priority && (
-                <Chip
-                  label={`Priority: ${filters.priority}`}
-                  size="small"
-                  onDelete={() => setFilters({ ...filters, priority: "" })}
-                  sx={{ height: 28 }}
-                />
-              )}
-              {filters.assignedTo && (
-                <Chip
-                  label={`Assigned To: ${filters.assignedTo}`}
-                  size="small"
-                  onDelete={() => setFilters({ ...filters, assignedTo: "" })}
-                  sx={{ height: 28 }}
-                />
-              )}
-              <Button size="small" onClick={resetFilters} sx={{ ml: "auto" }}>
-                Clear All
-              </Button>
-            </Box>
-          )}
-        </Paper>
-
-        {/* Filter Drawer */}
-        <Drawer
-          anchor={isMobile ? "bottom" : "right"}
-          open={openFilterDrawer}
-          onClose={() => setOpenFilterDrawer(false)}
-          PaperProps={{
-            sx: {
-              width: isMobile ? "100%" : 320,
-              maxHeight: isMobile ? "80vh" : "100%",
-              borderTopLeftRadius: isMobile ? 20 : 0,
-              borderTopRightRadius: isMobile ? 20 : 0,
-            },
-          }}
-        >
-          <Box sx={{ p: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Filter Tasks
-              </Typography>
-              <IconButton onClick={() => setOpenFilterDrawer(false)}>
-                <Close />
-              </IconButton>
-            </Box>
-
-            <Stack spacing={2.5}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Status</InputLabel>
-                <Select
-                  name="status"
-                  value={filters.status}
-                  onChange={handleFilterChange}
-                  label="Status"
-                >
-                  <MenuItem value="">All Status</MenuItem>
-                  {statusOptions.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth size="small">
-                <InputLabel>Priority</InputLabel>
-                <Select
-                  name="priority"
-                  value={filters.priority}
-                  onChange={handleFilterChange}
-                  label="Priority"
-                >
-                  <MenuItem value="">All Priority</MenuItem>
-                  {priorityOptions.map((priority) => (
-                    <MenuItem key={priority} value={priority}>
-                      {priority}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {currentTab === 1 && (
+              <Stack spacing={2.5}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Assigned To</InputLabel>
+                  <InputLabel>Status</InputLabel>
                   <Select
-                    name="assignedTo"
-                    value={filters.assignedTo}
+                    name="status"
+                    value={filters.status}
                     onChange={handleFilterChange}
-                    label="Assigned To"
+                    label="Status"
                   >
-                    <MenuItem value="">All Members</MenuItem>
-                    {teamMembers.map((member) => (
-                      <MenuItem key={member.EmpId} value={member.Name}>
-                        {member.Name}
+                    <MenuItem value="">All Status</MenuItem>
+                    {statusOptions.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
-              )}
 
-              <Button
-                variant="contained"
-                onClick={() => setOpenFilterDrawer(false)}
-                sx={{ mt: 2 }}
-              >
-                Apply Filters
-              </Button>
-
-              <Button variant="text" onClick={resetFilters}>
-                Reset Filters
-              </Button>
-            </Stack>
-          </Box>
-        </Drawer>
-
-        {/* Tasks List */}
-        <Fade in timeout={800}>
-          <Box>
-            {loading ? (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  minHeight: 300,
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            ) : filteredTasks.length === 0 ? (
-              <Paper
-                sx={{
-                  p: 6,
-                  textAlign: "center",
-                  borderRadius: 4,
-                  bgcolor: "white",
-                }}
-              >
-                <Assignment sx={{ fontSize: 80, color: "#e0e0e0", mb: 2 }} />
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                  No Tasks Found
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 3 }}
-                >
-                  {Object.values(filters).some((f) => f !== "")
-                    ? "Try adjusting your filters"
-                    : currentTab === 0
-                      ? "You don't have any tasks yet"
-                      : "No team tasks available"}
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => setOpenAddDialog(true)}
-                >
-                  Create New Task
-                </Button>
-              </Paper>
-            ) : (
-              <Grid container spacing={2}>
-                {filteredTasks.map((task) => (
-                  <Grid item xs={12} key={task.TaskId}>
-                    <Grow in timeout={500}>
-                      <Box>
-                        <ProfessionalTaskCard
-                          task={task}
-                          onUpdate={openUpdateModal}
-                        />
-                      </Box>
-                    </Grow>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        </Fade>
-
-        {/* Add Task Dialog */}
-        <Dialog
-          open={openAddDialog}
-          onClose={() => setOpenAddDialog(false)}
-          maxWidth="md"
-          fullWidth
-          fullScreen={isMobile}
-          PaperProps={{
-            sx: {
-              borderRadius: isMobile ? 0 : 3,
-            },
-          }}
-        >
-          <DialogTitle
-            sx={{
-              bgcolor: "primary.main",
-              color: "white",
-              py: 2,
-              px: 3,
-              fontSize: "1.25rem",
-              fontWeight: 600,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Add />
-              Create New Task
-            </Box>
-          </DialogTitle>
-
-          <DialogContent sx={{ p: 3 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Task Title"
-                  value={newTask.Title}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, Title: e.target.value })
-                  }
-                  required
-                  variant="outlined"
-                  placeholder="Enter task title"
-                  sx={{ mt: 1 }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  value={newTask.Description}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, Description: e.target.value })
-                  }
-                  multiline
-                  rows={3}
-                  variant="outlined"
-                  placeholder="Enter task description (optional)"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <FormControl component="fieldset">
-                  <FormLabel component="legend" sx={{ mb: 1 }}>
-                    Assign To
-                  </FormLabel>
-                  <RadioGroup
-                    row={!isMobile}
-                    value={newTask.assignedToType}
-                    onChange={(e) => {
-                      setNewTask({
-                        ...newTask,
-                        assignedToType: e.target.value,
-                        assignedToEmpId: "",
-                        assignedToName: "",
-                      });
-                    }}
-                  >
-                    <FormControlLabel
-                      value="self"
-                      control={<Radio />}
-                      label={
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Person fontSize="small" />
-                          <Typography>Assign to Self</Typography>
-                        </Box>
-                      }
-                    />
-                    <FormControlLabel
-                      value="team"
-                      control={<Radio />}
-                      label={
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Group fontSize="small" />
-                          <Typography>Assign to Team</Typography>
-                        </Box>
-                      }
-                    />
-                    <FormControlLabel
-                      value="other"
-                      control={<Radio />}
-                      label={
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <PersonAdd fontSize="small" />
-                          <Typography>Assign to Specific Person</Typography>
-                        </Box>
-                      }
-                    />
-                  </RadioGroup>
-                </FormControl>
-              </Grid>
-
-              {newTask.assignedToType === "team" && (
-                <Grid item xs={12}>
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    This task will be assigned to all team members
-                  </Alert>
-                  <Box
-                    sx={{
-                      maxHeight: 200,
-                      overflow: "auto",
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1,
-                      p: 1,
-                    }}
-                  >
-                    <List dense>
-                      {teamMembers.map((member) => (
-                        <ListItem key={member.EmpId}>
-                          <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: "#CC7A00" }}>
-                              {member.Name?.charAt(0)}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={member.Name}
-                            secondary={`${member.EmpId} • ${member.Designation || "Team Member"}`}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                </Grid>
-              )}
-
-              {newTask.assignedToType === "other" && (
-                <Grid item xs={12}>
-                  {loadingEmployees ? (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "center", py: 2 }}
-                    >
-                      <CircularProgress size={24} />
-                    </Box>
-                  ) : (
-                    <Autocomplete
-                      fullWidth
-                      options={employees}
-                      getOptionLabel={(option) =>
-                        typeof option === "string"
-                          ? option
-                          : `${option.Name} (${option.EmpId})`
-                      }
-                      value={
-                        employees.find(
-                          (emp) => emp.EmpId === newTask.assignedToEmpId,
-                        ) || null
-                      }
-                      onChange={(event, newValue) => {
-                        setNewTask({
-                          ...newTask,
-                          assignedToEmpId: newValue?.EmpId || "",
-                          assignedToName: newValue?.Name || "",
-                        });
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Select Employee"
-                          required
-                          placeholder="Search by name or ID"
-                          InputProps={{
-                            ...params.InputProps,
-                            startAdornment: (
-                              <>
-                                <InputAdornment position="start">
-                                  <Search />
-                                </InputAdornment>
-                                {params.InputProps.startAdornment}
-                              </>
-                            ),
-                          }}
-                        />
-                      )}
-                      renderOption={(props, option) => (
-                        <ListItem {...props}>
-                          <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: "#CC7A00" }}>
-                              {option.Name?.charAt(0)}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={option.Name}
-                            secondary={
-                              <>
-                                <Typography component="span" variant="body2">
-                                  {option.EmpId}
-                                </Typography>
-                                {option.Designation &&
-                                  ` • ${option.Designation}`}
-                              </>
-                            }
-                          />
-                        </ListItem>
-                      )}
-                      loading={loadingEmployees}
-                      noOptionsText="No employees found"
-                    />
-                  )}
-                </Grid>
-              )}
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
+                <FormControl fullWidth size="small">
                   <InputLabel>Priority</InputLabel>
                   <Select
-                    value={newTask.Priority}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, Priority: e.target.value })
-                    }
+                    name="priority"
+                    value={filters.priority}
+                    onChange={handleFilterChange}
                     label="Priority"
                   >
+                    <MenuItem value="">All Priority</MenuItem>
                     {priorityOptions.map((priority) => (
                       <MenuItem key={priority} value={priority}>
                         {priority}
@@ -1336,214 +1161,694 @@ function ViewTask() {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={newTask.Status}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, Status: e.target.value })
-                    }
-                    label="Status"
-                  >
-                    {statusOptions.map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {status}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
+                {/* Assign To Autocomplete */}
+                <Autocomplete
                   fullWidth
-                  label="Due Date"
-                  type="date"
-                  value={newTask.DueDate}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, DueDate: e.target.value })
+                  size="small"
+                  options={getUniqueAssignees()}
+                  getOptionLabel={(option) => option?.label || ""}
+                  value={filters.assignedTo}
+                  onChange={handleAssignToChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Assigned To"
+                      placeholder="Search by name"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start">
+                              <Search sx={{ fontSize: 18 }} />
+                            </InputAdornment>
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <ListItem {...props}>
+                      <ListItemText primary={option.label} />
+                    </ListItem>
+                  )}
+                  noOptionsText="No assignees found"
+                  isOptionEqualToValue={(option, value) =>
+                    option.value === value?.value
                   }
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    min: new Date().toISOString().split("T")[0],
-                  }}
                 />
-              </Grid>
-            </Grid>
-          </DialogContent>
 
-          <DialogActions sx={{ p: 3, gap: 1 }}>
-            <Button
-              onClick={() => setOpenAddDialog(false)}
-              variant="outlined"
-              fullWidth={isMobile}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddTask}
-              variant="contained"
-              disabled={
-                !newTask.Title ||
-                (newTask.assignedToType === "other" && !newTask.assignedToEmpId)
-              }
-              fullWidth={isMobile}
-              sx={{
-                bgcolor: "#1976d2",
-                "&:hover": { bgcolor: "#1565c0" },
-              }}
-            >
-              Create Task
-            </Button>
-          </DialogActions>
-        </Dialog>
+                {/* Assign By Autocomplete */}
+                <Autocomplete
+                  fullWidth
+                  size="small"
+                  options={getUniqueAssigners()}
+                  getOptionLabel={(option) => option?.label || ""}
+                  value={filters.assignedBy}
+                  onChange={handleAssignByChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Assigned By"
+                      placeholder="Search by name"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start">
+                              <Search sx={{ fontSize: 18 }} />
+                            </InputAdornment>
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <ListItem {...props}>
+                      <ListItemText primary={option.label} />
+                    </ListItem>
+                  )}
+                  noOptionsText="No assigners found"
+                  isOptionEqualToValue={(option, value) =>
+                    option.value === value?.value
+                  }
+                />
 
-        {/* Update Task Dialog */}
-        <Dialog
-          open={openUpdateDialog}
-          onClose={() => setOpenUpdateDialog(false)}
-          maxWidth="sm"
-          fullWidth
-          fullScreen={isMobile}
-          PaperProps={{
-            sx: {
-              borderRadius: isMobile ? 0 : 3,
-            },
-          }}
-        >
-          <DialogTitle
-            sx={{
-              bgcolor: "#1976d2",
-              color: "white",
-              py: 2,
-              px: 3,
-              fontSize: "1.25rem",
-              fontWeight: 600,
+                {/* Date Range Filters */}
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mt: 1, color: "text.secondary" }}
+                >
+                  Date Range
+                </Typography>
+
+                <DatePicker
+                  label="From Date"
+                  value={filters.dateFrom}
+                  onChange={handleDateFromChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start">
+                              <DateRange sx={{ fontSize: 18 }} />
+                            </InputAdornment>
+                            {params.InputProps?.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+
+                <DatePicker
+                  label="To Date"
+                  value={filters.dateTo}
+                  onChange={handleDateToChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start">
+                              <DateRange sx={{ fontSize: 18 }} />
+                            </InputAdornment>
+                            {params.InputProps?.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+
+                <Button
+                  variant="contained"
+                  onClick={() => setOpenFilterDrawer(false)}
+                  sx={{ mt: 2 }}
+                >
+                  Apply Filters
+                </Button>
+
+                <Button variant="text" onClick={resetFilters}>
+                  Reset Filters
+                </Button>
+              </Stack>
+            </Box>
+          </Drawer>
+
+          {/* Tasks List */}
+          <Fade in timeout={800}>
+            <Box>
+              {loading ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: 300,
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              ) : filteredTasks.length === 0 ? (
+                <Paper
+                  sx={{
+                    p: 6,
+                    textAlign: "center",
+                    borderRadius: 4,
+                    bgcolor: "white",
+                  }}
+                >
+                  <Assignment sx={{ fontSize: 80, color: "#e0e0e0", mb: 2 }} />
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ fontWeight: 600 }}
+                  >
+                    No Tasks Found
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
+                    {Object.values(filters).some((f) => f !== "" && f !== null)
+                      ? "Try adjusting your filters"
+                      : currentTab === 0
+                        ? "You don't have any tasks yet"
+                        : isAdmin
+                          ? "No admin tasks available"
+                          : "No team tasks available"}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => setOpenAddDialog(true)}
+                  >
+                    Create New Task
+                  </Button>
+                </Paper>
+              ) : (
+                <Grid container spacing={2}>
+                  {filteredTasks.map((task) => (
+                    <Grid item xs={12} key={task.TaskId}>
+                      <Grow in timeout={500}>
+                        <Box>
+                          <ProfessionalTaskCard
+                            task={task}
+                            onUpdate={openUpdateModal}
+                          />
+                        </Box>
+                      </Grow>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+          </Fade>
+
+          {/* Add Task Dialog */}
+          <Dialog
+            open={openAddDialog}
+            onClose={() => setOpenAddDialog(false)}
+            maxWidth="md"
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+              sx: {
+                borderRadius: isMobile ? 0 : 3,
+              },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Update />
-              Update Task Status
-            </Box>
-          </DialogTitle>
-
-          <DialogContent sx={{ p: 3 }}>
-            {selectedTask && (
-              <Stack spacing={3}>
-                <Paper
-                  variant="outlined"
-                  sx={{ p: 2, bgcolor: "#f8f9fa", borderRadius: 2 }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb: 1 }}
-                  >
-                    {selectedTask.Title}
-                  </Typography>
-                  {selectedTask.Description && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 2 }}
-                    >
-                      {selectedTask.Description}
-                    </Typography>
-                  )}
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                    <Chip
-                      label={selectedTask.Priority}
-                      color={getPriorityColor(selectedTask.Priority)}
-                      size="small"
-                    />
-                    <Chip
-                      label={selectedTask.Status}
-                      color={getStatusColor(selectedTask.Status)}
-                      size="small"
-                    />
-                    <Chip
-                      icon={<CalendarToday />}
-                      label={`Due: ${formatDate(selectedTask.DueDate)}`}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Paper>
-
-                <FormControl fullWidth>
-                  <InputLabel>New Status</InputLabel>
-                  <Select
-                    value={updateData.status}
-                    onChange={(e) =>
-                      setUpdateData({ ...updateData, status: e.target.value })
-                    }
-                    label="New Status"
-                  >
-                    {statusOptions.map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {status}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Remarks (Optional)"
-                  value={updateData.remarks}
-                  onChange={(e) =>
-                    setUpdateData({ ...updateData, remarks: e.target.value })
-                  }
-                  multiline
-                  rows={3}
-                  placeholder="Add any comments about the status update..."
-                />
-              </Stack>
-            )}
-          </DialogContent>
-
-          <DialogActions sx={{ p: 3, gap: 1 }}>
-            <Button
-              onClick={() => setOpenUpdateDialog(false)}
-              variant="outlined"
-              fullWidth={isMobile}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateTask}
-              variant="contained"
-              disabled={!updateData.status}
-              fullWidth={isMobile}
+            <DialogTitle
               sx={{
-                bgcolor: "#1976d2",
-                "&:hover": { bgcolor: "#1565c0" },
+                bgcolor: "primary.main",
+                color: "white",
+                py: 2,
+                px: 3,
+                fontSize: "1.25rem",
+                fontWeight: 600,
               }}
             >
-              Update Status
-            </Button>
-          </DialogActions>
-        </Dialog>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Add />
+                Create New Task
+              </Box>
+            </DialogTitle>
 
-        {/* Snackbar */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            sx={{ width: "100%" }}
+            <DialogContent sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Task Title"
+                    value={newTask.Title}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, Title: e.target.value })
+                    }
+                    required
+                    variant="outlined"
+                    placeholder="Enter task title"
+                    sx={{ mt: 1 }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    value={newTask.Description}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, Description: e.target.value })
+                    }
+                    multiline
+                    rows={3}
+                    variant="outlined"
+                    placeholder="Enter task description (optional)"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend" sx={{ mb: 1 }}>
+                      Assign To
+                    </FormLabel>
+                    <RadioGroup
+                      row={!isMobile}
+                      value={newTask.assignedToType}
+                      onChange={(e) => {
+                        setNewTask({
+                          ...newTask,
+                          assignedToType: e.target.value,
+                          assignedToEmpId: "",
+                          assignedToName: "",
+                        });
+                      }}
+                    >
+                      <FormControlLabel
+                        value="self"
+                        control={<Radio />}
+                        label={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Person fontSize="small" />
+                            <Typography>Assign to Self</Typography>
+                          </Box>
+                        }
+                      />
+                      <FormControlLabel
+                        value="team"
+                        control={<Radio />}
+                        label={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Group fontSize="small" />
+                            <Typography>Assign to Team</Typography>
+                          </Box>
+                        }
+                      />
+                      <FormControlLabel
+                        value="other"
+                        control={<Radio />}
+                        label={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <PersonAdd fontSize="small" />
+                            <Typography>Assign to Specific Person</Typography>
+                          </Box>
+                        }
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                {newTask.assignedToType === "team" && (
+                  <Grid item xs={12}>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      This task will be assigned to all team members
+                    </Alert>
+                    <Box
+                      sx={{
+                        maxHeight: 200,
+                        overflow: "auto",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        p: 1,
+                      }}
+                    >
+                      <List dense>
+                        {teamMembers.map((member) => (
+                          <ListItem key={member.EmpId}>
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: "#CC7A00" }}>
+                                {member.Name?.charAt(0)}
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={member.Name}
+                              secondary={`${member.EmpId} • ${member.Designation || "Team Member"}`}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  </Grid>
+                )}
+
+                {newTask.assignedToType === "other" && (
+                  <Grid item xs={12}>
+                    {loadingEmployees ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          py: 2,
+                        }}
+                      >
+                        <CircularProgress size={24} />
+                      </Box>
+                    ) : (
+                      <Autocomplete
+                        fullWidth
+                        options={employees}
+                        getOptionLabel={(option) =>
+                          typeof option === "string"
+                            ? option
+                            : `${option.Name} (${option.EmpId})`
+                        }
+                        value={
+                          employees.find(
+                            (emp) => emp.EmpId === newTask.assignedToEmpId,
+                          ) || null
+                        }
+                        onChange={(event, newValue) => {
+                          setNewTask({
+                            ...newTask,
+                            assignedToEmpId: newValue?.EmpId || "",
+                            assignedToName: newValue?.Name || "",
+                          });
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Select Employee"
+                            required
+                            placeholder="Search by name or ID"
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: (
+                                <>
+                                  <InputAdornment position="start">
+                                    <Search />
+                                  </InputAdornment>
+                                  {params.InputProps.startAdornment}
+                                </>
+                              ),
+                            }}
+                          />
+                        )}
+                        renderOption={(props, option) => (
+                          <ListItem {...props}>
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: "#CC7A00" }}>
+                                {option.Name?.charAt(0)}
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={option.Name}
+                              secondary={
+                                <>
+                                  <Typography component="span" variant="body2">
+                                    {option.EmpId}
+                                  </Typography>
+                                  {option.Designation &&
+                                    ` • ${option.Designation}`}
+                                </>
+                              }
+                            />
+                          </ListItem>
+                        )}
+                        loading={loadingEmployees}
+                        noOptionsText="No employees found"
+                      />
+                    )}
+                  </Grid>
+                )}
+
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Priority</InputLabel>
+                    <Select
+                      value={newTask.Priority}
+                      onChange={(e) =>
+                        setNewTask({ ...newTask, Priority: e.target.value })
+                      }
+                      label="Priority"
+                    >
+                      {priorityOptions.map((priority) => (
+                        <MenuItem key={priority} value={priority}>
+                          {priority}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={newTask.Status}
+                      onChange={(e) =>
+                        setNewTask({ ...newTask, Status: e.target.value })
+                      }
+                      label="Status"
+                    >
+                      {statusOptions.map((status) => (
+                        <MenuItem key={status} value={status}>
+                          {status}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Due Date"
+                    type="date"
+                    value={newTask.DueDate}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, DueDate: e.target.value })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: new Date().toISOString().split("T")[0],
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </DialogContent>
+
+            <DialogActions sx={{ p: 3, gap: 1 }}>
+              <Button
+                onClick={() => setOpenAddDialog(false)}
+                variant="outlined"
+                fullWidth={isMobile}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddTask}
+                variant="contained"
+                disabled={
+                  !newTask.Title ||
+                  (newTask.assignedToType === "other" &&
+                    !newTask.assignedToEmpId)
+                }
+                fullWidth={isMobile}
+                sx={{
+                  bgcolor: "#1976d2",
+                  "&:hover": { bgcolor: "#1565c0" },
+                }}
+              >
+                Create Task
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Update Task Dialog */}
+          <Dialog
+            open={openUpdateDialog}
+            onClose={() => setOpenUpdateDialog(false)}
+            maxWidth="sm"
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+              sx: {
+                borderRadius: isMobile ? 0 : 3,
+              },
+            }}
           >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
-    </Box>
+            <DialogTitle
+              sx={{
+                bgcolor: "#1976d2",
+                color: "white",
+                py: 2,
+                px: 3,
+                fontSize: "1.25rem",
+                fontWeight: 600,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Update />
+                Update Task Status
+              </Box>
+            </DialogTitle>
+
+            <DialogContent sx={{ p: 3 }}>
+              {selectedTask && (
+                <Stack spacing={3}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, bgcolor: "#f8f9fa", borderRadius: 2 }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, mb: 1 }}
+                    >
+                      {selectedTask.Title}
+                    </Typography>
+                    {selectedTask.Description && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
+                        {selectedTask.Description}
+                      </Typography>
+                    )}
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                      <Chip
+                        label={selectedTask.Priority}
+                        color={getPriorityColor(selectedTask.Priority)}
+                        size="small"
+                      />
+                      <Chip
+                        label={selectedTask.Status}
+                        color={getStatusColor(selectedTask.Status)}
+                        size="small"
+                      />
+                      <Chip
+                        icon={<CalendarToday />}
+                        label={`Due: ${formatDate(selectedTask.DueDate)}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Box>
+                  </Paper>
+
+                  <FormControl fullWidth>
+                    <InputLabel>New Status</InputLabel>
+                    <Select
+                      value={updateData.status}
+                      onChange={(e) =>
+                        setUpdateData({ ...updateData, status: e.target.value })
+                      }
+                      label="New Status"
+                    >
+                      {statusOptions.map((status) => (
+                        <MenuItem key={status} value={status}>
+                          {status}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    fullWidth
+                    label="Remarks (Optional)"
+                    value={updateData.remarks}
+                    onChange={(e) =>
+                      setUpdateData({ ...updateData, remarks: e.target.value })
+                    }
+                    multiline
+                    rows={3}
+                    placeholder="Add any comments about the status update..."
+                  />
+                </Stack>
+              )}
+            </DialogContent>
+
+            <DialogActions sx={{ p: 3, gap: 1 }}>
+              <Button
+                onClick={() => setOpenUpdateDialog(false)}
+                variant="outlined"
+                fullWidth={isMobile}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateTask}
+                variant="contained"
+                disabled={!updateData.status}
+                fullWidth={isMobile}
+                sx={{
+                  bgcolor: "#1976d2",
+                  "&:hover": { bgcolor: "#1565c0" },
+                }}
+              >
+                Update Status
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Snackbar */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={4000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Container>
+      </Box>
+    </LocalizationProvider>
   );
 }
 
