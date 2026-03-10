@@ -37,7 +37,7 @@ function StudentDetail() {
     const fetchStudent = async () => {
       try {
         const res = await fetch(
-          `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`
+          `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
         );
         const json = await res.json();
         if (json.success && json.data) {
@@ -68,7 +68,7 @@ function StudentDetail() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...formData, Id: student.Id }),
-        }
+        },
       );
       const json = await response.json();
       if (json.success) {
@@ -141,9 +141,21 @@ function StudentDetail() {
       title: "Documents",
       fields: [
         { label: "Photo", key: "Photo", type: "image" },
-        { label: "Character Certificate", key: "CharacterCertificate", type: "image" },
-        { label: "Migration Certificate", key: "MigrationCertificate", type: "image" },
-        { label: "College Leaving Certificate", key: "CollegeLeavingCertificate", type: "image" },
+        {
+          label: "Character Certificate",
+          key: "CharacterCertificate",
+          type: "image",
+        },
+        {
+          label: "Migration Certificate",
+          key: "MigrationCertificate",
+          type: "image",
+        },
+        {
+          label: "College Leaving Certificate",
+          key: "CollegeLeavingCertificate",
+          type: "image",
+        },
         { label: "Marksheet Copy", key: "MarksheetCopy", type: "image" },
         { label: "Aadhar Card Copy", key: "AadharCardCopy", type: "image" },
         { label: "Caste Certificate", key: "CasteCertificate", type: "image" },
