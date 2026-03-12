@@ -119,6 +119,11 @@ function Sidebar() {
         name: "Students",
         icon: <Person />,
       },
+      {
+        path: "/task/:empId",
+        name: "TaskList",
+        icon: <ChecklistIcon />,
+      },
     );
   }
   // HR-specific routes

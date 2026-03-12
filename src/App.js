@@ -48,6 +48,7 @@ import Docket from "./pages/Docket";
 import Maps from './pages/Maps';
 import VariableFeeStructure from './pages/VariableFeeStructure';
 import MidTerm from "./pages/MidTerm";
+import AdminTask from './pages/AdminTask';
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -272,7 +273,7 @@ function App() {
               path="/mid-term"
               element={<PrivateRoute element={MidTerm} />}
             />
-            <Route path="/task/:empId" element={<TaskList />} />
+            <Route path="/task/:empId" element={<AdminTask />} />
             <Route path="/visit" element={<PrivateRoute element={Visit} />} />
             <Route
               path="/plan-visit"
