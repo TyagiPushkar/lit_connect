@@ -273,7 +273,8 @@ function App() {
               path="/mid-term"
               element={<PrivateRoute element={MidTerm} />}
             />
-            <Route path="/task/:empId" element={<AdminTask />} />
+            <Route path="/task/:empId" element={<TaskList />} />
+            <Route path="/task" element={<AdminTask />} />
             <Route path="/visit" element={<PrivateRoute element={Visit} />} />
             <Route
               path="/plan-visit"

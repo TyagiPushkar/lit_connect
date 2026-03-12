@@ -120,7 +120,7 @@ function Sidebar() {
         icon: <Person />,
       },
       {
-        path: "/task/:empId",
+        path: "/task/",
         name: "TaskList",
         icon: <ChecklistIcon />,
       },
