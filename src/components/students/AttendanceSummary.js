@@ -24,7 +24,8 @@ import {
   parseISO,
 } from "date-fns";
 
-const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
+const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
+  console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
   const [summaryData, setSummaryData] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,13 +37,11 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
   const fetchHolidays = async () => {
     setHolidayLoading(true);
     setHolidayError(null);
-
     try {
       const response = await axios.get(
         `https://namami-infotech.com/LIT/src/holiday/view_holiday.php?Tenent_Id=${tenentId}`,
         { timeout: 10000 },
       );
-
       if (response.data.success && response.data.data) {
         setHolidays(response.data.data);
       } else {
@@ -59,153 +58,240 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
   };
 
   // Get all months from July to current month
-  const getAllMonthsFromJuly = () => {
+  const getAllMonthsFromJuly = (semester, session) => {
     const months = [];
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-
-    // Start from July of current year
-    let startMonth = 6; // July (0-indexed)
-    let startYear = currentYear;
-
-    // If current month is before July, start from July of previous year
-    if (currentDate.getMonth() < 6) {
-      startYear = currentYear - 1;
+    if (!semester || semester < 1) return months;
+    const startYear = parseInt(session.split("-")[0]);
+    let year;
+    let startMonth, endMonth;
+    if (semester % 2 === 1) {
+      // Odd semester (Jul-Dec)
+      year = startYear + Math.floor((semester - 1) / 2);
+      startMonth = 6;
+      endMonth = 11;
+    } else {
+      // Even semester (Jan-Jun)
+      year = startYear + Math.floor(semester / 2);
+      startMonth = 0;
+      endMonth = 5;
     }
-
-    const endDate = new Date(currentYear, currentDate.getMonth(), 1);
-    let date = new Date(startYear, startMonth, 1);
-
-    while (date <= endDate) {
+    for (let m = startMonth; m <= endMonth; m++) {
       months.push({
-        month: date.getMonth(),
-        year: date.getFullYear(),
-        name: date.toLocaleString("default", { month: "long" }),
-        yearShort: date.getFullYear().toString().slice(-2),
-        startDate: new Date(date),
-        endDate: endOfMonth(date),
+        month: m,
+        year: year,
+        name: new Date(year, m, 1).toLocaleString("default", { month: "long" }),
+        startDate: new Date(year, m, 1),
+        endDate: endOfMonth(new Date(year, m, 1)),
       });
-      date = new Date(date.getFullYear(), date.getMonth() + 1, 1);
     }
-
-    return months.reverse(); // Show latest first
+    return months;
   };
 
   // Calculate actual working days for a month (excluding Sundays and holidays)
+  // const calculateWorkingDays = (monthData) => {
+  //   const daysInMonth = eachDayOfInterval({
+  //     start: startOfMonth(monthData.startDate),
+  //     end: endOfMonth(monthData.startDate),
+  //   });
+
+  //   // Filter out Sundays
+  //   let workingDays = daysInMonth.filter((day) => !isSunday(day));
+
+  //   // Filter out holidays
+  //   if (holidays.length > 0) {
+  //     const holidayDates = holidays
+  //       .map((holiday) => {
+  //         try {
+  //           return parseISO(holiday.date);
+  //         } catch {
+  //           return null;
+  //         }
+  //       })
+  //       .filter(Boolean);
+
+  //     workingDays = workingDays.filter((day) => {
+  //       const dayFormatted = format(day, "yyyy-MM-dd");
+  //       return !holidayDates.some(
+  //         (holiday) => format(holiday, "yyyy-MM-dd") === dayFormatted,
+  //       );
+  //     });
+  //   }
+
+  //   return workingDays.length;
+  // };
+
+  //change by shahanshah
   const calculateWorkingDays = (monthData) => {
     const daysInMonth = eachDayOfInterval({
       start: startOfMonth(monthData.startDate),
       end: endOfMonth(monthData.startDate),
     });
+    const holidaySet = new Set(
+      holidays.map((h) => {
+        try {
+          return format(parseISO(h.date), "yyyy-MM-dd");
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const workingDays = daysInMonth.filter((day) => {
+      if (isSunday(day)) return false;
 
-    // Filter out Sundays
-    let workingDays = daysInMonth.filter((day) => !isSunday(day));
+      const formatted = format(day, "yyyy-MM-dd");
+      if (holidaySet.has(formatted)) return false;
 
-    // Filter out holidays
-    if (holidays.length > 0) {
-      const holidayDates = holidays
-        .map((holiday) => {
-          try {
-            return parseISO(holiday.date);
-          } catch {
-            return null;
-          }
-        })
-        .filter(Boolean);
-
-      workingDays = workingDays.filter((day) => {
-        const dayFormatted = format(day, "yyyy-MM-dd");
-        return !holidayDates.some(
-          (holiday) => format(holiday, "yyyy-MM-dd") === dayFormatted,
-        );
-      });
-    }
-
+      return true;
+    });
     return workingDays.length;
   };
 
+  // const fetchAttendanceSummary = async () => {
+  //   if (!EmpId) return;
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const months = getAllMonthsFromJuly();
+  //     const summaryPromises = months.map(async (month) => {
+  //       try {
+  //         const response = await axios.get(
+  //           `https://namami-infotech.com/LIT/src/attendance/view_attendance.php`,
+  //           {
+  //             params: { EmpId: EmpId },
+  //             timeout: 10000,
+  //           },
+  //         );
+
+  //         if (response.data.success && response.data.data) {
+  //           const monthData = response.data.data.filter((activity) => {
+  //             if (!activity.date) return false;
+
+  //             try {
+  //               const [day, monthStr, year] = activity.date.split("/");
+  //               const activityDate = new Date(
+  //                 Number.parseInt(year),
+  //                 Number.parseInt(monthStr) - 1,
+  //                 Number.parseInt(day),
+  //               );
+
+  //               return (
+  //                 activityDate.getMonth() === month.month &&
+  //                 activityDate.getFullYear() === month.year
+  //               );
+  //             } catch (error) {
+  //               return false;
+  //             }
+  //           });
+
+  //           const totalWorkingDays = calculateWorkingDays(month);
+  //           const present = monthData.length;
+  //           const absent = Math.max(0, totalWorkingDays - present);
+  //           const percentage =
+  //             totalWorkingDays > 0
+  //               ? ((present / totalWorkingDays) * 100).toFixed(1)
+  //               : 0;
+
+  //           return {
+  //             monthName: `${month.name} ${month.year}`,
+  //             monthYear: `${month.year}-${String(month.month + 1).padStart(2, "0")}`,
+  //             totalClasses: totalWorkingDays,
+  //             present,
+  //             absent,
+  //             percentage: Number.parseFloat(percentage),
+  //             sortKey: new Date(month.year, month.month).getTime(),
+  //           };
+  //         }
+  //         return null;
+  //       } catch (error) {
+  //         console.error(`Error fetching data for ${month.name}:`, error);
+  //         const totalWorkingDays = calculateWorkingDays(month);
+  //         return {
+  //           monthName: `${month.name} ${month.year}`,
+  //           monthYear: `${month.year}-${String(month.month + 1).padStart(2, "0")}`,
+  //           totalClasses: totalWorkingDays,
+  //           present: 0,
+  //           absent: totalWorkingDays,
+  //           percentage: 0,
+  //           error: true,
+  //           sortKey: new Date(month.year, month.month).getTime(),
+  //         };
+  //       }
+  //     });
+
+  //     const results = await Promise.all(summaryPromises);
+  //     const validResults = results.filter((result) => result !== null);
+
+  //     validResults.sort((a, b) => b.sortKey - a.sortKey);
+
+  //     setSummaryData(validResults);
+  //   } catch (error) {
+  //     console.error("Error fetching attendance summary:", error);
+  //     setError("Failed to load attendance summary");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  //change by shahanshah
   const fetchAttendanceSummary = async () => {
     if (!EmpId) return;
-
     setLoading(true);
     setError(null);
-
     try {
-      const months = getAllMonthsFromJuly();
-      const summaryPromises = months.map(async (month) => {
-        try {
-          const response = await axios.get(
-            `https://namami-infotech.com/LIT/src/attendance/view_attendance.php`,
-            {
-              params: { EmpId: EmpId },
-              timeout: 10000,
-            },
-          );
-
-          if (response.data.success && response.data.data) {
-            const monthData = response.data.data.filter((activity) => {
-              if (!activity.date) return false;
-
-              try {
-                const [day, monthStr, year] = activity.date.split("/");
-                const activityDate = new Date(
-                  Number.parseInt(year),
-                  Number.parseInt(monthStr) - 1,
-                  Number.parseInt(day),
-                );
-
-                return (
-                  activityDate.getMonth() === month.month &&
-                  activityDate.getFullYear() === month.year
-                );
-              } catch (error) {
-                return false;
-              }
-            });
-
-            const totalWorkingDays = calculateWorkingDays(month);
-            const present = monthData.length;
-            const absent = Math.max(0, totalWorkingDays - present);
-            const percentage =
-              totalWorkingDays > 0
-                ? ((present / totalWorkingDays) * 100).toFixed(1)
-                : 0;
-
-            return {
-              monthName: `${month.name} ${month.year}`,
-              monthYear: `${month.year}-${String(month.month + 1).padStart(2, "0")}`,
-              totalClasses: totalWorkingDays,
-              present,
-              absent,
-              percentage: Number.parseFloat(percentage),
-              sortKey: new Date(month.year, month.month).getTime(),
-            };
+      const months = getAllMonthsFromJuly(sem, year);
+      const response = await axios.get(
+        `https://namami-infotech.com/LIT/src/attendance/view_attendance.php`,
+        {
+          params: { EmpId },
+          timeout: 10000,
+        },
+      );
+      if (!response.data.success || !response.data.data) {
+        setSummaryData([]);
+        return;
+      }
+      const allAttendance = response.data.data;
+      const results = months.map((month) => {
+        const monthAttendance = allAttendance.filter((activity) => {
+          if (!activity.date) return false;
+          try {
+            const [day, monthStr, year] = activity.date.split("/");
+            const activityDate = new Date(
+              parseInt(year),
+              parseInt(monthStr) - 1,
+              parseInt(day),
+            );
+            return (
+              activityDate.getMonth() === month.month &&
+              activityDate.getFullYear() === month.year
+            );
+          } catch {
+            return false;
           }
-          return null;
-        } catch (error) {
-          console.error(`Error fetching data for ${month.name}:`, error);
-          const totalWorkingDays = calculateWorkingDays(month);
-          return {
-            monthName: `${month.name} ${month.year}`,
-            monthYear: `${month.year}-${String(month.month + 1).padStart(2, "0")}`,
-            totalClasses: totalWorkingDays,
-            present: 0,
-            absent: totalWorkingDays,
-            percentage: 0,
-            error: true,
-            sortKey: new Date(month.year, month.month).getTime(),
-          };
-        }
+        });
+        //  REMOVE DUPLICATE DATES
+        const uniqueDates = new Set(monthAttendance.map((a) => a.date));
+        const present = uniqueDates.size;
+        const totalWorkingDays = calculateWorkingDays(month);
+        const absent = Math.max(0, totalWorkingDays - present);
+        const percentage =
+          totalWorkingDays > 0
+            ? ((present / totalWorkingDays) * 100).toFixed(1)
+            : 0;
+        return {
+          monthName: `${month.name} ${month.year}`,
+          monthYear: `${month.year}-${String(month.month + 1).padStart(2, "0")}`,
+          totalClasses: totalWorkingDays,
+          present,
+          absent,
+          percentage: Number(percentage),
+          sortKey: new Date(month.year, month.month).getTime(),
+        };
       });
-
-      const results = await Promise.all(summaryPromises);
-      const validResults = results.filter((result) => result !== null);
-
-      validResults.sort((a, b) => b.sortKey - a.sortKey);
-
-      setSummaryData(validResults);
+      results.sort((a, b) => b.sortKey - a.sortKey);
+      setSummaryData(results);
     } catch (error) {
-      console.error("Error fetching attendance summary:", error);
+      console.error("Attendance Error:", error);
       setError("Failed to load attendance summary");
     } finally {
       setLoading(false);
@@ -219,10 +305,11 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
 
   // Fetch attendance summary when EmpId changes or holidays are loaded
   useEffect(() => {
-    if (EmpId && holidays.length >= 0) {
+    if (EmpId && holidays.length > 0) {
       fetchAttendanceSummary();
     }
-  }, [EmpId, holidays]);
+    console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
+  }, [EmpId, holidays.length, sem]);
 
   if (!EmpId) {
     return (
@@ -247,7 +334,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
       sx={{
         border: "2px solid #333",
         padding: "20px",
-        marginBottom: "30px",
+        marginBottom: "0px",
         backgroundColor: "#fafafa",
         fontFamily: '"Courier New", monospace',
         position: "relative",
@@ -332,7 +419,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
               display: "inline-block",
             }}
           >
-            Monthly Attendance Summary (July to Current Month)
+            Monthly Attendance Summary (Latest 6 Months)
           </Typography>
 
           <TableContainer>
@@ -616,12 +703,12 @@ const AttendanceSummary = ({ EmpId, tenentId = "1" }) => {
               <strong>Note:</strong> Working days exclude Sundays and declared
               institute holidays
             </Typography>
-            <Typography
+            {/* <Typography
               variant="caption"
               sx={{ display: "block", fontStyle: "italic" }}
             >
               Academic year follows July to June cycle
-            </Typography>
+            </Typography> */}
           </Box>
         </>
       ) : !(loading || holidayLoading) && summaryData.length === 0 ? (

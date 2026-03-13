@@ -311,7 +311,7 @@ function StudentDetail() {
       </Dialog>
 
       <StudentReports />
-      <ReportCardPDF studentId={studentId} />
+      {/* <ReportCardPDF studentId={studentId} sem={student?.Sem} year={student?.Session}/> */}
       <Box sx={{ mb: 3 }}>{/* <AttendanceSummary EmpId={studentId} /> */}</Box>
     </Box>
   );

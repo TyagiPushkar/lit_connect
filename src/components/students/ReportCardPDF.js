@@ -57,9 +57,10 @@ const calculateGPA = (percentage) => {
   return "1.0";
 };
 
-export default function ReportCardPDF({ studentId }) {
+export default function ReportCardPDF({ studentId, sem, year }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const reportRef = useRef(null);
+//  const [availableSemesters, setAvailableSemesters] = useState([]);
 
   const {
     data: student,
@@ -607,7 +608,7 @@ export default function ReportCardPDF({ studentId }) {
                     >
                       Semester
                     </span>
-                    :{semester || "N/A"}
+                    :{sem || student?.Sem || "N/A"}
                   </Typography>
                   <Typography
                     sx={{
@@ -633,11 +634,11 @@ export default function ReportCardPDF({ studentId }) {
                 </Grid>
               </Grid>
             </Box>
-            <Box mb={4}>
-              <AttendanceSummary EmpId={studentId} />
+            <Box sx={{ mb: 2 }}>
+              <AttendanceSummary EmpId={studentId} sem={sem} year={year} />
             </Box>
             {/* Internal Examination Results */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 2 }}>
               <Typography
                 variant="h6"
                 sx={{
@@ -916,13 +917,13 @@ export default function ReportCardPDF({ studentId }) {
               >
                 Class Test Performance (CT1-CT6)
               </Typography>
-
               {!ctAll || ctAll.every((s) => !s.rows || s.rows.length === 0) ? (
                 <Typography
                   sx={{
                     fontStyle: "italic",
-                    color: "#666",
-                    fontFamily: '"Courier New", monospace',
+                    color: "#777",
+                    textAlign: "center",
+                    mt: 3,
                   }}
                 >
                   No class test data recorded.
@@ -931,32 +932,118 @@ export default function ReportCardPDF({ studentId }) {
                 <Grid container spacing={2}>
                   {ctAll.map((section) => {
                     if (!section.rows || section.rows.length === 0) return null;
-                    const totals = calcMarksTotals(section.rows);
-                    const grade = calculateGrade(totals.pct);
+
                     return (
-                      <Grid item xs={6} md={4} key={section.category}>
+                      <Grid item xs={12} sm={6} md={4} key={section.category}>
                         <Box
                           sx={{
-                            border: "1px solid #999",
-                            padding: "12px",
-                            backgroundColor: "#fff",
-                            fontFamily: '"Courier New", monospace',
+                            background: "#fff",
+                            borderRadius: "10px",
+                            border: "1px solid #e5e5e5",
+                            overflow: "hidden",
                           }}
                         >
-                          <Typography sx={{ fontWeight: "bold", mb: 1 }}>
-                            {section.category}
-                          </Typography>
-                          <Divider sx={{ my: 1 }} />
-                          <Typography variant="body2">
-                            Marks: {totals.totalObtained}/{totals.totalMax}
-                          </Typography>
-                          <Typography variant="body2">
-                            Percentage: {formatPct(totals.pct)}
-                          </Typography>
-                          <Typography variant="body2" sx={{ mt: 1 }}>
-                            Grade:{" "}
-                            <span style={{ fontWeight: "bold" }}>{grade}</span>
-                          </Typography>
+                          {/* Title */}
+                          <Box
+                            sx={{
+                              background: "#f5f7fa",
+                              px: 2,
+                              py: 1,
+                              borderBottom: "1px solid #e0e0e0",
+                            }}
+                          >
+                            <Typography sx={{ fontWeight: 600 }}>
+                              {section.category}
+                            </Typography>
+                          </Box>
+                          {/* Table */}
+                          <Table size="small" sx={{ minWidth: 320 }}>
+                            <TableHead>
+                              <TableRow
+                                sx={{
+                                  background: "#fafafa",
+                                }}
+                              >
+                                <TableCell sx={{ fontWeight: 600 }}>
+                                  Subject
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  Max
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  Obt
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  %
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  Grade
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+
+                            <TableBody>
+                              {section.rows.map((row, index) => {
+                                const pct =
+                                  (row.ObtainedMarks / row.MaxMarks) * 100;
+                                const grade = calculateGrade(pct);
+
+                                return (
+                                  <TableRow
+                                    key={row.Id}
+                                    sx={{
+                                      backgroundColor:
+                                        index % 2 === 0 ? "#fff" : "#fafafa",
+                                    }}
+                                  >
+                                    <TableCell>{row.Subject}</TableCell>
+
+                                    <TableCell align="center">
+                                      {row.MaxMarks}
+                                    </TableCell>
+
+                                    <TableCell
+                                      align="center"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {row.ObtainedMarks}
+                                    </TableCell>
+
+                                    <TableCell align="center">
+                                      {pct.toFixed(1)}%
+                                    </TableCell>
+
+                                    <TableCell
+                                      align="center"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color:
+                                          grade === "A"
+                                            ? "#2e7d32"
+                                            : grade === "B"
+                                              ? "#ed6c02"
+                                              : "#d32f2f",
+                                      }}
+                                    >
+                                      {grade}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
                         </Box>
                       </Grid>
                     );
@@ -997,46 +1084,172 @@ export default function ReportCardPDF({ studentId }) {
                 <Grid container spacing={2}>
                   {cbtAll.map((section) => {
                     if (!section.rows || section.rows.length === 0) return null;
-                    const totals = calcMarksTotals(section.rows);
-                    const grade = calculateGrade(totals.pct);
                     return (
                       <Grid item xs={6} md={4} key={section.category}>
                         <Box
                           sx={{
-                            border: "1px solid #999",
-                            padding: "12px",
-                            backgroundColor: "#fff",
-                            fontFamily: '"Courier New", monospace',
+                            background: "#fff",
+                            borderRadius: "10px",
+                            border: "1px solid #e5e5e5",
+                            overflow: "hidden",
                           }}
                         >
-                          <Typography sx={{ fontWeight: "bold", mb: 1 }}>
-                            CBT Test {section.category}
-                          </Typography>
-                          <Divider sx={{ my: 1 }} />
-                          <Typography variant="body2">
-                            Score: {totals.totalObtained}/{totals.totalMax}
-                          </Typography>
-                          <Typography variant="body2">
-                            Percentage: {formatPct(totals.pct)}
-                          </Typography>
+                          {/* Title */}
                           <Box
                             sx={{
-                              display: "inline-block",
-                              padding: "2px 8px",
-                              backgroundColor: "#e8f5e8",
-                              border: "1px solid #4caf50",
-                              borderRadius: "2px",
-                              mt: 1,
+                              background: "#f5f7fa",
+                              px: 2,
+                              py: 1,
+                              borderBottom: "1px solid #e0e0e0",
                             }}
                           >
-                            Grade: {grade}
+                            <Typography sx={{ fontWeight: 600 }}>
+                              {section.category}
+                            </Typography>
                           </Box>
+                          <Table size="small" sx={{ minWidth: 320 }}>
+                            <TableHead>
+                              <TableRow
+                                sx={{
+                                  background: "#fafafa",
+                                }}
+                              >
+                                <TableCell sx={{ fontWeight: 600 }}>
+                                  Subject
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  Max
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  Obt
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  %
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  Grade
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {section.rows.map((row, index) => {
+                                const pct =
+                                  (row.ObtainedMarks / row.MaxMarks) * 100;
+                                const grade = calculateGrade(pct);
+
+                                return (
+                                  <TableRow
+                                    key={row.Id}
+                                    sx={{
+                                      backgroundColor:
+                                        index % 2 === 0 ? "#fff" : "#fafafa",
+                                    }}
+                                  >
+                                    <TableCell>{row.Subject}</TableCell>
+
+                                    <TableCell align="center">
+                                      {row.MaxMarks}
+                                    </TableCell>
+
+                                    <TableCell
+                                      align="center"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {row.ObtainedMarks}
+                                    </TableCell>
+
+                                    <TableCell align="center">
+                                      {pct.toFixed(1)}%
+                                    </TableCell>
+
+                                    <TableCell
+                                      align="center"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color:
+                                          grade === "A"
+                                            ? "#2e7d32"
+                                            : grade === "B"
+                                              ? "#ed6c02"
+                                              : "#d32f2f",
+                                      }}
+                                    >
+                                      {grade}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
                         </Box>
                       </Grid>
                     );
                   })}
                 </Grid>
               )}
+            </Box>
+
+            {/* Assignment section */}
+            <Box sx={{ mt: 4 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  backgroundColor: "#555",
+                  color: "white",
+                  padding: "8px 16px",
+                  display: "inline-block",
+                  marginBottom: "15px",
+                  fontFamily: '"Courier New", monospace',
+                  fontWeight: "bold",
+                }}
+              >
+                Assignments
+              </Typography>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>Month</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>sem</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>No Of Class</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      Present Class
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Percentage</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {assignment.map((assignment) => {
+                    const pct =
+                      (assignment.ObtainedMarks / assignment.MaxMarks) * 100;
+
+                    return (
+                      <TableRow key={assignment.Id}>
+                        <TableCell>{assignment.Month}</TableCell>
+                        <TableCell>{assignment.Semester}</TableCell>
+                        <TableCell align="center">
+                          {assignment.NoOfClasses}
+                        </TableCell>
+                        <TableCell align="center">
+                          {assignment.PresentClass}
+                        </TableCell>
+                        <TableCell align="center">{pct.toFixed(1)}%</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </Box>
 
             {/* Footer */}
