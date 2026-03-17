@@ -867,7 +867,7 @@ function StudentReports() {
           `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
         );
         const json = await res.json();
-        
+
         if (json.success && json.data) {
           setStudent(json.data);
 

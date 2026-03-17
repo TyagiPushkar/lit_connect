@@ -23,6 +23,7 @@ import {
   isSunday,
   parseISO,
 } from "date-fns";
+import { over } from "lodash";
 
 const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
   console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
@@ -311,6 +312,22 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
     console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
   }, [EmpId, holidays.length, sem]);
 
+  const totalWorkingDays = summaryData.reduce(
+    (sum, row) => sum + row.totalClasses,
+    0,
+  );
+
+  const totalPresent = summaryData.reduce((sum, row) => sum + row.present, 0);
+  const totalAbsent = summaryData.reduce((sum, row) => sum + row.absent, 0);
+  const overallPercentage =
+    summaryData.length > 0
+      ? (
+          summaryData.reduce((sum, row) => sum + row.percentage, 0) /
+          summaryData.length
+        ).toFixed(1)
+      : 0;
+      
+
   if (!EmpId) {
     return (
       <Box
@@ -569,6 +586,53 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableRow sx={{}}>
+                <TableCell
+                  sx={{ border: "1px solid #333", fontWeight: "bold" }}
+                >
+                  Total Average
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    border: "1px solid #333",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {totalWorkingDays}
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    border: "1px solid #333",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {totalPresent}
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    border: "1px solid #333",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {totalAbsent}
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    border: "1px solid #333",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {overallPercentage}%
+                </TableCell>
+              </TableRow>
             </Table>
           </TableContainer>
 
@@ -624,7 +688,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
               </Grid>
             </Box>
           )} */}
-          {summaryData.length > 0 && (
+          {/* {summaryData.length > 0 && (
             <Box
               sx={{
                 mt: 3,
@@ -690,10 +754,11 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                 </Grid>
               </Grid>
             </Box>
-          )}
+          )} */}
           {/* Legend */}
           <Box
             sx={{
+              mt: 2,
               pt: 1,
               borderTop: "1px dashed #999",
               fontFamily: '"Courier New", monospace',

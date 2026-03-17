@@ -76,6 +76,7 @@ function StudentReport() {
                     onChange={(e) => setCategory(e.target.value)}
                   >
                     <MenuItem value="Internal Exam">Internal Exam</MenuItem>
+                    <MenuItem value="Vst Exam">Vst Exam</MenuItem>
                     <MenuItem value="CBT">CBT</MenuItem>
                     <MenuItem value="Class Test">Class Test</MenuItem>
                     <MenuItem value="Assignment">Assignment</MenuItem>
