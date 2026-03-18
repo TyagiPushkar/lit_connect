@@ -96,7 +96,7 @@ function Sidebar() {
         name: "Variable Fees Structure",
         icon: <ChecklistIcon />,
       },
-      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> }
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
     );
   }
   if (user?.role === "Front Desk") {
@@ -169,7 +169,20 @@ function Sidebar() {
         icon: <WorkspacePremiumIcon />,
       },
       { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
-      {path:"/mid-term", name:"Mid Term", icon:<MenuIcon />}
+      { path: "/mid-term", name: "Mid Term", icon: <MenuIcon /> },
+    );
+  }
+  if (user?.role === "Principal") {
+    allowedRoutes.push(
+      { path: "/students", name: "Students", icon: <Person /> },
+
+      { path: "/policy", name: "Timetable", icon: <CalendarMonthIcon /> },
+      { path: "/subjects", name: "Subjects", icon: <LibraryBooksIcon /> },
+
+      { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
+      { path: "/news", name: "News", icon: <NewspaperIcon /> },
+      { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
+      { path: "/report", name: "Report", icon: <SummarizeIcon /> },
     );
   }
   // Combine all available routes

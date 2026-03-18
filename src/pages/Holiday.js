@@ -13,21 +13,23 @@ function Holiday() {
     const isMobile = useMediaQuery('(max-width:600px)');
     const drawerWidth = isMobile ? 0 : 11;
     return (
-        <Box sx={{ display: 'flex' }}>
-            {/* Sidebar with fixed width */}
-            <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
-                <Sidebar />
-            </Box>
-            <Box component="main" sx={{ flexGrow: 1, p: 0, ml: drawerWidth }}>
-                <Navbar />
-                <div style={{ marginTop: "20px", marginLeft: "10px" }}>
-                    {user && user.role === 'HR' ? <AddHoliday /> : null}
-
-                    <ViewHoliday />
-                </div>
-
-            </Box>
+      <Box sx={{ display: "flex" }}>
+        {/* Sidebar with fixed width */}
+        <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
+          <Sidebar />
         </Box>
+        <Box component="main" sx={{ flexGrow: 1, p: 0, ml: drawerWidth }}>
+          <Navbar />
+          <div style={{ marginTop: "20px", marginLeft: "10px" }}>
+            {/* {user && user.role === 'HR' ? <AddHoliday /> : null} */}
+            {user && (user.role === "HR" || user.role === "Principal") ? (
+              <AddHoliday />
+            ) : null}
+
+            <ViewHoliday />
+          </div>
+        </Box>
+      </Box>
     );
 }
 
