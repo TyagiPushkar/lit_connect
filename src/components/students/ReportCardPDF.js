@@ -356,7 +356,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     mt: 0.5,
                   }}
                 >
-                  (Approved by AICTE, New Delhi & Affiliated to BPUT, Rourkela)
+                  (Affiliated to Utkal University, Odisha)
                 </Typography>
                 <Typography
                   variant="body2"
@@ -369,7 +369,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     letterSpacing: "0.3px",
                   }}
                 >
-                  Plot No. 239, Badagada, Bhubaneswar, Odisha - 751030
+                  M4/46, Acharya Vihar, Bhubaneswar, Odisha 751013
                 </Typography>
                 <Typography
                   variant="body2"
