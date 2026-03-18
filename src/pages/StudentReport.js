@@ -17,6 +17,7 @@ import AssignmentReport from "../components/report/AssignmentReport";
 import { Category } from "@mui/icons-material";
 import CBT from "../components/report/CBT";
 import ClassTest from "../components/report/ClassTest";
+import VstExam from "../components/report/VstExam";
 
 function StudentReport() {
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -27,6 +28,8 @@ function StudentReport() {
     switch (category) {
       case "Internal Exam":
         return <InternalExam />;
+      case "Vst Exam":
+        return <VstExam />;
       case "CBT":
         return <CBT />;
       case "Class Test":
