@@ -382,7 +382,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     letterSpacing: "0.3px",
                   }}
                 >
-                  Phone: 0674-2541234 | Email: info@lit.edu.in
+                  Phone: 0674-2544690 | Email: info@litindia.ac.in
                 </Typography>
               </Box>
 
