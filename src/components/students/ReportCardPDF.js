@@ -73,10 +73,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   );
 
   const course = student?.Course;
-  const semester = useMemo(() => {
-    if (!student?.Sem) return undefined;
-    return String(student.Sem);
-  }, [student]);
+  // const semester = useMemo(() => {
+  //   if (!student?.Sem) return undefined;
+  //   return String(student.Sem);
+  // }, [student]);
+  const semester = sem ?? (student?.Sem ? String(student.Sem) : undefined);
 
   const studCode = student?.StudentID;
 
@@ -174,7 +175,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     setIsGenerating(true);
     try {
       const canvas = await html2canvas(reportRef.current, {
-        scale: 3,
+        scale: 1,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -185,26 +186,53 @@ export default function ReportCardPDF({ studentId, sem, year }) {
           });
         },
       });
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg", 0.7);
 
-      const pdf = new jsPDF("p", "mm", "a4");
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
       const imgWidth = pageWidth;
       const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
+      // let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        0,
+        position,
+        imgWidth,
+        imgHeight,
+        "",
+        "FAST",
+      );
+      // heightLeft -= pageHeight;
+      let y = 0;
 
-      while (heightLeft > 0) {
-        position = -imgHeight + heightLeft;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      while (y < imgHeight) {
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          0,
+          -y, // 🔥 main fix
+          imgWidth,
+          imgHeight,
+          "",
+          "FAST",
+        );
+
+        y += pageHeight;
+
+        if (y < imgHeight) {
+          pdf.addPage();
+        }
       }
 
       const fileName = `ReportCard_${studCode || studentId}_Sem${semester || ""}.pdf`;
@@ -264,14 +292,25 @@ export default function ReportCardPDF({ studentId, sem, year }) {
           ref={reportRef}
           id="reportCard"
           elevation={0}
+          // sx={{
+          //   p: 0,
+          //   fontFamily: '"Courier New", Courier, monospace',
+          //   background: "linear-gradient(to bottom, #ffffff 0%, #f9f9f9 100%)",
+          //   border: "2px solid #333",
+          //   position: "relative",
+          //   overflow: "visible",
+          //   // minHeight: "29.7cm",
+          //   boxSizing: "border-box",
+          // }}
           sx={{
-            p: 0,
+            // 🔥 IMPORTANT
+            minHeight: "297mm",
+            p: "2mm", // thoda padding dena zaroori hai
             fontFamily: '"Courier New", Courier, monospace',
-            background: "linear-gradient(to bottom, #ffffff 0%, #f9f9f9 100%)",
-            border: "2px solid #333",
+            background: "#fff",
+            border: "1px solid #333",
             position: "relative",
             overflow: "visible",
-            minHeight: "29.7cm",
             boxSizing: "border-box",
           }}
         >
@@ -469,12 +508,12 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   padding: "0 10px",
                   fontFamily: '"Courier New", monospace',
                   fontWeight: "bold",
-                  fontSize: "14px",
+                  fontSize: "15px",
                 }}
               >
                 STUDENT PARTICULARS
               </Box>
-
+              {/* student bio data */}
               <Grid container spacing={3}>
                 {/* <Grid item xs={6}>
                   <Typography
@@ -516,7 +555,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
+                      fontSize: "18px",
                       color: "#444",
                     }}
                   >
@@ -538,7 +577,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
+                      fontSize: "18px",
                       color: "#444",
                     }}
                   >
@@ -560,7 +599,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
+                      fontSize: "18px",
                       color: "#444",
                     }}
                   >
@@ -583,7 +622,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
+                      fontSize: "18px",
                       color: "#444",
                     }}
                   >
@@ -596,7 +635,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     >
                       Roll No
                     </span>
-                    :{studCode || studentId || "N/A"}
+                    : {studCode || studentId || "N/A"}
                   </Typography>
                   <Typography
                     sx={{
@@ -604,7 +643,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
+                      fontSize: "18px",
                       color: "#444",
                     }}
                   >
@@ -617,7 +656,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     >
                       Semester
                     </span>
-                    :{sem || student?.Sem || "N/A"}
+                    : {sem || student?.Sem || "N/A"}
                   </Typography>
                   <Typography
                     sx={{
@@ -625,7 +664,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
+                      fontSize: "18px",
                       color: "#444",
                     }}
                   >
@@ -636,9 +675,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                         color: "#222",
                       }}
                     >
-                      Contact
+                      Contact No
                     </span>
-                    :{student?.Contact || student?.GuardianContactNo || "-"}
+                    : {student?.StudentContactNo},{" "}
+                    {student?.GuardianContactNo || "-"}
                   </Typography>
                 </Grid>
               </Grid>
@@ -685,7 +725,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       border: "1px solid #333",
                       "& .MuiTableCell-root": {
                         padding: "4px 8px",
-                        fontSize: "13px",
+                        fontSize: "16px",
                         lineHeight: 1.2,
                       },
                     }}
@@ -697,6 +737,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             sx={{
                               border: "1px solid #333",
                               fontWeight: "bold",
+                              fontSize: "14px",
                               textAlign: "center",
                             }}
                           >
@@ -706,6 +747,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             sx={{
                               border: "1px solid #333",
                               fontWeight: "bold",
+                              fontSize: "14px",
                               textAlign: "center",
                             }}
                           >
@@ -716,6 +758,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
+                              fontSize: "14px",
                             }}
                           >
                             Max Marks
@@ -725,6 +768,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
+                              fontSize: "14px",
                             }}
                           >
                             Marks Obtained
@@ -734,6 +778,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
+                              fontSize: "14px",
                             }}
                           >
                             Percentage
@@ -743,6 +788,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
+                              fontSize: "14px",
                             }}
                           >
                             Grade
@@ -764,17 +810,24 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
+                                  fontSize: "14px",
                                 }}
                               >
                                 {row?.SubjectCode || "-"}
                               </TableCell>
-                              <TableCell sx={{ border: "1px solid #333" }}>
+                              <TableCell
+                                sx={{
+                                  border: "1px solid #333",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {row?.Subject || "-"}
                               </TableCell>
                               <TableCell
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
+                                  fontSize: "14px",
                                 }}
                               >
                                 {max}
@@ -784,6 +837,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   border: "1px solid #333",
                                   textAlign: "center",
                                   fontWeight: "bold",
+                                  fontSize: "14px",
                                 }}
                               >
                                 {got}
@@ -792,6 +846,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
+                                  fontSize: "14px",
                                 }}
                               >
                                 {formatPct(pct)}
@@ -800,12 +855,14 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
+                                  fontSize: "14px",
                                 }}
                               >
                                 <Box
                                   sx={{
                                     display: "inline-block",
                                     padding: "2px 8px",
+                                    fontSize: "14px",
                                     backgroundColor:
                                       grade === "A"
                                         ? "#e8f5e8"
@@ -958,7 +1015,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           sx={{
                             background: "#fff",
                             borderRadius: "10px",
-                            border: "1px solid #e5e5e5",
+                            border: "1px solid #333",
                             overflow: "hidden",
                           }}
                         >
@@ -968,7 +1025,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               background: "#f5f7fa",
                               px: 2,
                               py: 1,
-                              borderBottom: "1px solid #e0e0e0",
+                              // borderBottom: "1px solid #e0e0e0",
                             }}
                           >
                             <Typography sx={{ fontWeight: 600 }}>
@@ -976,93 +1033,153 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             </Typography>
                           </Box>
                           {/* Table */}
-                          <Table size="small" sx={{ width: "100%" }}>
-                            <TableHead>
-                              <TableRow
-                                sx={{
-                                  background: "#fafafa",
-                                }}
-                              >
-                                <TableCell sx={{ fontWeight: 600 }}>
-                                  Subject
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
+                          <TableContainer
+                            size="small"
+                            sx={{
+                              fontFamily: '"Courier New", monospace',
+                              // border: "1px solid #333",
+                              "& .MuiTableCell-root": {
+                                padding: "4px 8px",
+                                fontSize: "16px",
+                                lineHeight: 1.2,
+                              },
+                            }}
+                          >
+                            <Table size="small" sx={{ width: "100%" }}>
+                              <TableHead>
+                                <TableRow
+                                  sx={{
+                                    background: "#fafafa",
+                                  }}
                                 >
-                                  Max
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  Obt
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  %
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  Grade
-                                </TableCell>
-                              </TableRow>
-                            </TableHead>
-
-                            <TableBody>
-                              {section.rows.map((row, index) => {
-                                const pct =
-                                  (row.ObtainedMarks / row.MaxMarks) * 100;
-                                const grade = calculateGrade(pct);
-
-                                return (
-                                  <TableRow
-                                    key={row.Id}
+                                  <TableCell
                                     sx={{
-                                      backgroundColor:
-                                        index % 2 === 0 ? "#fff" : "#fafafa",
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
                                     }}
                                   >
-                                    <TableCell>{row.Subject}</TableCell>
+                                    Subject
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    Max
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    Obt
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    %
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    Grade
+                                  </TableCell>
+                                </TableRow>
+                              </TableHead>
 
-                                    <TableCell align="center">
-                                      {row.MaxMarks}
-                                    </TableCell>
+                              <TableBody>
+                                {section.rows.map((row, index) => {
+                                  const pct =
+                                    (row.ObtainedMarks / row.MaxMarks) * 100;
+                                  const grade = calculateGrade(pct);
 
-                                    <TableCell
-                                      align="center"
-                                      sx={{ fontWeight: 600 }}
-                                    >
-                                      {row.ObtainedMarks}
-                                    </TableCell>
-
-                                    <TableCell align="center">
-                                      {pct.toFixed(1)}%
-                                    </TableCell>
-
-                                    <TableCell
-                                      align="center"
+                                  return (
+                                    <TableRow
+                                      key={row.Id}
                                       sx={{
-                                        fontWeight: 600,
-                                        color:
-                                          grade === "A"
-                                            ? "#2e7d32"
-                                            : grade === "B"
-                                              ? "#ed6c02"
-                                              : "#d32f2f",
+                                        backgroundColor:
+                                          index % 2 === 0 ? "#fff" : "#fafafa",
                                       }}
                                     >
-                                      {grade}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
+                                      <TableCell
+                                        sx={{
+                                          border: "1px solid #333",
+
+                                          fontSize: "14px",
+                                        }}
+                                      >
+                                        {row.Subject}
+                                      </TableCell>
+
+                                      <TableCell
+                                        sx={{
+                                          border: "1px solid #333",
+                                          textAlign: "center",
+                                          fontSize: "14px",
+                                        }}
+                                      >
+                                        {row.MaxMarks}
+                                      </TableCell>
+
+                                      <TableCell
+                                        sx={{
+                                          border: "1px solid #333",
+                                          textAlign: "center",
+                                          fontSize: "14px",
+                                        }}
+                                      >
+                                        {row.ObtainedMarks}
+                                      </TableCell>
+
+                                      <TableCell
+                                        sx={{
+                                          border: "1px solid #333",
+                                          textAlign: "center",
+                                          fontSize: "14px",
+                                        }}
+                                      >
+                                        {pct.toFixed(1)}%
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                          fontweight: "bold",
+                                          fontSize: "14px",
+                                          color:
+                                            grade === "A"
+                                              ? "#2e7d32"
+                                              : grade === "B"
+                                                ? "#ed6c02"
+                                                : "#d32f2f",
+                                        }}
+                                      >
+                                        {grade}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
                         </Box>
                       </Grid>
                     );
@@ -1085,7 +1202,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Computer Based Tests
+                Pre Placement Training
               </Typography>
 
               {!cbtAll ||
@@ -1109,7 +1226,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           sx={{
                             background: "#fff",
                             borderRadius: "10px",
-                            border: "1px solid #e5e5e5",
+                            border: "1px solid #333",
                             overflow: "hidden",
                           }}
                         >
@@ -1119,99 +1236,146 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               background: "#f5f7fa",
                               px: 2,
                               py: 1,
-                              borderBottom: "1px solid #e0e0e0",
+                              // borderBottom: "1px solid #e0e0e0",
                             }}
                           >
                             <Typography sx={{ fontWeight: 600 }}>
                               {section.category}
                             </Typography>
                           </Box>
-                          <Table size="small" sx={{ Width: "100%" }}>
-                            <TableHead>
-                              <TableRow
-                                sx={{
-                                  background: "#fafafa",
-                                }}
-                              >
-                                <TableCell sx={{ fontWeight: 600 }}>
-                                  Subject
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
+                          <TableContainer
+                            sx={{
+                              fontFamily: '"Courier New", monospace',
+                              // border: "1px solid #333",
+                              "& .MuiTableCell-root": {
+                                padding: "4px 8px",
+                                fontSize: "16px",
+                                lineHeight: 1.2,
+                              },
+                            }}
+                          >
+                            <Table size="small" sx={{ Width: "100%" }}>
+                              <TableHead>
+                                <TableRow
+                                  sx={{
+                                    background: "#fafafa",
+                                  }}
                                 >
-                                  Max
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  Obt
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  %
-                                </TableCell>
-                                <TableCell
-                                  align="center"
-                                  sx={{ fontWeight: 600 }}
-                                >
-                                  Grade
-                                </TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {section.rows.map((row, index) => {
-                                const pct =
-                                  (row.ObtainedMarks / row.MaxMarks) * 100;
-                                const grade = calculateGrade(pct);
-
-                                return (
-                                  <TableRow
-                                    key={row.Id}
+                                  <TableCell
                                     sx={{
-                                      backgroundColor:
-                                        index % 2 === 0 ? "#fff" : "#fafafa",
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
                                     }}
                                   >
-                                    <TableCell>{row.Subject}</TableCell>
+                                    Subject
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    Max
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    Obt
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    %
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      border: "1px solid #333",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    Grade
+                                  </TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {section.rows.map((row, index) => {
+                                  const pct =
+                                    (row.ObtainedMarks / row.MaxMarks) * 100;
+                                  const grade = calculateGrade(pct);
 
-                                    <TableCell align="center">
-                                      {row.MaxMarks}
-                                    </TableCell>
-
-                                    <TableCell
-                                      align="center"
-                                      sx={{ fontWeight: 600 }}
-                                    >
-                                      {row.ObtainedMarks}
-                                    </TableCell>
-
-                                    <TableCell align="center">
-                                      {pct.toFixed(1)}%
-                                    </TableCell>
-
-                                    <TableCell
-                                      align="center"
+                                  return (
+                                    <TableRow
+                                      key={row.Id}
                                       sx={{
-                                        fontWeight: 600,
-                                        color:
-                                          grade === "A"
-                                            ? "#2e7d32"
-                                            : grade === "B"
-                                              ? "#ed6c02"
-                                              : "#d32f2f",
+                                        backgroundColor:
+                                          index % 2 === 0 ? "#fff" : "#fafafa",
                                       }}
                                     >
-                                      {grade}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
+                                      <TableCell
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {row.Subject}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {row.MaxMarks}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {row.ObtainedMarks}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {pct.toFixed(1)}%
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                          color:
+                                            grade === "A"
+                                              ? "#2e7d32"
+                                              : grade === "B"
+                                                ? "#ed6c02"
+                                                : "#d32f2f",
+                                        }}
+                                      >
+                                        {grade}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
                         </Box>
                       </Grid>
                     );
@@ -1234,7 +1398,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Virtual Simulation Tests
+                Very Similar Tests
               </Typography>
 
               {!vst || vst.length === 0 ? (
@@ -1252,10 +1416,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   size="small"
                   sx={{
                     fontFamily: '"Courier New", monospace',
-                    border: "1px solid #333",
                     "& .MuiTableCell-root": {
                       padding: "4px 8px",
-                      fontSize: "13px",
+                      fontSize: "16px",
                       lineHeight: 1.2,
                     },
                   }}
@@ -1440,43 +1603,122 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   No Assignment recorded.
                 </Typography>
               ) : (
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Month</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>sem</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        No Of Class
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        Present Class
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Percentage</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {assignment.map((assignment) => {
-                      const pct =
-                        (assignment.ObtainedMarks / assignment.MaxMarks) * 100;
+                <TableContainer
+                  sx={{
+                    fontFamily: '"Courier New", monospace',
+                    "& .MuiTableCell-root": {
+                      padding: "4px 8px",
+                      fontSize: "16px",
+                      lineHeight: 1.2,
+                    },
+                  }}
+                >
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #333",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          Month
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #333",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          sem
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #333",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          No Of Class
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #333",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          Present Class
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #333",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          Percentage
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {assignment.map((assignment) => {
+                        const pct =
+                          (assignment.ObtainedMarks / assignment.MaxMarks) *
+                          100;
 
-                      return (
-                        <TableRow key={assignment.Id}>
-                          <TableCell>{assignment.Month}</TableCell>
-                          <TableCell>{assignment.Semester}</TableCell>
-                          <TableCell align="center">
-                            {assignment.NoOfClasses}
-                          </TableCell>
-                          <TableCell align="center">
-                            {assignment.PresentClass}
-                          </TableCell>
-                          <TableCell align="center">
-                            {pct.toFixed(1)}%
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                        return (
+                          <TableRow key={assignment.Id}>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                              }}
+                            >
+                              {assignment.Month}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                              }}
+                            >
+                              {assignment.Semester}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              {assignment.NoOfClasses}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              {assignment.PresentClass}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              {pct.toFixed(1)}%
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               )}
             </Box>
 

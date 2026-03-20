@@ -326,7 +326,6 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           summaryData.length
         ).toFixed(1)
       : 0;
-      
 
   if (!EmpId) {
     return (
@@ -445,6 +444,11 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
               sx={{
                 fontFamily: '"Courier New", monospace',
                 border: "1px solid #333",
+                "& .MuiTableCell-root": {
+                  padding: "4px 8px",
+                  fontSize: "16px",
+                  lineHeight: 1.2,
+                },
               }}
             >
               <TableHead>
@@ -516,6 +520,8 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         border: "1px solid #333",
                         padding: "",
                         fontWeight: "500",
+                        fontSize: "15px",
+                        fontbold: "500",
                       }}
                     >
                       {row.monthName}
@@ -526,6 +532,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         padding: "",
                         textAlign: "center",
                         fontWeight: "500",
+                        fontSize: "15px",
                       }}
                     >
                       {row.totalClasses}
@@ -534,6 +541,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                       sx={{
                         border: "1px solid #333",
                         padding: "",
+                        fontSize: "15px",
                         textAlign: "center",
                         color: "#2e7d32",
                         fontWeight: "bold",
@@ -545,6 +553,8 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                       sx={{
                         border: "1px solid #333",
                         padding: "",
+                        fontSize: "15px",
+                        fontWeight: "bold",
                         textAlign: "center",
                         color: "#d32f2f",
                       }}
@@ -555,6 +565,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                       sx={{
                         border: "1px solid #333",
                         padding: "",
+                        fontSize: "15px",
                         textAlign: "center",
                       }}
                     >
