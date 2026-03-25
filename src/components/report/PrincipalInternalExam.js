@@ -6,8 +6,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import DownloadIcon from '@mui/icons-material/Download';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 function PrincipalInternalExam() {
     const [course, setCourse] = useState('');
@@ -99,38 +98,23 @@ function PrincipalInternalExam() {
     }, [course, sem]);
 
     const handleDownload = () => {
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
-        const pageWidth = doc.internal.pageSize.getWidth();
-
-        doc.setFontSize(14);
-        doc.setTextColor('#CC7A00');
-        doc.text('Internal Exam Report', pageWidth / 2, 40, { align: 'center' });
-
-        doc.setFontSize(9);
-        doc.setTextColor('#444444');
-        doc.text(`Course: ${course}   |   Semester: ${sem}`, pageWidth / 2, 56, { align: 'center' });
-
-        const head = [['Student ID', 'Name', 'Course', 'Semester', ...subjects]];
-        const body = pivoted.map(row => [
-            row.StudId,
-            studentMap[String(row.StudId).toLowerCase()] || '-',
-            row.Course,
-            row.Sem,
-            ...subjects.map(s => (row[s] !== undefined ? row[s] : '-')),
-        ]);
-
-        autoTable(doc, {
-            head,
-            body,
-            startY: 68,
-            theme: 'striped',
-            styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak' },
-            headStyles: { fillColor: [204, 122, 0], textColor: 255, fontStyle: 'bold' },
-            margin: { left: 20, right: 20 },
-            tableWidth: 'auto',
+        const rows = pivoted.map(row => {
+            const entry = {
+                'Student ID': row.StudId,
+                'Name': studentMap[String(row.StudId).toLowerCase()] || '-',
+                'Course': row.Course,
+                'Semester': row.Sem,
+            };
+            subjects.forEach(s => {
+                entry[s] = row[s] !== undefined ? row[s] : '-';
+            });
+            return entry;
         });
 
-        doc.save(`InternalExam_${course}_Sem${sem}.pdf`);
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Internal Exam');
+        XLSX.writeFile(wb, `InternalExam_${course}_Sem${sem}.xlsx`);
     };
 
     return (
