@@ -7,8 +7,15 @@ import {
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
 import IconButton from '@mui/material/IconButton';
+import DownloadIcon from '@mui/icons-material/Download';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { useAuth } from '../auth/AuthContext';
 
 function ListInternalExam({ setView }) {
+    const { user } = useAuth();
+    const isPrincipal = user?.role === 'Principal';
+
     const [records, setRecords] = useState([]);
     const [filteredRecords, setFilteredRecords] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -21,7 +28,28 @@ function ListInternalExam({ setView }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [editId, setEditId] = useState(null);
     const [editValue, setEditValue] = useState('');
-    
+    const [studentMap, setStudentMap] = useState({});
+
+    // Fetch student name map for Principal view
+    useEffect(() => {
+        if (!isPrincipal) return;
+        const fetchStudents = async () => {
+            try {
+                const res = await axios.get('https://namami-infotech.com/LIT/src/students/get_student.php');
+                if (res.data.success) {
+                    const map = {};
+                    res.data.data.forEach(s => {
+                        map[String(s.StudentID)] = s.CandidateName;
+                    });
+                    setStudentMap(map);
+                }
+            } catch (err) {
+                console.error("Failed to fetch students", err);
+            }
+        };
+        fetchStudents();
+    }, [isPrincipal]);
+
     // Fetch subjects based on Course & Sem
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -84,7 +112,7 @@ function ListInternalExam({ setView }) {
                 Id: id,
                 ObtainedMarks: editValue
             });
-    
+
             if (response.data.success) {
                 const updated = records.map(record =>
                     record.Id === id ? { ...record, ObtainedMarks: editValue } : record
@@ -99,23 +127,77 @@ function ListInternalExam({ setView }) {
             alert('Error updating marks.');
         }
     };
-    
+
+    const handleDownload = () => {
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Title
+        doc.setFontSize(14);
+        doc.setTextColor('#CC7A00');
+        doc.text('Internal Exam Report', pageWidth / 2, 40, { align: 'center' });
+
+        // Sub-title
+        doc.setFontSize(10);
+        doc.setTextColor('#444444');
+        doc.text(`Course: ${course}   |   Semester: ${sem}   |   Subject: ${subject}`, pageWidth / 2, 58, { align: 'center' });
+
+        const head = [['Student Name', 'Student ID', 'Course', 'Semester', 'Subject', 'Max Marks', 'Obtained Marks']];
+        const body = filteredRecords.map(row => [
+            studentMap[String(row.StudId)] || '—',
+            row.StudId,
+            row.Course,
+            row.Sem,
+            row.Subject,
+            row.MaxMarks,
+            row.ObtainedMarks,
+        ]);
+
+        autoTable(doc, {
+            head,
+            body,
+            startY: 70,
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
+            headStyles: { fillColor: [204, 122, 0], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [255, 248, 240] },
+            margin: { left: 30, right: 30 },
+            tableWidth: 'auto',
+        });
+
+        doc.save(`InternalExam_${course}_Sem${sem}_${subject}.pdf`);
+    };
+
     return (
         <Box sx={{ p: 0 }}>
             <Box elevation={1} sx={{ p: 0, borderRadius: 2, mb: 1 }}>
-                <Typography variant="h6" color="#CC7A00" gutterBottom>
-                    Internal Exam Report
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" color="#CC7A00">
+                        Internal Exam Report
+                    </Typography>
+                    {isPrincipal && filteredRecords.length > 0 && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<DownloadIcon />}
+                            onClick={handleDownload}
+                            sx={{ color: '#CC7A00', borderColor: '#CC7A00' }}
+                        >
+                            Download Report
+                        </Button>
+                    )}
+                </Box>
 
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6} md={3}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Course</InputLabel>
                             <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
-                               <MenuItem value="BSc. DS">BSc. DS</MenuItem>
-                                                           <MenuItem value="BSc. CS(H)">BSc. CS(H)</MenuItem>
-                                                           <MenuItem value="BSc. ITM(H)">BSc. ITM(H)</MenuItem>
-                                                           <MenuItem value="BCA">BCA</MenuItem>
+                                <MenuItem value="BSc. DS">BSc. DS</MenuItem>
+                                <MenuItem value="BSc. CS(H)">BSc. CS(H)</MenuItem>
+                                <MenuItem value="BSc. ITM(H)">BSc. ITM(H)</MenuItem>
+                                <MenuItem value="BCA">BCA</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
@@ -167,53 +249,59 @@ function ListInternalExam({ setView }) {
                 <Paper elevation={2} sx={{ borderRadius: 2, p: 0 }}>
                     <TableContainer>
                         <Table>
-                        <TableHead sx={{ backgroundColor: '#CC7A00' }}>
-    <TableRow>
-        <TableCell sx={{ color: '#fff' }}>Actions</TableCell>
-        <TableCell sx={{ color: '#fff' }}>Student ID</TableCell>
-        <TableCell sx={{ color: '#fff' }}>Course</TableCell>
-        <TableCell sx={{ color: '#fff' }}>Semester</TableCell>
-        <TableCell sx={{ color: '#fff' }}>Subject</TableCell>
-        <TableCell sx={{ color: '#fff' }}>Max Marks</TableCell>
-        <TableCell sx={{ color: '#fff' }}>Obtained Marks</TableCell>
-    </TableRow>
-</TableHead>
-<TableBody>
-    {filteredRecords.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
-        <TableRow key={idx}>
-            <TableCell>
-                <IconButton onClick={() => {
-                    setEditId(row.Id);
-                    setEditValue(row.ObtainedMarks);
-                }}>
-                    <EditIcon />
-                </IconButton>
-            </TableCell>
-            <TableCell>{row.StudId}</TableCell>
-            <TableCell>{row.Course}</TableCell>
-            <TableCell>{row.Sem}</TableCell>
-            <TableCell>{row.Subject}</TableCell>
-            <TableCell>{row.MaxMarks}</TableCell>
-            <TableCell>
-                {editId === row.Id ? (
-                    <TextField
-                        value={editValue}
-                        size="small"
-                        type="number"
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={() => handleSaveMarks(row.Id)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveMarks(row.Id);
-                        }}
-                    />
-                ) : (
-                    row.ObtainedMarks
-                )}
-            </TableCell>
-        </TableRow>
-    ))}
-</TableBody>
-
+                            <TableHead sx={{ backgroundColor: '#CC7A00' }}>
+                                <TableRow>
+                                    {isPrincipal
+                                        ? <TableCell sx={{ color: '#fff' }}>Student Name</TableCell>
+                                        : <TableCell sx={{ color: '#fff' }}>Actions</TableCell>
+                                    }
+                                    <TableCell sx={{ color: '#fff' }}>Student ID</TableCell>
+                                    <TableCell sx={{ color: '#fff' }}>Course</TableCell>
+                                    <TableCell sx={{ color: '#fff' }}>Semester</TableCell>
+                                    <TableCell sx={{ color: '#fff' }}>Subject</TableCell>
+                                    <TableCell sx={{ color: '#fff' }}>Max Marks</TableCell>
+                                    <TableCell sx={{ color: '#fff' }}>Obtained Marks</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {filteredRecords.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
+                                    <TableRow key={idx}>
+                                        {isPrincipal ? (
+                                            <TableCell>{studentMap[String(row.StudId)] || '—'}</TableCell>
+                                        ) : (
+                                            <TableCell>
+                                                <IconButton onClick={() => {
+                                                    setEditId(row.Id);
+                                                    setEditValue(row.ObtainedMarks);
+                                                }}>
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                        )}
+                                        <TableCell>{row.StudId}</TableCell>
+                                        <TableCell>{row.Course}</TableCell>
+                                        <TableCell>{row.Sem}</TableCell>
+                                        <TableCell>{row.Subject}</TableCell>
+                                        <TableCell>{row.MaxMarks}</TableCell>
+                                        <TableCell>
+                                            {!isPrincipal && editId === row.Id ? (
+                                                <TextField
+                                                    value={editValue}
+                                                    size="small"
+                                                    type="number"
+                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                    onBlur={() => handleSaveMarks(row.Id)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleSaveMarks(row.Id);
+                                                    }}
+                                                />
+                                            ) : (
+                                                row.ObtainedMarks
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
                         </Table>
                     </TableContainer>
                     <TablePagination

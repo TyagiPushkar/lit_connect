@@ -182,11 +182,21 @@ function Sidebar() {
       { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
       { path: "/news", name: "News", icon: <NewspaperIcon /> },
       { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
-      { path: "/report", name: "Report", icon: <SummarizeIcon /> },
     );
   }
   // Combine all available routes
   const routes = [...defaultRoutes, ...allowedRoutes];
+
+  // For Principal: insert Report right after Attendance
+  if (user?.role === "Principal") {
+    const attendanceIdx = routes.findIndex(r => r.path === "/attendance");
+    const reportRoute = { path: "/report", name: "Report", icon: <SummarizeIcon /> };
+    if (attendanceIdx !== -1) {
+      routes.splice(attendanceIdx + 1, 0, reportRoute);
+    } else {
+      routes.push(reportRoute);
+    }
+  }
 
   return (
     <Drawer
