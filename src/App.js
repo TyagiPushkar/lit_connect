@@ -118,7 +118,7 @@ function App() {
             <Route
               path="/report"
               element={
-                <PrivateRoute element={StudentReport} requiredRole="Teacher" />
+                <PrivateRoute element={StudentReport} requiredRoles={["Teacher", "Principal"]} />
               }
             />
             <Route

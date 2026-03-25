@@ -21,6 +21,7 @@
     "framer-motion": "^11.3.24",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.0",
+    "jspdf-autotable": "^5.0.7",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
