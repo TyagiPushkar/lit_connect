@@ -14,15 +14,18 @@ import {
 } from "@mui/material";
 import InternalExam from "../components/report/InternalExam";
 import AssignmentReport from "../components/report/AssignmentReport";
-import { Category } from "@mui/icons-material";
 import CBT from "../components/report/CBT";
 import ClassTest from "../components/report/ClassTest";
 import VstExam from "../components/report/VstExam";
+import PrincipalInternalExam from "../components/report/PrincipalInternalExam";
+import { useAuth } from "../components/auth/AuthContext";
 
 function StudentReport() {
   const isMobile = useMediaQuery("(max-width:600px)");
   const drawerWidth = isMobile ? 0 : 100;
   const [category, setCategory] = useState("Internal Exam");
+  const { user } = useAuth();
+  const isPrincipal = user?.role === "Principal";
 
   const renderComponent = () => {
     switch (category) {
@@ -53,46 +56,54 @@ function StudentReport() {
         <Navbar />
 
         <Box sx={{ px: 3, py: 2 }}>
-          {/* Header & Category Selector */}
-          <Paper
-            elevation={1}
-            sx={{ p: 2, mb: 3, borderRadius: 2, backgroundColor: "#ffffff" }}
-          >
-            <Grid
-              container
-              alignItems="center"
-              spacing={2}
-              justifyContent="space-between"
-            >
-              <Grid item xs={12} md="auto">
-                <Typography variant="h6" color="#CC7A00" fontWeight="bold">
-                  {category} Report Dashboard
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="category-label">Report Category</InputLabel>
-                  <Select
-                    labelId="category-label"
-                    value={category}
-                    label="Report Category"
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <MenuItem value="Internal Exam">Internal Exam</MenuItem>
-                    <MenuItem value="Vst Exam">Vst Exam</MenuItem>
-                    <MenuItem value="CBT">CBT</MenuItem>
-                    <MenuItem value="Class Test">Class Test</MenuItem>
-                    <MenuItem value="Assignment">Assignment</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </Paper>
+          {isPrincipal ? (
+            <Paper elevation={1} sx={{ p: 2, borderRadius: 2, backgroundColor: "#ffffff" }}>
+              <PrincipalInternalExam />
+            </Paper>
+          ) : (
+            <>
+              {/* Header & Category Selector */}
+              <Paper
+                elevation={1}
+                sx={{ p: 2, mb: 3, borderRadius: 2, backgroundColor: "#ffffff" }}
+              >
+                <Grid
+                  container
+                  alignItems="center"
+                  spacing={2}
+                  justifyContent="space-between"
+                >
+                  <Grid item xs={12} md="auto">
+                    <Typography variant="h6" color="#CC7A00" fontWeight="bold">
+                      {category} Report Dashboard
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel id="category-label">Report Category</InputLabel>
+                      <Select
+                        labelId="category-label"
+                        value={category}
+                        label="Report Category"
+                        onChange={(e) => setCategory(e.target.value)}
+                      >
+                        <MenuItem value="Internal Exam">Internal Exam</MenuItem>
+                        <MenuItem value="Vst Exam">Vst Exam</MenuItem>
+                        <MenuItem value="CBT">CBT</MenuItem>
+                        <MenuItem value="Class Test">Class Test</MenuItem>
+                        <MenuItem value="Assignment">Assignment</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Paper>
 
-          {/* Dynamic Report Component */}
-          <Box elevation={1} sx={{ p: 0, borderRadius: 2 }}>
-            {renderComponent()}
-          </Box>
+              {/* Dynamic Report Component */}
+              <Box elevation={1} sx={{ p: 0, borderRadius: 2 }}>
+                {renderComponent()}
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
     </Box>

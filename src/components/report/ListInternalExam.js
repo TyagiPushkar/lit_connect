@@ -39,7 +39,7 @@ function ListInternalExam({ setView }) {
                 if (res.data.success) {
                     const map = {};
                     res.data.data.forEach(s => {
-                        map[String(s.StudentID)] = s.CandidateName;
+                        map[String(s.StudentID).toLowerCase()] = s.CandidateName;
                     });
                     setStudentMap(map);
                 }
