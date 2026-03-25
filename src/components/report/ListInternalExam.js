@@ -129,23 +129,21 @@ function ListInternalExam({ setView }) {
     };
 
     const handleDownload = () => {
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
 
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // Title
         doc.setFontSize(14);
         doc.setTextColor('#CC7A00');
         doc.text('Internal Exam Report', pageWidth / 2, 40, { align: 'center' });
 
-        // Sub-title
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setTextColor('#444444');
-        doc.text(`Course: ${course}   |   Semester: ${sem}   |   Subject: ${subject}`, pageWidth / 2, 58, { align: 'center' });
+        doc.text(`Course: ${course}   |   Semester: ${sem}   |   Subject: ${subject}`, pageWidth / 2, 56, { align: 'center' });
 
         const head = [['Student Name', 'Student ID', 'Course', 'Semester', 'Subject', 'Max Marks', 'Obtained Marks']];
         const body = filteredRecords.map(row => [
-            studentMap[String(row.StudId)] || '—',
+            studentMap[String(row.StudId)] || '-',
             row.StudId,
             row.Course,
             row.Sem,
@@ -157,11 +155,10 @@ function ListInternalExam({ setView }) {
         autoTable(doc, {
             head,
             body,
-            startY: 70,
-            theme: 'grid',
-            styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
+            startY: 68,
+            theme: 'striped',
+            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
             headStyles: { fillColor: [204, 122, 0], textColor: 255, fontStyle: 'bold' },
-            alternateRowStyles: { fillColor: [255, 248, 240] },
             margin: { left: 30, right: 30 },
             tableWidth: 'auto',
         });
