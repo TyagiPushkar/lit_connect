@@ -55,6 +55,7 @@ function PrincipalInternalExam() {
                     return;
                 }
                 const subjectNames = subjData.data.map(s => s.Subject);
+                const subjectObjects = subjData.data;
 
                 // Step 2: fetch marks for every subject in parallel
                 const results = await Promise.all(
@@ -85,7 +86,7 @@ function PrincipalInternalExam() {
                     grouped[r.StudId][r.Subject] = r.ObtainedMarks;
                 });
 
-                setSubjects(subjectNames);
+                setSubjects(subjectObjects);
                 setPivoted(Object.values(grouped));
             } catch (err) {
                 console.error('Failed to fetch records', err);
@@ -173,7 +174,7 @@ function PrincipalInternalExam() {
                                     <TableCell sx={{ color: '#fff', whiteSpace: 'nowrap' }}>Course</TableCell>
                                     <TableCell sx={{ color: '#fff', whiteSpace: 'nowrap' }}>Semester</TableCell>
                                     {subjects.map(s => (
-                                        <TableCell key={s} sx={{ color: '#fff', whiteSpace: 'nowrap' }}>{s}</TableCell>
+                                        <TableCell key={s.Subject} sx={{ color: '#fff', whiteSpace: 'nowrap' }}>{s.Subject} ({s.SubjectCode || '-'})</TableCell>
                                     ))}
                                 </TableRow>
                             </TableHead>
@@ -185,7 +186,7 @@ function PrincipalInternalExam() {
                                         <TableCell>{row.Course}</TableCell>
                                         <TableCell>{row.Sem}</TableCell>
                                         {subjects.map(s => (
-                                            <TableCell key={s}>{row[s] !== undefined ? row[s] : '—'}</TableCell>
+                                            <TableCell key={s.Subject}>{row[s.Subject] !== undefined ? row[s.Subject] : '—'}</TableCell>
                                         ))}
                                     </TableRow>
                                 ))}

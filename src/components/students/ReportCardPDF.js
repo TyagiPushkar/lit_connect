@@ -108,6 +108,19 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     fetchReportArray,
   );
 
+  const { data: subjectsList } = useSWR(
+    course && semester
+      ? `https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+      : null,
+    fetchReportArray,
+  );
+
+  const subjectCodeMap = useMemo(() => {
+    const map = {};
+    (subjectsList || []).forEach((s) => { map[s.Subject] = s.SubjectCode; });
+    return map;
+  }, [subjectsList]);
+
   const ctKeys = useMemo(() => ["CT1", "CT2", "CT3", "CT4", "CT5", "CT6"], []);
   const cbtKeys = useMemo(() => ["1", "2", "3", "4", "5", "6"], []);
 
@@ -175,70 +188,46 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     setIsGenerating(true);
     try {
       const canvas = await html2canvas(reportRef.current, {
-        scale: 1,
+        scale: 1.5,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        onclone: (clonedDoc) => {
-          const imgs = clonedDoc.getElementsByTagName("img");
-          Array.from(imgs).forEach((img) => {
-            img.setAttribute("crossorigin", "anonymous");
-          });
-        },
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.7);
 
-      const pdf = new jsPDF({
-        orientation: "p",
-        unit: "mm",
-        format: "a4",
-        compress: true,
-      });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4", compress: true });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const marginTop = 10;    // mm
+      const marginBottom = 10; // mm
+      const contentH = pageH - marginTop - marginBottom;
 
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+      // Canvas pixels that fit in one page's content area
+      const contentHeightPx = Math.floor((canvas.width * contentH) / pageW);
 
-      // let heightLeft = imgHeight;
-      let position = 0;
+      let yOffset = 0;
+      let firstPage = true;
 
-      pdf.addImage(
-        imgData,
-        "JPEG",
-        0,
-        position,
-        imgWidth,
-        imgHeight,
-        "",
-        "FAST",
-      );
-      // heightLeft -= pageHeight;
-      let y = 0;
+      while (yOffset < canvas.height) {
+        const sliceH = Math.min(contentHeightPx, canvas.height - yOffset);
 
-      while (y < imgHeight) {
-        pdf.addImage(
-          imgData,
-          "JPEG",
-          0,
-          -y, // 🔥 main fix
-          imgWidth,
-          imgHeight,
-          "",
-          "FAST",
-        );
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = contentHeightPx;
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(canvas, 0, yOffset, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
 
-        y += pageHeight;
+        if (!firstPage) pdf.addPage();
+        pdf.addImage(sliceCanvas.toDataURL("image/jpeg", 0.85), "JPEG", 0, marginTop, pageW, contentH);
 
-        if (y < imgHeight) {
-          pdf.addPage();
-        }
+        yOffset += contentHeightPx;
+        firstPage = false;
       }
 
-      const fileName = `ReportCard_${studCode || studentId}_Sem${semester || ""}.pdf`;
-      pdf.save(fileName);
+      pdf.save(`ReportCard_${studCode || studentId}_Sem${semester || ""}.pdf`);
     } catch (e) {
-      console.error("[v0] PDF generation error:", e);
+      console.error("PDF generation error:", e);
       alert("Failed to generate PDF. Please try again.");
     } finally {
       setIsGenerating(false);
@@ -813,7 +802,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   fontSize: "14px",
                                 }}
                               >
-                                {row?.SubjectCode || "-"}
+                                {subjectCodeMap[row?.Subject] || row?.SubjectCode || "-"}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -1499,7 +1488,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 textAlign: "center",
                               }}
                             >
-                              {row?.SubjectCode || "-"}
+                              {subjectCodeMap[row?.Subject] || row?.SubjectCode || "-"}
                             </TableCell>
                             <TableCell
                               sx={{
