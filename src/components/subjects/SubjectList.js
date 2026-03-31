@@ -225,7 +225,7 @@ function SubjectsList() {
                     <TableCell>{subject.Id}</TableCell>
                     <TableCell>{subject.Course}</TableCell>
                     <TableCell>Semester {subject.Semester}</TableCell>
-                    <TableCell>{subject.Subject}</TableCell>
+                    <TableCell>{subject.Subject} ({subject.SubjectCode || '-'})</TableCell>
                     <TableCell>
                       <Box 
                         component="span" 

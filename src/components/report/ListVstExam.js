@@ -173,7 +173,7 @@ function ListVstExam({ setView }) {
               >
                 {subjectsList.map((subj, index) => (
                   <MenuItem key={index} value={subj.Subject}>
-                    {subj.Subject}
+                    {subj.Subject} ({subj.SubjectCode || '-'})
                   </MenuItem>
                 ))}
               </Select>
@@ -234,7 +234,7 @@ function ListVstExam({ setView }) {
                       <TableCell>{row.StudId}</TableCell>
                       <TableCell>{row.Course}</TableCell>
                       <TableCell>{row.Sem}</TableCell>
-                      <TableCell>{row.Subject}</TableCell>
+                      <TableCell>{row.Subject} ({row.SubjectCode || '-'})</TableCell>
                       <TableCell>{row.MaxMarks}</TableCell>
                       <TableCell>
                         {editId === row.Id ? (

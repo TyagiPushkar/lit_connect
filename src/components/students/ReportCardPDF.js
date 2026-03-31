@@ -108,6 +108,19 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     fetchReportArray,
   );
 
+  const { data: subjectsList } = useSWR(
+    course && semester
+      ? `https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+      : null,
+    fetchReportArray,
+  );
+
+  const subjectCodeMap = useMemo(() => {
+    const map = {};
+    (subjectsList || []).forEach((s) => { map[s.Subject] = s.SubjectCode; });
+    return map;
+  }, [subjectsList]);
+
   const ctKeys = useMemo(() => ["CT1", "CT2", "CT3", "CT4", "CT5", "CT6"], []);
   const cbtKeys = useMemo(() => ["1", "2", "3", "4", "5", "6"], []);
 
@@ -789,7 +802,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   fontSize: "14px",
                                 }}
                               >
-                                {row?.SubjectCode || "-"}
+                                {subjectCodeMap[row?.Subject] || row?.SubjectCode || "-"}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -1475,7 +1488,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 textAlign: "center",
                               }}
                             >
-                              {row?.SubjectCode || "-"}
+                              {subjectCodeMap[row?.Subject] || row?.SubjectCode || "-"}
                             </TableCell>
                             <TableCell
                               sx={{
