@@ -2,7 +2,7 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { Box, useMediaQuery } from '@mui/material';
-import StudentFeesTransaction from '../components/fees/StudentFeesTransaction';
+import StudentDetail from '../components/students/StudentDetail';
 
 function StudentFees() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -17,7 +17,7 @@ function StudentFees() {
             <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
                 <Navbar />
                 <Box sx={{ mt: -1, p: 1 }}>
-                    <StudentFeesTransaction/>
+                    <StudentDetail/>
                 </Box>
             </Box>
         </Box>

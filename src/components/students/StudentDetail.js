@@ -114,6 +114,7 @@ function StudentDetail() {
         { label: "Guardian Contact", key: "GuardianContactNo" },
         { label: "Student ID", key: "StudentID", editable: false },
         { label: "Refrence By", key: "RefrenceBy", editable: false },
+        { label: "Annual Income", key: "AnnualIncome", editable: false, blankIfEmpty: true },
       ],
     },
     {
