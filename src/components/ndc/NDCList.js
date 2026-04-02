@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Table,
@@ -43,6 +44,7 @@ import { useAuth } from "../auth/AuthContext";
 
 const NDCList = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -242,7 +244,7 @@ const NDCList = () => {
   };
 
   const handleViewClick = (studentId) => {
-    window.location.href = `/student/${studentId}`;
+    navigate(`/student/${studentId}`);
   };
 
   const handleOpenMenu = (event, student) => {

@@ -18,6 +18,7 @@ function TempAdmissionView() {
   const { activityId } = useParams();
   const [details, setDetails] = useState([]);
   const [checkpoints, setCheckpoints] = useState({});
+  const [checkpointTypeMap, setCheckpointTypeMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -34,27 +35,39 @@ function TempAdmissionView() {
     "Prefrences": [28,29,53, 54],
   };
 
-  const candidateDetailsIds = [3, 5, 6, 7, 8, 9, 10, 11, 12, 52];
+  const candidateDetailsIds = [3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 52];
   const studentPhotoChkId = 4; // Assume 13 is the image URL
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const [detailsRes, checkpointsRes] = await Promise.all([
+        const [detailsRes, checkpointsRes, typesRes] = await Promise.all([
           axios.get(
             `https://namami-infotech.com/LIT/src/menu/get_transaction_dtl.php?activityId=${encodeURIComponent(activityId)}`,
           ),
           axios.get(
             `https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`,
           ),
+          axios.get(
+            `https://namami-infotech.com/LIT/src/menu/get_types.php`,
+          ),
         ]);
 
         if (detailsRes.data.success && checkpointsRes.data.success) {
+          const typeIdToName = {};
+          if (typesRes.data.success) {
+            typesRes.data.data.forEach((t) => {
+              typeIdToName[t.TypeId] = t.Type.trim();
+            });
+          }
           const checkpointMap = {};
+          const cpTypeMap = {};
           checkpointsRes.data.data.forEach((cp) => {
             checkpointMap[cp.CheckpointId] = cp.Description;
+            cpTypeMap[cp.CheckpointId] = typeIdToName[cp.TypeId] || "Unknown";
           });
           setCheckpoints(checkpointMap);
+          setCheckpointTypeMap(cpTypeMap);
           setDetails(detailsRes.data.data);
         } else {
           setError("No details or checkpoints found.");
@@ -360,6 +373,22 @@ localStorage.setItem("student_hostel", hostel);
       {Object.entries(sections).map(([sectionTitle, ids]) =>
         renderSection(sectionTitle, ids),
       )}
+
+      {/* Any submitted checkpoints not covered by the sections above */}
+      {(() => {
+        const DATA_TYPES = ["Text", "Email", "Number", "Digit", "Long Text", "Date", "Dropdown", "Radio", "Checkbox", "Pic/Camera"];
+        const shownIds = [
+          studentPhotoChkId,
+          ...candidateDetailsIds,
+          ...Object.values(sections).flat(),
+        ];
+        const remainingIds = details
+          .map((d) => parseInt(d.ChkId))
+          .filter((id) => !shownIds.includes(id) && DATA_TYPES.includes(checkpointTypeMap[id]));
+        return remainingIds.length > 0
+          ? renderSection("Other Details", remainingIds)
+          : null;
+      })()}
     </Paper>
 
     {/* Fixed Footer: ONLY Next Button */}
