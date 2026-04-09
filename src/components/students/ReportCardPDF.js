@@ -24,6 +24,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import GradeIcon from "@mui/icons-material/Grade";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import AttendanceSummary from "./AttendanceSummary";
 
 const fetchJSON = async (url) => {
@@ -160,6 +162,19 @@ export default function ReportCardPDF({ studentId, sem, year }) {
         rows: results[i] || [],
       }));
     },
+  );
+
+  const { data: ptmRecordsRaw } = useSWR(
+    studentId
+      ? `https://namami-infotech.com/LIT/src/Ptm/fetch_ptm.php?StudentId=${encodeURIComponent(studentId)}`
+      : null,
+    async (url) => {
+      const json = await fetchJSON(url);
+      return json?.success && json?.data ? json.data : [];
+    },
+  );
+  const ptmRecords = (ptmRecordsRaw || []).filter(
+    (r) => r.PTMDate && String(r.Sem) === String(semester),
   );
 
   const calcMarksTotals = (rows) => {
@@ -1710,6 +1725,117 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 </TableContainer>
               )}
             </Box>
+
+            {/* PTM Section — only shown if HR has created PTM events */}
+            {ptmRecords && ptmRecords.length > 0 && (
+            <Box sx={{ mt: 4 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  backgroundColor: "#555",
+                  color: "white",
+                  padding: "8px 16px",
+                  display: "inline-block",
+                  marginBottom: "15px",
+                  fontFamily: '"Courier New", monospace',
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                }}
+              >
+                PTM (Parent-Teacher Meeting)
+              </Typography>
+
+              {(
+                <TableContainer
+                  sx={{
+                    fontFamily: '"Courier New", monospace',
+                    border: "1px solid #333",
+                    "& .MuiTableCell-root": {
+                      padding: "6px 12px",
+                      fontSize: "14px",
+                    },
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+                        <TableCell
+                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
+                        >
+                          Semester
+                        </TableCell>
+                        <TableCell
+                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
+                        >
+                          PTM Date
+                        </TableCell>
+                        <TableCell
+                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
+                        >
+                          Attendance
+                        </TableCell>
+                        <TableCell
+                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
+                        >
+                          Remarks
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {ptmRecords.map((rec, idx) => (
+                        <TableRow key={idx} hover>
+                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
+                            Semester {rec.Sem}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
+                            {rec.PTMDate
+                              ? new Date(rec.PTMDate).toLocaleDateString("en-IN", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
+                            {rec.Attended === "Yes" ? (
+                              <Box
+                                sx={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  color: "#2e7d32",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                Attended
+                              </Box>
+                            ) : (
+                              <Box
+                                sx={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  color: "#d32f2f",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                <CancelIcon sx={{ fontSize: 16 }} />
+                                Not Attended
+                              </Box>
+                            )}
+                          </TableCell>
+                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
+                            {rec.Remarks || "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
+            )}
 
             {/* Footer */}
             <Box
