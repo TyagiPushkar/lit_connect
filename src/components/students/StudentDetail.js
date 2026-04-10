@@ -21,6 +21,7 @@ import StudentReports from "./StudentReport";
 import { useAuth } from "../auth/AuthContext";
 import AttendanceSummary from "./AttendanceSummary";
 import ReportCardPDF from "./ReportCardPDF";
+import PTMAttendance from "./PTMAttendance";
 
 function StudentDetail() {
   const { user } = useAuth();
@@ -114,6 +115,7 @@ function StudentDetail() {
         { label: "Guardian Contact", key: "GuardianContactNo" },
         { label: "Student ID", key: "StudentID", editable: false },
         { label: "Refrence By", key: "RefrenceBy", editable: false },
+        { label: "Annual Income", key: "AnnualIncome", editable: false, blankIfEmpty: true },
       ],
     },
     {
@@ -313,6 +315,14 @@ function StudentDetail() {
       <StudentReports />
       {/* <ReportCardPDF studentId={studentId} sem={student?.Sem} year={student?.Session}/> */}
       <Box sx={{ mb: 3 }}>{/* <AttendanceSummary EmpId={studentId} /> */}</Box>
+
+      {student && (
+        <PTMAttendance
+          studentId={studentId}
+          currentSem={student?.Sem}
+          studentName={student?.CandidateName}
+        />
+      )}
     </Box>
   );
 }

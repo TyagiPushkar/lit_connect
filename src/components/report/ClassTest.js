@@ -164,7 +164,7 @@ function ClassTest() {
                         >
                             {subjectsList.map((subj, index) => (
                                 <MenuItem key={index} value={subj.Subject}>
-                                    {subj.Subject}
+                                    {subj.Subject} ({subj.SubjectCode || '-'})
                                 </MenuItem>
                             ))}
                         </Select>
