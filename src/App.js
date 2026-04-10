@@ -69,7 +69,7 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route
               path="/teachers"
-              element={<PrivateRoute element={Employee} requiredRole="HR" />}
+              element={<PrivateRoute element={Employee} requiredRoles={["HR","Admin"]} />}
             />
             <Route
               path="/teachers/:empId"
@@ -130,7 +130,8 @@ function App() {
             <Route
               path="/library-dashboard"
               element={
-                <PrivateRoute element={LibraryDash} requiredRole="Librarian" />
+                // <PrivateRoute element={LibraryDash} requiredRole="Librarian" />
+                <PrivateRoute element={LibraryDash} requiredRoles={["Librarian","Admin"]} />
               }
             />
             <Route
@@ -233,7 +234,7 @@ function App() {
             />
             <Route
               path="/student/:studentId"
-              element={<PrivateRoute element={StudentInfo} requiredRoles={["HR", "Front Desk","Accounts"]} />}
+              element={<PrivateRoute element={StudentInfo} requiredRoles={["HR", "Front Desk","Accounts", "Admin" ]} />}
             />
             <Route
               path="/variable"
