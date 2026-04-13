@@ -17,7 +17,6 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import { useAuth } from "../auth/AuthContext";
 
 const API_BASE = "https://namami-infotech.com/LIT/src/Ptm";
@@ -140,9 +139,13 @@ export default function PTMAttendance({ studentId, currentSem, studentName }) {
       ) : (
         <TableContainer component={Paper} variant="outlined">
           <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+            <colgroup>
+              <col style={{ width: "50%" }} />
+              <col style={{ width: "50%" }} />
+            </colgroup>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell sx={{ fontWeight: 700, width: "160px" }}>PTM Date</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>PTM Date</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
               </TableRow>
             </TableHead>
@@ -156,14 +159,16 @@ export default function PTMAttendance({ studentId, currentSem, studentName }) {
               ) : (
                 normalizedRecords.map((rec, idx) => (
                   <TableRow key={idx} hover>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    <TableCell sx={{ whiteSpace: "nowrap", verticalAlign: "top" }}>
                       {new Date(rec.PTMDate).toLocaleDateString("en-IN", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
                       })}
                     </TableCell>
-                    <TableCell sx={{ color: "#555", wordBreak: "break-word" }}>{rec.Remarks || "—"}</TableCell>
+                    <TableCell sx={{ color: "#555", wordBreak: "break-word", verticalAlign: "top" }}>
+                      {rec.Remarks || "—"}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
