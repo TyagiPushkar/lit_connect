@@ -144,13 +144,13 @@ export default function PTMAttendance({ studentId, currentSem, studentName }) {
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableCell sx={{ fontWeight: 700 }}>PTM Date</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
-                {isHR && <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>}
+               
               </TableRow>
             </TableHead>
             <TableBody>
               {normalizedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isHR ? 3 : 2} sx={{ textAlign: "center", color: "#999", fontStyle: "italic" }}>
+                  <TableCell colSpan={2} sx={{ textAlign: "center", color: "#999", fontStyle: "italic" }}>
                     No PTM records found.
                   </TableCell>
                 </TableRow>
@@ -165,18 +165,7 @@ export default function PTMAttendance({ studentId, currentSem, studentName }) {
                       })}
                     </TableCell>
                     <TableCell sx={{ color: "#555" }}>{rec.Remarks || "—"}</TableCell>
-                    {isHR && (
-                      <TableCell>
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => handleOpenDialog(rec)}
-                          sx={{ color: "#CC7A00", textTransform: "none" }}
-                        >
-                          Edit
-                        </Button>
-                      </TableCell>
-                    )}
+                   
                   </TableRow>
                 ))
               )}
