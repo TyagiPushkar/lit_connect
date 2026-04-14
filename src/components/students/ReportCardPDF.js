@@ -15,17 +15,8 @@ import {
   TableRow,
   Typography,
   Grid,
-  Divider,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import PrintIcon from "@mui/icons-material/Print";
-import SchoolIcon from "@mui/icons-material/School";
-import PersonIcon from "@mui/icons-material/Person";
-import GradeIcon from "@mui/icons-material/Grade";
-import DateRangeIcon from "@mui/icons-material/DateRange";
-import AssessmentIcon from "@mui/icons-material/Assessment";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
 import AttendanceSummary from "./AttendanceSummary";
 
 const fetchJSON = async (url) => {
@@ -51,12 +42,7 @@ const calculateGrade = (percentage) => {
   return "D";
 };
 
-const calculateGPA = (percentage) => {
-  if (percentage >= 80) return "4.0";
-  if (percentage >= 60) return "3.0";
-  if (percentage >= 45) return "2.0";
-  return "1.0";
-};
+
 
 export default function ReportCardPDF({ studentId, sem, year }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -164,23 +150,13 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     },
   );
 
-  const { data: ptmRecordsRaw } = useSWR(
-    studentId
-      ? `https://namami-infotech.com/LIT/src/Ptm/fetch_ptm.php?StudentId=${encodeURIComponent(studentId)}`
-      : null,
-    async (url) => {
-      const json = await fetchJSON(url);
-      return json?.success && json?.data ? json.data : [];
-    },
-  );
-  const ptmRecords = (ptmRecordsRaw || []).filter(
-    (r) => r.PTMDate && String(r.Sem) === String(semester),
-  );
+  const isAbsent = (row) => String(row?.Status ?? "").toLowerCase() === "absent";
 
   const calcMarksTotals = (rows) => {
     let totalMax = 0;
     let totalObtained = 0;
     rows?.forEach((r) => {
+      if (isAbsent(r)) return;
       totalMax += Number.parseInt(r?.MaxMarks || 0, 10);
       totalObtained += Number.parseInt(r?.ObtainedMarks || 0, 10);
     });
@@ -801,13 +777,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       </TableHead>
                       <TableBody>
                         {internal.map((row, idx) => {
+                          const absent = isAbsent(row);
                           const max = Number.parseInt(row?.MaxMarks || 0, 10);
-                          const got = Number.parseInt(
-                            row?.ObtainedMarks || 0,
-                            10,
-                          );
-                          const pct = max > 0 ? (got / max) * 100 : 0;
-                          const grade = calculateGrade(pct);
+                          const got = absent ? null : Number.parseInt(row?.ObtainedMarks || 0, 10);
+                          const pct = !absent && max > 0 ? (got / max) * 100 : null;
+                          const grade = pct !== null ? calculateGrade(pct) : null;
                           return (
                             <TableRow key={idx} hover>
                               <TableCell
@@ -844,7 +818,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   fontSize: "14px",
                                 }}
                               >
-                                {got}
+                                {absent ? "A" : got}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -853,7 +827,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   fontSize: "14px",
                                 }}
                               >
-                                {formatPct(pct)}
+                                {absent ? "-" : formatPct(pct)}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -862,34 +836,36 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   fontSize: "14px",
                                 }}
                               >
-                                <Box
-                                  sx={{
-                                    display: "inline-block",
-                                    padding: "2px 8px",
-                                    fontSize: "14px",
-                                    backgroundColor:
-                                      grade === "A"
-                                        ? "#e8f5e8"
-                                        : grade === "B"
-                                          ? "#e3f2fd"
-                                          : grade === "C"
-                                            ? "#fff8e1"
-                                            : "#ffebee",
-                                    border: "1px solid",
-                                    borderColor:
-                                      grade === "A"
-                                        ? "#4caf50"
-                                        : grade === "B"
-                                          ? "#2196f3"
-                                          : grade === "C"
-                                            ? "#ff9800"
-                                            : "#f44336",
-                                    borderRadius: "2px",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {grade}
-                                </Box>
+                                {absent ? "-" : (
+                                  <Box
+                                    sx={{
+                                      display: "inline-block",
+                                      padding: "2px 8px",
+                                      fontSize: "14px",
+                                      backgroundColor:
+                                        grade === "A"
+                                          ? "#e8f5e8"
+                                          : grade === "B"
+                                            ? "#e3f2fd"
+                                            : grade === "C"
+                                              ? "#fff8e1"
+                                              : "#ffebee",
+                                      border: "1px solid",
+                                      borderColor:
+                                        grade === "A"
+                                          ? "#4caf50"
+                                          : grade === "B"
+                                            ? "#2196f3"
+                                            : grade === "C"
+                                              ? "#ff9800"
+                                              : "#f44336",
+                                      borderRadius: "2px",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {grade}
+                                  </Box>
+                                )}
                               </TableCell>
                             </TableRow>
                           );
@@ -910,72 +886,29 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     }}
                   >
                     <Grid container alignItems="center">
-                      <Grid item xs={4} sx={{ textAlign: "center" }}>
-                        <Typography
-                          sx={{
-                            fontFamily: '"Courier New", monospace',
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Total Marks: {calcMarksTotals(internal).totalObtained}{" "}
-                          / {calcMarksTotals(internal).totalMax}
-                        </Typography>
-                        {/* <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: '"Courier New", monospace',
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {calcMarksTotals(internal).totalObtained} /{" "}
-                          {calcMarksTotals(internal).totalMax}
-                        </Typography> */}
-                      </Grid>
-                      <Grid item xs={4}>
-                        <Typography
-                          sx={{
-                            fontFamily: '"Courier New", monospace',
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Overall Percentage:{" "}
-                          {formatPct(calcMarksTotals(internal).pct)}
-                        </Typography>
-                        {/* <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: '"Courier New", monospace',
-                            fontWeight: "bold",
-                            color: "#1976d2",
-                          }}
-                        >
-                          {formatPct(calcMarksTotals(internal).pct)}
-                        </Typography> */}
-                      </Grid>
-                      <Grid item xs={4}>
-                        <Typography
-                          sx={{
-                            fontFamily: '"Courier New", monospace',
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Final Grade:
-                          {calculateGrade(calcMarksTotals(internal).pct)}
-                        </Typography>
-                        {/* <Box
-                          sx={{
-                            display: "inline-block",
-                            padding: "4px 16px",
-                            backgroundColor: "#333",
-                            color: "white",
-                            fontWeight: "bold",
-                            fontSize: "18px",
-                            borderRadius: "2px",
-                          }}
-                        >
-                          {calculateGrade(calcMarksTotals(internal).pct)}
-                        </Box> */}
-                      </Grid>
+                      {(() => {
+                        const totals = calcMarksTotals(internal);
+                        const hasValid = totals.totalMax > 0;
+                        return (
+                          <>
+                            <Grid item xs={4} sx={{ textAlign: "center" }}>
+                              <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: "bold" }}>
+                                Total Marks: {hasValid ? `${totals.totalObtained} / ${totals.totalMax}` : "-"}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: "bold" }}>
+                                Overall Percentage: {hasValid ? formatPct(totals.pct) : "-"}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: "bold" }}>
+                                Final Grade: {hasValid ? calculateGrade(totals.pct) : "-"}
+                              </Typography>
+                            </Grid>
+                          </>
+                        );
+                      })()}
                     </Grid>
                   </Box>
                 </>
@@ -1110,9 +1043,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
 
                               <TableBody>
                                 {section.rows.map((row, index) => {
-                                  const pct =
-                                    (row.ObtainedMarks / row.MaxMarks) * 100;
-                                  const grade = calculateGrade(pct);
+                                  const absent = isAbsent(row);
+                                  const pct = absent ? null : (row.ObtainedMarks / row.MaxMarks) * 100;
+                                  const grade = pct !== null ? calculateGrade(pct) : null;
 
                                   return (
                                     <TableRow
@@ -1125,7 +1058,6 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                       <TableCell
                                         sx={{
                                           border: "1px solid #333",
-
                                           fontSize: "14px",
                                         }}
                                       >
@@ -1149,7 +1081,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                           fontSize: "14px",
                                         }}
                                       >
-                                        {row.ObtainedMarks}
+                                        {absent ? "A" : row.ObtainedMarks}
                                       </TableCell>
 
                                       <TableCell
@@ -1159,7 +1091,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                           fontSize: "14px",
                                         }}
                                       >
-                                        {pct.toFixed(1)}%
+                                        {absent ? "-" : `${pct.toFixed(1)}%`}
                                       </TableCell>
 
                                       <TableCell
@@ -1168,15 +1100,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                           border: "1px solid #333",
                                           fontweight: "bold",
                                           fontSize: "14px",
-                                          color:
-                                            grade === "A"
+                                          color: absent ? "#555"
+                                            : grade === "A"
                                               ? "#2e7d32"
                                               : grade === "B"
                                                 ? "#ed6c02"
                                                 : "#d32f2f",
                                         }}
                                       >
-                                        {grade}
+                                        {absent ? "-" : grade}
                                       </TableCell>
                                     </TableRow>
                                   );
@@ -1313,9 +1245,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               </TableHead>
                               <TableBody>
                                 {section.rows.map((row, index) => {
-                                  const pct =
-                                    (row.ObtainedMarks / row.MaxMarks) * 100;
-                                  const grade = calculateGrade(pct);
+                                  const absent = isAbsent(row);
+                                  const pct = absent ? null : (row.ObtainedMarks / row.MaxMarks) * 100;
+                                  const grade = pct !== null ? calculateGrade(pct) : null;
 
                                   return (
                                     <TableRow
@@ -1348,7 +1280,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                           border: "1px solid #333",
                                         }}
                                       >
-                                        {row.ObtainedMarks}
+                                        {absent ? "A" : row.ObtainedMarks}
                                       </TableCell>
 
                                       <TableCell
@@ -1357,22 +1289,22 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                           border: "1px solid #333",
                                         }}
                                       >
-                                        {pct.toFixed(1)}%
+                                        {absent ? "-" : `${pct.toFixed(1)}%`}
                                       </TableCell>
 
                                       <TableCell
                                         align="center"
                                         sx={{
                                           border: "1px solid #333",
-                                          color:
-                                            grade === "A"
+                                          color: absent ? "#555"
+                                            : grade === "A"
                                               ? "#2e7d32"
                                               : grade === "B"
                                                 ? "#ed6c02"
                                                 : "#d32f2f",
                                         }}
                                       >
-                                        {grade}
+                                        {absent ? "-" : grade}
                                       </TableCell>
                                     </TableRow>
                                   );
@@ -1488,13 +1420,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     </TableHead>
                     <TableBody>
                       {vst.map((row, idx) => {
+                        const absent = isAbsent(row);
                         const max = Number.parseInt(row?.MaxMarks || 0, 10);
-                        const got = Number.parseInt(
-                          row?.ObtainedMarks || 0,
-                          10,
-                        );
-                        const pct = max > 0 ? (got / max) * 100 : 0;
-                        const grade = calculateGrade(pct);
+                        const got = absent ? null : Number.parseInt(row?.ObtainedMarks || 0, 10);
+                        const pct = !absent && max > 0 ? (got / max) * 100 : null;
+                        const grade = pct !== null ? calculateGrade(pct) : null;
                         return (
                           <TableRow key={idx} hover>
                             <TableCell
@@ -1528,7 +1458,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 fontWeight: "bold",
                               }}
                             >
-                              {got}
+                              {absent ? "A" : got}
                             </TableCell>
                             <TableCell
                               sx={{
@@ -1536,7 +1466,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 textAlign: "center",
                               }}
                             >
-                              {formatPct(pct)}
+                              {absent ? "-" : formatPct(pct)}
                             </TableCell>
                             <TableCell
                               sx={{
@@ -1544,33 +1474,35 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 textAlign: "center",
                               }}
                             >
-                              <Box
-                                sx={{
-                                  display: "inline-block",
-                                  padding: "2px 8px",
-                                  backgroundColor:
-                                    grade === "A"
-                                      ? "#e8f5e8"
-                                      : grade === "B"
-                                        ? "#e3f2fd"
-                                        : grade === "C"
-                                          ? "#fff8e1"
-                                          : "#ffebee",
-                                  border: "1px solid",
-                                  borderColor:
-                                    grade === "A"
-                                      ? "#4caf50"
-                                      : grade === "B"
-                                        ? "#2196f3"
-                                        : grade === "C"
-                                          ? "#ff9800"
-                                          : "#f44336",
-                                  borderRadius: "2px",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {grade}
-                              </Box>
+                              {absent ? "-" : (
+                                <Box
+                                  sx={{
+                                    display: "inline-block",
+                                    padding: "2px 8px",
+                                    backgroundColor:
+                                      grade === "A"
+                                        ? "#e8f5e8"
+                                        : grade === "B"
+                                          ? "#e3f2fd"
+                                          : grade === "C"
+                                            ? "#fff8e1"
+                                            : "#ffebee",
+                                    border: "1px solid",
+                                    borderColor:
+                                      grade === "A"
+                                        ? "#4caf50"
+                                        : grade === "B"
+                                          ? "#2196f3"
+                                          : grade === "C"
+                                            ? "#ff9800"
+                                            : "#f44336",
+                                    borderRadius: "2px",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {grade}
+                                </Box>
+                              )}
                             </TableCell>
                           </TableRow>
                         );

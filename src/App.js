@@ -227,13 +227,14 @@ function App() {
                     "Admin",
                     "HR",
                     "Examination",
+                    "Principal",
                   ]}
                 />
               }
             />
             <Route
               path="/student/:studentId"
-              element={<PrivateRoute element={StudentInfo} requiredRoles={["HR", "Front Desk","Accounts"]} />}
+              element={<PrivateRoute element={StudentInfo} requiredRoles={["HR", "Front Desk", "Accounts", "Principal"]} />}
             />
             <Route
               path="/variable"
