@@ -68,53 +68,57 @@ function InternalExam() {
     };
 
     const handleUpload = async () => {
-        if (!course || !sem || !subject || !file) {
+    if (!course || !sem || !subject || !file) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'All fields are required!',
+            showConfirmButton: true,
+        });
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('Course', course);
+    formData.append('Sem', sem);
+    formData.append('Subject', subject);
+    formData.append('file', file);
+
+    try {
+        const res = await fetch('https://namami-infotech.com/LIT/src/report/add_internal_exam_marks.php', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
             Swal.fire({
-                icon: 'warning',
-                title: 'All fields are required!',
+                icon: 'success',
+                title: result.message,
                 showConfirmButton: true,
             });
-            return;
-        }
 
-        const formData = new FormData();
-        formData.append('Course', course);
-        formData.append('Sem', sem);
-        formData.append('Subject', subject);
-        formData.append('file', file);
-
-        try {
-            const res = await fetch('https://namami-infotech.com/LIT/src/report/add_internal_exam_marks.php', {
-                method: 'POST',
-                body: formData,
-            });
-            const result = await res.json();
-            if (result.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: result.message,
-                    showConfirmButton: true,
-                });
-                setCourse('');
-                setSem('');
-                setSubject('');
-                setFile(null);
-                setSubjectsList([]);
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: result.message || 'Upload failed',
-                    showConfirmButton: true,
-                });
-            }
-        } catch (err) {
+            setCourse('');
+            setSem('');
+            setSubject('');
+            setFile(null);
+            setSubjectsList([]);
+        } else {
             Swal.fire({
                 icon: 'error',
-                title: 'Network or server error.',
+                title: result.message || 'Upload failed',
                 showConfirmButton: true,
             });
         }
-    };
+
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Network or server error.',
+            showConfirmButton: true,
+        });
+    }
+};
 
     return (
         <Box sx={{ p: 0 }}>
