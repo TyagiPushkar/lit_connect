@@ -17,7 +17,6 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import { useAuth } from "../auth/AuthContext";
 
 const API_BASE = "https://namami-infotech.com/LIT/src/Ptm";
@@ -139,44 +138,37 @@ export default function PTMAttendance({ studentId, currentSem, studentName }) {
         <Typography color="error">{error}</Typography>
       ) : (
         <TableContainer component={Paper} variant="outlined">
-          <Table size="small">
+          <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+            <colgroup>
+              <col style={{ width: "50%" }} />
+              <col style={{ width: "50%" }} />
+            </colgroup>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableCell sx={{ fontWeight: 700 }}>PTM Date</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
-                {isHR && <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
               {normalizedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isHR ? 3 : 2} sx={{ textAlign: "center", color: "#999", fontStyle: "italic" }}>
+                  <TableCell colSpan={2} sx={{ textAlign: "center", color: "#999", fontStyle: "italic" }}>
                     No PTM records found.
                   </TableCell>
                 </TableRow>
               ) : (
                 normalizedRecords.map((rec, idx) => (
                   <TableRow key={idx} hover>
-                    <TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap", verticalAlign: "top" }}>
                       {new Date(rec.PTMDate).toLocaleDateString("en-IN", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
                       })}
                     </TableCell>
-                    <TableCell sx={{ color: "#555" }}>{rec.Remarks || "—"}</TableCell>
-                    {isHR && (
-                      <TableCell>
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => handleOpenDialog(rec)}
-                          sx={{ color: "#CC7A00", textTransform: "none" }}
-                        >
-                          Edit
-                        </Button>
-                      </TableCell>
-                    )}
+                    <TableCell sx={{ color: "#555", wordBreak: "break-word", verticalAlign: "top" }}>
+                      {rec.Remarks || "—"}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
