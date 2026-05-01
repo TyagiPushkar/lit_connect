@@ -119,7 +119,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
 
   const subjectCodeMap = useMemo(() => {
     const map = {};
-    (subjectsList || []).forEach((s) => { map[s.Subject] = s.SubjectCode; });
+    (subjectsList || []).forEach((s) => {
+      map[s.Subject] = s.SubjectCode;
+    });
     return map;
   }, [subjectsList]);
 
@@ -209,10 +211,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
         backgroundColor: "#ffffff",
       });
 
-      const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4", compress: true });
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      const marginTop = 10;    // mm
+      const marginTop = 10; // mm
       const marginBottom = 10; // mm
       const contentH = pageH - marginTop - marginBottom;
 
@@ -231,10 +238,27 @@ export default function ReportCardPDF({ studentId, sem, year }) {
         const ctx = sliceCanvas.getContext("2d");
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-        ctx.drawImage(canvas, 0, yOffset, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        ctx.drawImage(
+          canvas,
+          0,
+          yOffset,
+          canvas.width,
+          sliceH,
+          0,
+          0,
+          canvas.width,
+          sliceH,
+        );
 
         if (!firstPage) pdf.addPage();
-        pdf.addImage(sliceCanvas.toDataURL("image/jpeg", 0.85), "JPEG", 0, marginTop, pageW, contentH);
+        pdf.addImage(
+          sliceCanvas.toDataURL("image/jpeg", 0.85),
+          "JPEG",
+          0,
+          marginTop,
+          pageW,
+          contentH,
+        );
 
         yOffset += contentHeightPx;
         firstPage = false;
@@ -817,7 +841,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   fontSize: "14px",
                                 }}
                               >
-                                {subjectCodeMap[row?.Subject] || row?.SubjectCode || "-"}
+                                {subjectCodeMap[row?.Subject] ||
+                                  row?.SubjectCode ||
+                                  "-"}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -1503,7 +1529,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 textAlign: "center",
                               }}
                             >
-                              {subjectCodeMap[row?.Subject] || row?.SubjectCode || "-"}
+                              {subjectCodeMap[row?.Subject] ||
+                                row?.SubjectCode ||
+                                "-"}
                             </TableCell>
                             <TableCell
                               sx={{
@@ -1726,115 +1754,154 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               )}
             </Box>
 
-            {/* PTM Section — only shown if HR has created PTM events */}
+            {/* PTM Section — only shown if HR has created PTM  */}
             {ptmRecords && ptmRecords.length > 0 && (
-            <Box sx={{ mt: 4 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  backgroundColor: "#555",
-                  color: "white",
-                  padding: "8px 16px",
-                  display: "inline-block",
-                  marginBottom: "15px",
-                  fontFamily: '"Courier New", monospace',
-                  fontWeight: "bold",
-                  textTransform: "uppercase",
-                }}
-              >
-                PTM (Parent-Teacher Meeting)
-              </Typography>
-
-              {(
-                <TableContainer
+              <Box sx={{ mt: 4 }}>
+                <Typography
+                  variant="h6"
                   sx={{
+                    backgroundColor: "#555",
+                    color: "white",
+                    padding: "8px 16px",
+                    display: "inline-block",
+                    marginBottom: "15px",
                     fontFamily: '"Courier New", monospace',
-                    border: "1px solid #333",
-                    "& .MuiTableCell-root": {
-                      padding: "6px 12px",
-                      fontSize: "14px",
-                    },
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
                   }}
                 >
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
-                        <TableCell
-                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
-                        >
-                          Semester
-                        </TableCell>
-                        <TableCell
-                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
-                        >
-                          PTM Date
-                        </TableCell>
-                        <TableCell
-                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
-                        >
-                          Attendance
-                        </TableCell>
-                        <TableCell
-                          sx={{ border: "1px solid #333", fontWeight: "bold", textAlign: "center" }}
-                        >
-                          Remarks
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {ptmRecords.map((rec, idx) => (
-                        <TableRow key={idx} hover>
-                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
-                            Semester {rec.Sem}
+                  PTM (Parent-Teacher Meeting)
+                </Typography>
+
+                {
+                  <TableContainer
+                    sx={{
+                      fontFamily: '"Courier New", monospace',
+                      border: "1px solid #333",
+                      "& .MuiTableCell-root": {
+                        padding: "6px 12px",
+                        fontSize: "14px",
+                      },
+                    }}
+                  >
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            Semester
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
-                            {rec.PTMDate
-                              ? new Date(rec.PTMDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                              : "—"}
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            PTM Date
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
-                            {rec.Attended === "Yes" ? (
-                              <Box
-                                sx={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                  color: "#2e7d32",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                <CheckCircleIcon sx={{ fontSize: 16 }} />
-                                Attended
-                              </Box>
-                            ) : (
-                              <Box
-                                sx={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                  color: "#d32f2f",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                <CancelIcon sx={{ fontSize: 16 }} />
-                                Not Attended
-                              </Box>
-                            )}
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            Attendance
                           </TableCell>
-                          <TableCell sx={{ border: "1px solid #333", textAlign: "center" }}>
-                            {rec.Remarks || "—"}
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            Remarks
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            </Box>
+                      </TableHead>
+                      <TableBody>
+                        {ptmRecords.map((rec, idx) => (
+                          <TableRow key={idx} hover>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              Semester {rec.Sem}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              {rec.PTMDate
+                                ? new Date(rec.PTMDate).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    },
+                                  )
+                                : "—"}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              {rec.Attended === "Yes" ? (
+                                <Box
+                                  sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    color: "#2e7d32",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                  Attended
+                                </Box>
+                              ) : (
+                                <Box
+                                  sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    color: "#d32f2f",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  <CancelIcon sx={{ fontSize: 16 }} />
+                                  Not Attended
+                                </Box>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                border: "1px solid #333",
+                                textAlign: "center",
+                              }}
+                            >
+                              {rec.Remarks || "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                }
+              </Box>
             )}
 
             {/* Footer */}
