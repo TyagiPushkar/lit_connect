@@ -285,12 +285,18 @@ function ListInternalExam({ setView }) {
                                                 <TextField
                                                     value={editValue}
                                                     size="small"
-                                                    type="number"
-                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                    type="text"
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || val === 'A' || val === 'a' || /^\d+$/.test(val))
+                                                            setEditValue(val.toUpperCase());
+                                                    }}
                                                     onBlur={() => handleSaveMarks(row.Id)}
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Enter') handleSaveMarks(row.Id);
                                                     }}
+                                                    inputProps={{ style: { width: 60 } }}
+                                                    placeholder="0 or A"
                                                 />
                                             ) : (
                                                 row.ObtainedMarks

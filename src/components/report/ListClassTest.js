@@ -206,10 +206,15 @@ function ListCBTExam({ setView }) {
                                             {editRowId === row.Id ? (
                                                 <TextField
                                                     size="small"
-                                                    type="number"
+                                                    type="text"
                                                     value={editedMarks}
-                                                    onChange={(e) => setEditedMarks(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || val === 'A' || val === 'a' || /^\d+$/.test(val))
+                                                            setEditedMarks(val.toUpperCase());
+                                                    }}
                                                     sx={{ width: 80 }}
+                                                    placeholder="0 or A"
                                                 />
                                             ) : (
                                                 row.ObtainedMarks

@@ -13,7 +13,6 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
-import ListCBTExam from './ListCBTExam';
 import ListClassTest from './ListClassTest';
 
 function ClassTest() {
@@ -69,7 +68,7 @@ function ClassTest() {
     };
 
     const handleUpload = async () => {
-        if (!course || !sem || !subject || !file) {
+        if (!course || !sem || !subject || !Category || !file) {
             Swal.fire({
                 icon: 'warning',
                 title: 'All fields are required!',
@@ -222,7 +221,7 @@ function ClassTest() {
                     <Button
                         size="small"
                         variant="contained"
-                        disabled={!file || !course || !sem || !subject}
+                        disabled={!file || !course || !sem || !subject || !Category}
                         onClick={handleUpload}
                         sx={{ backgroundColor: "#CC7A00", '&:hover': { backgroundColor: "#b36600" } }}
                     >

@@ -1,54 +1,54 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import { AuthProvider } from './components/auth/AuthContext';
-import Login from './pages/Login';
-import theme from './styles/theme';
-import Employee from './pages/Employee';
-import Holiday from './pages/Holiday';
-import Policy from './pages/Policy';
-import Attendance from './pages/Attendance';
-import Notification from './pages/Notification';
-import Leave from './pages/Leave';
-import EmpProfile from './pages/User';
-import PrivateRoute from './components/auth/PrivateRoute';
-import EmployeeProfile from './pages/EmployeeProfile';
-import VisitReport from './pages/VisitReport';
-import Admission from './pages/Admission';
-import ViewAdmission from './pages/ViewAdmission';
-import Library from './pages/Library';
-import AdmissionFinal from './pages/AdmissionFinal';
-import FeesStructure from './pages/FeesStructure';
-import FeesPayment from './pages/FeesPayment';
-import StudentFees from './pages/StudentFees';
-import StuLibrary from './pages/StuLibrary';
-import LibraryDash from './pages/LibraryDash';
-import StudentReport from './pages/StudentReport';
-import Form from './pages/Form';
-import Certificate from './pages/Certificate';
-import Students from './pages/Students';
-import StudentInfo from './pages/StudentInfo';
-import Variable from './pages/Variable';
-import Regularise from './pages/Regularise';
-import Notices from './pages/Notices';
-import News from './pages/News';
-import TimeTable from './pages/TimeTable';
-import Transaction from './pages/Transactions';
-import FeesSummaryView from './pages/FeesSummaryView';
-import OtherFees from './pages/OtherFees';
-import Subjects from './pages/Subjects';
-import Dashboard from './pages/Dashboard';
-import VariableFees from './pages/VariableFees';
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { ThemeProvider } from "@mui/material/styles";
+import { AuthProvider } from "./components/auth/AuthContext";
+import Login from "./pages/Login";
+import theme from "./styles/theme";
+import Employee from "./pages/Employee";
+import Holiday from "./pages/Holiday";
+import Policy from "./pages/Policy";
+import Attendance from "./pages/Attendance";
+import Notification from "./pages/Notification";
+import Leave from "./pages/Leave";
+import EmpProfile from "./pages/User";
+import PrivateRoute from "./components/auth/PrivateRoute";
+import EmployeeProfile from "./pages/EmployeeProfile";
+import VisitReport from "./pages/VisitReport";
+import Admission from "./pages/Admission";
+import ViewAdmission from "./pages/ViewAdmission";
+import Library from "./pages/Library";
+import AdmissionFinal from "./pages/AdmissionFinal";
+import FeesStructure from "./pages/FeesStructure";
+import FeesPayment from "./pages/FeesPayment";
+import StudentFees from "./pages/StudentFees";
+import StuLibrary from "./pages/StuLibrary";
+import LibraryDash from "./pages/LibraryDash";
+import StudentReport from "./pages/StudentReport";
+import Form from "./pages/Form";
+import Certificate from "./pages/Certificate";
+import Students from "./pages/Students";
+import StudentInfo from "./pages/StudentInfo";
+import Variable from "./pages/Variable";
+import Regularise from "./pages/Regularise";
+import Notices from "./pages/Notices";
+import News from "./pages/News";
+import TimeTable from "./pages/TimeTable";
+import Transaction from "./pages/Transactions";
+import FeesSummaryView from "./pages/FeesSummaryView";
+import OtherFees from "./pages/OtherFees";
+import Subjects from "./pages/Subjects";
+import Dashboard from "./pages/Dashboard";
+import VariableFees from "./pages/VariableFees";
 import StudentCertificate from "./pages/StudentCretificate";
 import StudentCertificateDetail from "./pages/StudentCertificateDetail";
 import NDC from "./pages/NDC";
 import TaskList from "./pages/TaskList";
 import Visit from "./pages/Dealer";
 import Docket from "./pages/Docket";
-import Maps from './pages/Maps';
-import VariableFeeStructure from './pages/VariableFeeStructure';
+import Maps from "./pages/Maps";
+import VariableFeeStructure from "./pages/VariableFeeStructure";
 import MidTerm from "./pages/MidTerm";
-import AdminTask from './pages/AdminTask';
+import AdminTask from "./pages/AdminTask";
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -69,7 +69,12 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route
               path="/teachers"
-              element={<PrivateRoute element={Employee} requiredRoles={["HR","Admin"]} />}
+              element={
+                <PrivateRoute
+                  element={Employee}
+                  requiredRoles={["HR", "Admin"]}
+                />
+              }
             />
             <Route
               path="/teachers/:empId"
@@ -118,7 +123,10 @@ function App() {
             <Route
               path="/report"
               element={
-                <PrivateRoute element={StudentReport} requiredRoles={["Teacher", "Principal"]} />
+                <PrivateRoute
+                  element={StudentReport}
+                  requiredRoles={["Teacher", "Principal"]}
+                />
               }
             />
             <Route
@@ -131,7 +139,10 @@ function App() {
               path="/library-dashboard"
               element={
                 // <PrivateRoute element={LibraryDash} requiredRole="Librarian" />
-                <PrivateRoute element={LibraryDash} requiredRoles={["Librarian","Admin"]} />
+                <PrivateRoute
+                  element={LibraryDash}
+                  requiredRoles={["Librarian", "Admin"]}
+                />
               }
             />
             <Route
@@ -228,13 +239,26 @@ function App() {
                     "Admin",
                     "HR",
                     "Examination",
+                    "Principal",
                   ]}
                 />
               }
             />
             <Route
               path="/student/:studentId"
-              element={<PrivateRoute element={StudentInfo} requiredRoles={["HR", "Front Desk","Accounts", "Admin" ]} />}
+              element={
+                <PrivateRoute
+                  element={StudentInfo}
+                  requiredRoles={[
+                    "HR",
+                    "Front Desk",
+                    "Accounts",
+                    "Principal",
+                    "Examination",
+                    "Admin",
+                  ]}
+                />
+              }
             />
             <Route
               path="/variable"

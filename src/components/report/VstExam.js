@@ -57,6 +57,7 @@ function VstExam() {
       ["StudId", "MaxMarks", "ObtainedMarks"],
       ["1001", "100", "85"],
       ["1002", "100", "90"],
+      ["1003", "100", "A"],
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
     const workbook = XLSX.utils.book_new();
