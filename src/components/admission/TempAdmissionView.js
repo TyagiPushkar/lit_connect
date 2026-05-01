@@ -29,13 +29,13 @@ function TempAdmissionView() {
   const sections = {
     "Address for Correspondence": [15, 16],
     "Academic Records of Qualifying Examination": [
-      18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+      18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 55,
     ],
     "List of Attached Documents": [31, 33, 35, 37, 38, 39, 40],
-    "Prefrences": [28,29,53, 54],
+    Prefrences: [28, 29, 53, 54],
   };
 
-  const candidateDetailsIds = [3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 52];
+  const candidateDetailsIds = [3, 5, 6, 61, 7, 8, 9, 10, 11, 12, 13, 52, 60];
   const studentPhotoChkId = 4; // Assume 13 is the image URL
 
   useEffect(() => {
@@ -48,9 +48,7 @@ function TempAdmissionView() {
           axios.get(
             `https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`,
           ),
-          axios.get(
-            `https://namami-infotech.com/LIT/src/menu/get_types.php`,
-          ),
+          axios.get(`https://namami-infotech.com/LIT/src/menu/get_types.php`),
         ]);
 
         if (detailsRes.data.success && checkpointsRes.data.success) {
@@ -88,98 +86,95 @@ function TempAdmissionView() {
   };
 
   const handleNext = async () => {
-    setIsSubmitting(true); 
-  const fieldMap = {
-    3: "CandidateName",
-    4: "Photo",
-    5: "Course",
-    6: "GuardianName",
-    7: "StudentContactNo",
-    8: "GuardianContactNo",
-    9: "EmailId",
-    10: "BloodGroup",
-    11: "Gender",
-    12: "DOB",
-    13: "ReligionCategory",
-    15: "PermanentAddress",
-    16: "PresentAddress",
-    18: "Board10University",
-    19: "Year10Passing",
-    22: "Percentage10",
-    21: "Board12University",
-    24: "Year12PassingAlt",
-    27: "Percentage12",
-    24: "Council12Name",
-    25: "Year12Passing",
-    26: "RollNo12",
-    27: "Stream12",
-    28: "InterestInHostel",
-    29: "InterestInTransport",
-    31: "CharacterCertificate",
-    33: "MigrationCertificate",
-    35: "CollegeLeavingCertificate",
-    37: "MarksheetCopy",
-    38: "AadharCardCopy",
-    39: "CasteCertificate",
-    40: "BloodGroupCopy",
-    52: "AlternateGaurdiaNumber",
-    53: "Disabled",
-    54: "RefrenceBy"
-  };
+    setIsSubmitting(true);
+    const fieldMap = {
+      3: "CandidateName",
+      4: "Photo",
+      5: "Course",
+      6: "GuardianName",
+      7: "StudentContactNo",
+      8: "GuardianContactNo",
+      9: "EmailId",
+      10: "BloodGroup",
+      11: "Gender",
+      12: "DOB",
+      13: "ReligionCategory",
+      15: "PermanentAddress",
+      16: "PresentAddress",
+      18: "Board10University",
+      19: "Year10Passing",
+      22: "Percentage10",
+      21: "Board12University",
+      24: "Year12PassingAlt",
+      27: "Percentage12",
+      24: "Council12Name",
+      25: "Year12Passing",
+      26: "RollNo12",
+      27: "Stream12",
+      28: "InterestInHostel",
+      29: "InterestInTransport",
+      31: "CharacterCertificate",
+      33: "MigrationCertificate",
+      35: "CollegeLeavingCertificate",
+      37: "MarksheetCopy",
+      38: "AadharCardCopy",
+      39: "CasteCertificate",
+      40: "BloodGroupCopy",
+      52: "AlternateGaurdiaNumber",
+      53: "Disabled",
+      54: "RefrenceBy",
+    };
 
-  const studentData = {
-    StudentID: `STU-${activityId}`, // Or generate your logic
-    TempID: activityId,
-    SubmissionDate: new Date().toISOString().split("T")[0],
-    Place: "Bhubaneswar", // Example value
-    Remark: "", // Optional
-  };
+    const studentData = {
+      StudentID: `STU-${activityId}`, // Or generate your logic
+      TempID: activityId,
+      SubmissionDate: new Date().toISOString().split("T")[0],
+      Place: "Bhubaneswar", // Example value
+      Remark: "", // Optional
+    };
 
-  details.forEach((item) => {
-    const fieldName = fieldMap[item.ChkId];
-    if (fieldName) {
-      studentData[fieldName] = item.Value;
-    }
-  });
-
-  console.log("Sending payload:", studentData);
-
-  try {
-    const response = await axios.post(
-      "https://namami-infotech.com/LIT/src/students/add_student.php",
-      studentData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+    details.forEach((item) => {
+      const fieldName = fieldMap[item.ChkId];
+      if (fieldName) {
+        studentData[fieldName] = item.Value;
       }
-    );
+    });
 
-    if (response.data.success) {
-  const studentId = response.data.data.StudentID;
-      const course = studentData.Course;
-      const hostel = studentData.Hostel;
-  // Save to localStorage
-  localStorage.setItem("student_id", studentId);
-localStorage.setItem("student_course", course);
-localStorage.setItem("student_hostel", hostel);
-  alert("Student record saved successfully.");
- navigate("/admissions/finalize", {
-  state: { studentId, course, hostel }
-});
-    } else {
-      alert("Error: " + response.data.message);
-    }
-  } catch (error) {
-    console.error("Submission error:", error);
-    alert("Failed to submit student data.");
-    }
-    finally {
+    console.log("Sending payload:", studentData);
+
+    try {
+      const response = await axios.post(
+        "https://namami-infotech.com/LIT/src/students/add_student.php",
+        studentData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.data.success) {
+        const studentId = response.data.data.StudentID;
+        const course = studentData.Course;
+        const hostel = studentData.Hostel;
+        // Save to localStorage
+        localStorage.setItem("student_id", studentId);
+        localStorage.setItem("student_course", course);
+        localStorage.setItem("student_hostel", hostel);
+        alert("Student record saved successfully.");
+        navigate("/admissions/finalize", {
+          state: { studentId, course, hostel },
+        });
+      } else {
+        alert("Error: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("Failed to submit student data.");
+    } finally {
       setIsSubmitting(false); // Stop loading regardless of success/failure
     }
-};
-
-
+  };
 
   const renderStudentDetails = () => {
     const fields = candidateDetailsIds.map((id) => ({
@@ -331,100 +326,112 @@ localStorage.setItem("student_hostel", hostel);
     );
 
   return (
-  <Box sx={{ p: 2, background: "#fff", pb: 10 }}>
-    {/* Header with Back button */}
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        mb: 3,
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={() => navigate(-1)}
-          sx={{ color: "#CC7A00", borderColor: "#CC7A00" }}
-        >
-          Back
-        </Button>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#CC7A00" }}>
-            Lakshay Institute Of Technology
-          </Typography>
-          <Typography variant="subtitle1">Admission Form Details</Typography>
-        </Box>
-      </Box>
-      <Avatar
-        src={logo}
-        alt="College Logo"
-        sx={{ width: 80, height: 80 }}
-        variant="rounded"
-      />
-    </Box>
-
-    {/* Main Paper */}
-    <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
-      {/* Student Details */}
-      {renderStudentDetails()}
-
-      {/* Remaining Sections */}
-      {Object.entries(sections).map(([sectionTitle, ids]) =>
-        renderSection(sectionTitle, ids),
-      )}
-
-      {/* Any submitted checkpoints not covered by the sections above */}
-      {(() => {
-        const DATA_TYPES = ["Text", "Email", "Number", "Digit", "Long Text", "Date", "Dropdown", "Radio", "Checkbox", "Pic/Camera"];
-        const shownIds = [
-          studentPhotoChkId,
-          ...candidateDetailsIds,
-          ...Object.values(sections).flat(),
-        ];
-        const remainingIds = details
-          .map((d) => parseInt(d.ChkId))
-          .filter((id) => !shownIds.includes(id) && DATA_TYPES.includes(checkpointTypeMap[id]));
-        return remainingIds.length > 0
-          ? renderSection("Other Details", remainingIds)
-          : null;
-      })()}
-    </Paper>
-
-    {/* Fixed Footer: ONLY Next Button */}
-    <Box
-      sx={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        p: 2,
-        display: "flex",
-          justifyContent: "flex-end",
-        gap:"100px",
-        backgroundColor: "#fff",
-        boxShadow: "0 -2px 8px rgba(0,0,0,0.05)",
-        zIndex: 1000,
-      }}
+    <Box sx={{ p: 2, background: "#fff", pb: 10 }}>
+      {/* Header with Back button */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
       >
-       
-      <Button
-  variant="contained"
-  sx={{ backgroundColor: "#CC7A00" }}
-  onClick={handleNext}
-  disabled={isSubmitting}
->
-  {isSubmitting ? (
-    <CircularProgress size={24} color="inherit" />
-  ) : (
-    "Enroll"
-  )}
-</Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate(-1)}
+            sx={{ color: "#CC7A00", borderColor: "#CC7A00" }}
+          >
+            Back
+          </Button>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#CC7A00" }}>
+              Lakshay Institute Of Technology
+            </Typography>
+            <Typography variant="subtitle1">Admission Form Details</Typography>
+          </Box>
+        </Box>
+        <Avatar
+          src={logo}
+          alt="College Logo"
+          sx={{ width: 80, height: 80 }}
+          variant="rounded"
+        />
+      </Box>
+
+      {/* Main Paper */}
+      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
+        {/* Student Details */}
+        {renderStudentDetails()}
+
+        {/* Remaining Sections */}
+        {Object.entries(sections).map(([sectionTitle, ids]) =>
+          renderSection(sectionTitle, ids),
+        )}
+
+        {/* Any submitted checkpoints not covered by the sections above */}
+        {(() => {
+          const DATA_TYPES = [
+            "Text",
+            "Email",
+            "Number",
+            "Digit",
+            "Long Text",
+            "Date",
+            "Dropdown",
+            "Radio",
+            "Checkbox",
+            "Pic/Camera",
+          ];
+          const shownIds = [
+            studentPhotoChkId,
+            ...candidateDetailsIds,
+            ...Object.values(sections).flat(),
+          ];
+          const remainingIds = details
+            .map((d) => parseInt(d.ChkId))
+            .filter(
+              (id) =>
+                !shownIds.includes(id) &&
+                DATA_TYPES.includes(checkpointTypeMap[id]),
+            );
+          return remainingIds.length > 0
+            ? renderSection("Other Details", remainingIds)
+            : null;
+        })()}
+      </Paper>
+
+      {/* Fixed Footer: ONLY Next Button */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          p: 2,
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "100px",
+          backgroundColor: "#fff",
+          boxShadow: "0 -2px 8px rgba(0,0,0,0.05)",
+          zIndex: 1000,
+        }}
+      >
+        <Button
+          variant="contained"
+          sx={{ backgroundColor: "#CC7A00" }}
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Enroll"
+          )}
+        </Button>
+      </Box>
     </Box>
-  </Box>
-);
-
-
+  );
 }
 
 export default TempAdmissionView;
