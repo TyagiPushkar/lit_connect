@@ -106,8 +106,12 @@ function PrincipalInternalExam() {
                 'Course': row.Course,
                 'Semester': row.Sem,
             };
+            // subjects.forEach(s => {
+            //     const colName = `${s.Subject} (${s.SubjectCode || '-'})`;
+            //     entry[colName] = row[s.Subject] !== undefined ? row[s.Subject] : '-';
+            // });
             subjects.forEach(s => {
-                entry[s] = row[s] !== undefined ? row[s] : '-';
+                entry[s.Subject] = row[s.Subject] !== undefined ? row[s.Subject] : '-';
             });
             return entry;
         });
@@ -130,7 +134,7 @@ function PrincipalInternalExam() {
                         onClick={handleDownload}
                         sx={{ color: '#CC7A00', borderColor: '#CC7A00' }}
                     >
-                        Download PDF
+                        Download Excel
                     </Button>
                 )}
             </Box>
