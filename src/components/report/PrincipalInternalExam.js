@@ -106,6 +106,7 @@ function PrincipalInternalExam() {
                 'Course': row.Course,
                 'Semester': row.Sem,
             };
+            //all goood
             // subjects.forEach(s => {
             //     const colName = `${s.Subject} (${s.SubjectCode || '-'})`;
             //     entry[colName] = row[s.Subject] !== undefined ? row[s.Subject] : '-';
