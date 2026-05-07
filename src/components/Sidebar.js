@@ -168,6 +168,7 @@ function Sidebar() {
         name: "Student Certificate",
         icon: <WorkspacePremiumIcon />,
       },
+
       {
         path: "/certificate",
         name: "Certificate",
@@ -183,7 +184,7 @@ function Sidebar() {
 
       { path: "/policy", name: "Timetable", icon: <CalendarMonthIcon /> },
       { path: "/subjects", name: "Subjects", icon: <LibraryBooksIcon /> },
-
+      { path: "/mid-term", name: "Mid Term", icon: <MenuIcon /> },
       { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
       { path: "/news", name: "News", icon: <NewspaperIcon /> },
       { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
