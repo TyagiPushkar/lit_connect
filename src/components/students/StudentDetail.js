@@ -106,6 +106,7 @@ function StudentDetail() {
       fields: [
         { label: "Candidate Name", key: "CandidateName" },
         { label: "Guardian Name", key: "GuardianName" },
+        { label: "Mother Name", key: "mother_name" },
         { label: "DOB", key: "DOB" },
         { label: "Gender", key: "Gender" },
         { label: "Email", key: "EmailId" },
@@ -115,7 +116,12 @@ function StudentDetail() {
         { label: "Guardian Contact", key: "GuardianContactNo" },
         { label: "Student ID", key: "StudentID", editable: false },
         { label: "Refrence By", key: "RefrenceBy", editable: false },
-        { label: "Annual Income", key: "AnnualIncome", editable: false, blankIfEmpty: true },
+        {
+          label: "Annual Income",
+          key: "AnnualIncome",
+          editable: false,
+          blankIfEmpty: true,
+        },
       ],
     },
     {
@@ -130,6 +136,7 @@ function StudentDetail() {
         { label: "10th %", key: "Percentage10" },
         { label: "12th %", key: "Percentage12" },
         { label: "Submission Date", key: "SubmissionDate", editable: false },
+        { label: "Last institute Name", key: "last_institute_name" },
       ],
     },
     {

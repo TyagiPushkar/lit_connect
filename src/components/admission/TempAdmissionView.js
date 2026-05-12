@@ -123,6 +123,10 @@ function TempAdmissionView() {
       52: "AlternateGaurdiaNumber",
       53: "Disabled",
       54: "RefrenceBy",
+      // ✅ ADD THESE NEW FIELDS
+      61: "mother_name",
+      55: "last_institute_name",
+      60: "AnnualIncome",
     };
 
     const studentData = {
