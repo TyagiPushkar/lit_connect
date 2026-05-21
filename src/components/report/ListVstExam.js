@@ -254,6 +254,10 @@ function ListVstExam({ setView }) {
                             inputProps={{ style: { width: 60 } }}
                             placeholder="0 or A"
                           />
+                        ) : row.ObtainedMarks === null ? (
+                          <span style={{ color: "red", fontWeight: "bold" }}>
+                            A
+                          </span>
                         ) : (
                           row.ObtainedMarks
                         )}
