@@ -39,9 +39,9 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useAuth } from "../auth/AuthContext";
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DownloadIcon from "@mui/icons-material/Download";
-import BlockIcon from '@mui/icons-material/Block';
+import BlockIcon from "@mui/icons-material/Block";
 import Papa from "papaparse";
 
 function EmployeeList() {
@@ -55,7 +55,7 @@ function EmployeeList() {
   const [openForm, setOpenForm] = useState(false);
   const [formMode, setFormMode] = useState("add"); // 'add' or 'edit'
   const [nextEmpId, setNextEmpId] = useState(""); // State to store the next EmpId
-  
+
   const [formData, setFormData] = useState({
     EmpId: "",
     Name: "",
@@ -83,11 +83,11 @@ function EmployeeList() {
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   // Filter states
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'active', 'inactive'
   const [showFilters, setShowFilters] = useState(false);
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -104,7 +104,7 @@ function EmployeeList() {
       console.log("Employees response:", response.data);
       if (response.data.success) {
         setEmployees(response.data.data);
-        
+
         // Extract last EmpId from message and generate next one
         if (response.data.message && response.data.message.match(/[A-Z]+\d+/)) {
           generateNextEmpId(response.data.message);
@@ -128,14 +128,14 @@ function EmployeeList() {
         const prefix = match[1]; // Alphabetic prefix (e.g., "LIT")
         const number = parseInt(match[2], 10); // Numeric part (e.g., 87)
         const nextNumber = number + 1;
-        const nextEmpId = `${prefix}${nextNumber.toString().padStart(4, '0')}`;
+        const nextEmpId = `${prefix}${nextNumber.toString().padStart(4, "0")}`;
         setNextEmpId(nextEmpId);
-        
+
         // Update formData with the new EmpId if in add mode
-        if (formMode === 'add') {
-          setFormData(prev => ({
+        if (formMode === "add") {
+          setFormData((prev) => ({
             ...prev,
-            EmpId: nextEmpId
+            EmpId: nextEmpId,
           }));
         }
       }
@@ -150,7 +150,7 @@ function EmployeeList() {
       const response = await axios.get(
         "https://namami-infotech.com/LIT/src/employee/get_office.php",
       );
-      console.log("Offices response:", response.data);
+      // console.log("Offices response:", response.data);
       if (response.data.success) {
         setOffices(response.data.data);
       } else {
@@ -176,25 +176,33 @@ function EmployeeList() {
 
   const handleOpenForm = async (mode, employee = null) => {
     setFormMode(mode);
-    
+    // console.log("Opening form in mode:", mode, "with employee data:", employee);
+
     if (mode === "edit" && employee) {
       // Format dates for input fields (YYYY-MM-DD)
       const formattedDOB = employee.DOB ? formatDateForInput(employee.DOB) : "";
-      const formattedJoinDate = employee.JoinDate ? formatDateForInput(employee.JoinDate) : "";
-      
+      const formattedJoinDate = employee.JoinDate
+        ? formatDateForInput(employee.JoinDate)
+        : "";
+
       // Parse WeekOff from string to array
-      const weekOffArray = employee.WeekOff ? employee.WeekOff.split(",").map(item => item.trim()) : [];
-      
+      const weekOffArray = employee.WeekOff
+        ? employee.WeekOff.split(",").map((item) => item.trim())
+        : [];
+
       // Get selected office IDs from the employee data
-      const selectedOfficeIds = employee.OfficeId ? 
-        employee.OfficeId.toString().split(",").map(id => id.trim()) : [];
-      
+      const selectedOfficeIds = employee.OfficeId
+        ? employee.OfficeId.toString()
+            .split(",")
+            .map((id) => id.trim())
+        : [];
+
       console.log("Editing employee data:", {
         ...employee,
         DOB: formattedDOB,
         JoinDate: formattedJoinDate,
         WeekOff: weekOffArray,
-        OfficeId: selectedOfficeIds
+        OfficeId: selectedOfficeIds,
       });
 
       setFormData({
@@ -228,7 +236,8 @@ function EmployeeList() {
         // If nextEmpId is not set, fetch employees to get the last EmpId
         await fetchEmployees();
       }
-      
+      // console.log("show all data ", formData);
+
       setFormData({
         EmpId: nextEmpId,
         Name: "",
@@ -261,22 +270,22 @@ function EmployeeList() {
   // Helper function to format date for input field (YYYY-MM-DD)
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
-    
+
     try {
       // Remove time part if present
-      const dateOnly = dateString.split(' ')[0];
+      const dateOnly = dateString.split(" ")[0];
       const date = new Date(dateOnly);
-      
+
       // Check if date is valid
       if (isNaN(date.getTime())) {
         return "";
       }
-      
+
       // Format as YYYY-MM-DD for input[type="date"]
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
       return `${year}-${month}-${day}`;
     } catch (error) {
       console.error("Error formatting date:", error);
@@ -300,27 +309,33 @@ function EmployeeList() {
       Shift: formData.Shift,
       DOB: formData.DOB || "",
       JoinDate: formData.JoinDate || "",
-      WeekOff: Array.isArray(formData.WeekOff) ? formData.WeekOff.join(",") : formData.WeekOff || "",
+      WeekOff: Array.isArray(formData.WeekOff)
+        ? formData.WeekOff.join(",")
+        : formData.WeekOff || "",
       Designation: formData.Designation || "",
       Category: formData.Category || "",
     };
 
     // Prepare office data
-    const selectedOfficeIds = Array.isArray(formData.OfficeId) ? formData.OfficeId : [];
+    const selectedOfficeIds = Array.isArray(formData.OfficeId)
+      ? formData.OfficeId
+      : [];
     const officeData = [];
-    
+
     if (selectedOfficeIds.length > 0) {
-      selectedOfficeIds.forEach(officeId => {
-        const office = offices.find(o => o.Id.toString() === officeId.toString());
+      selectedOfficeIds.forEach((officeId) => {
+        const office = offices.find(
+          (o) => o.Id.toString() === officeId.toString(),
+        );
         if (office) {
           officeData.push({
             OfficeName: office.OfficeName,
-            LatLong: office.LatLong
+            LatLong: office.LatLong,
           });
         }
       });
     }
-    
+
     if (officeData.length > 0) {
       formattedFormData.Offices = officeData;
     }
@@ -335,14 +350,15 @@ function EmployeeList() {
 
     console.log("Submitting form data:", formattedFormData);
 
-    const url = formMode === "add"
-      ? "https://namami-infotech.com/LIT/src/employee/add_employee.php"
-      : "https://namami-infotech.com/LIT/src/employee/edit_employee.php";
+    const url =
+      formMode === "add"
+        ? "https://namami-infotech.com/LIT/src/employee/add_employee.php"
+        : "https://namami-infotech.com/LIT/src/employee/edit_employee.php";
 
     try {
       const response = await axios.post(url, formattedFormData);
       console.log("Response:", response.data);
-      
+
       if (response.data.success) {
         alert(response.data.message || "Operation successful!");
         handleCloseForm();
@@ -406,17 +422,17 @@ function EmployeeList() {
 
   const handleOfficeChange = (event) => {
     const selectedOfficeIds = event.target.value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      OfficeId: selectedOfficeIds
+      OfficeId: selectedOfficeIds,
     }));
   };
 
   const handleWeekOffChange = (event) => {
     const selectedDays = event.target.value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      WeekOff: selectedDays
+      WeekOff: selectedDays,
     }));
   };
 
@@ -433,7 +449,7 @@ function EmployeeList() {
     try {
       const isActive = employee.IsActive === 1;
       const action = isActive ? "disable" : "enable";
-      
+
       const response = await axios.post(
         "https://namami-infotech.com/LIT/src/employee/disable_employee.php",
         {
@@ -443,12 +459,12 @@ function EmployeeList() {
       );
 
       if (response.data.success) {
-        setEmployees(prevEmployees => 
-          prevEmployees.map(emp => 
-            emp.EmpId === employee.EmpId 
-              ? { ...emp, IsActive: isActive ? 0 : 1 } 
-              : emp
-          )
+        setEmployees((prevEmployees) =>
+          prevEmployees.map((emp) =>
+            emp.EmpId === employee.EmpId
+              ? { ...emp, IsActive: isActive ? 0 : 1 }
+              : emp,
+          ),
         );
       } else {
         console.error("Error:", response.data.message);
@@ -461,7 +477,9 @@ function EmployeeList() {
   };
 
   // Extract unique roles for filter
-  const uniqueRoles = [...new Set(employees.map(emp => emp.Role).filter(Boolean))].sort();
+  const uniqueRoles = [
+    ...new Set(employees.map((emp) => emp.Role).filter(Boolean)),
+  ].sort();
 
   const filteredEmployees = employees.filter((employee) => {
     // Apply text search filter
@@ -476,34 +494,34 @@ function EmployeeList() {
       });
       if (!matchesSearch) return false;
     }
-    
+
     // Apply status filter
-    if (statusFilter !== 'all') {
-      const isActiveFilter = statusFilter === 'active';
+    if (statusFilter !== "all") {
+      const isActiveFilter = statusFilter === "active";
       const isActive = employee.IsActive === 1;
       if (isActive !== isActiveFilter) return false;
     }
-    
+
     // Apply role filter
     if (roleFilter) {
       if (employee.Role !== roleFilter) return false;
     }
-    
+
     return true;
   });
 
   const handleClearFilters = () => {
-    setStatusFilter('all');
-    setRoleFilter('');
+    setStatusFilter("all");
+    setRoleFilter("");
   };
 
   const hasActiveFilters = () => {
-    return statusFilter !== 'all' || roleFilter;
+    return statusFilter !== "all" || roleFilter;
   };
 
   const getActiveFilterCount = () => {
     let count = 0;
-    if (statusFilter !== 'all') count++;
+    if (statusFilter !== "all") count++;
     if (roleFilter) count++;
     return count;
   };
@@ -518,14 +536,14 @@ function EmployeeList() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ employee_id: EmpId }),
-        }
+        },
       );
       const data = await response.json();
       if (data.success) {
         alert("Mobile ID removed successfully.");
         fetchEmployees();
       } else {
-        alert( "Mobile ID already removed");
+        alert("Mobile ID already removed");
       }
     } catch (err) {
       setError("Error removing Mobile ID.");
@@ -533,8 +551,8 @@ function EmployeeList() {
   };
 
   // Calculate counts for summary
-  const activeCount = employees.filter(emp => emp.IsActive === 1).length;
-  const inactiveCount = employees.filter(emp => emp.IsActive === 0).length;
+  const activeCount = employees.filter((emp) => emp.IsActive === 1).length;
+  const inactiveCount = employees.filter((emp) => emp.IsActive === 0).length;
 
   const isEmployeeActive = (employee) => {
     return employee.IsActive === 1;
@@ -926,8 +944,8 @@ function EmployeeList() {
                   value={formData.EmpId}
                   disabled
                   helperText={
-                    formMode === "add" 
-                      ? "Auto-generated from last Employee ID" 
+                    formMode === "add"
+                      ? "Auto-generated from last Employee ID"
                       : "Employee ID cannot be changed"
                   }
                 />
@@ -943,7 +961,7 @@ function EmployeeList() {
                   required
                 />
               </Grid>
-              
+
               {/* Password field only shown in add mode */}
               {formMode === "add" && (
                 <Grid item xs={12} md={6}>
@@ -960,7 +978,7 @@ function EmployeeList() {
                   />
                 </Grid>
               )}
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -990,7 +1008,7 @@ function EmployeeList() {
                   required
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   select
@@ -1007,7 +1025,7 @@ function EmployeeList() {
                   <MenuItem value="Non Teaching">Non Teaching</MenuItem>
                 </TextField>
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   select
@@ -1020,15 +1038,23 @@ function EmployeeList() {
                   required
                 >
                   <MenuItem value="">Select Role</MenuItem>
-                  <MenuItem value="HR">HR</MenuItem>
+                  {uniqueRoles.map((role) => (
+                    <MenuItem key={role} value={role}>
+                      {role}
+                    </MenuItem>
+                  ))}
+                  {/* <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Employee">Employee</MenuItem>
                   <MenuItem value="Librarian">Librarian</MenuItem>
                   <MenuItem value="Accounts">Accounts</MenuItem>
+                  <MenuItem value="Teacher">Teacher</MenuItem>
+                  <MenuItem value="Staff">Staff</MenuItem>
+                  <MenuItem value="Examination">Examination</MenuItem>
                   <MenuItem value="Front Desk">Front Desk</MenuItem>
-                  <MenuItem value="Sales">Sales</MenuItem>
+                  <MenuItem value="Sales">Sales</MenuItem> */}
                 </TextField>
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -1041,7 +1067,7 @@ function EmployeeList() {
                   required
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -1053,13 +1079,15 @@ function EmployeeList() {
                   helperText="Optional: Enter Reporting Manager's EmpId"
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
                   <InputLabel>Week Off</InputLabel>
                   <Select
                     multiple
-                    value={Array.isArray(formData.WeekOff) ? formData.WeekOff : []}
+                    value={
+                      Array.isArray(formData.WeekOff) ? formData.WeekOff : []
+                    }
                     onChange={handleWeekOffChange}
                     label="Week Off"
                     renderValue={(selected) => selected.join(", ")}
@@ -1089,11 +1117,11 @@ function EmployeeList() {
                     shrink: true,
                   }}
                   inputProps={{
-                    max: new Date().toISOString().split("T")[0]
+                    max: new Date().toISOString().split("T")[0],
                   }}
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -1107,7 +1135,7 @@ function EmployeeList() {
                     shrink: true,
                   }}
                   inputProps={{
-                    max: new Date().toISOString().split("T")[0]
+                    max: new Date().toISOString().split("T")[0],
                   }}
                 />
               </Grid>
@@ -1144,13 +1172,17 @@ function EmployeeList() {
                   <InputLabel>Office</InputLabel>
                   <Select
                     multiple
-                    value={Array.isArray(formData.OfficeId) ? formData.OfficeId : []}
+                    value={
+                      Array.isArray(formData.OfficeId) ? formData.OfficeId : []
+                    }
                     onChange={handleOfficeChange}
                     label="Office"
                     renderValue={(selected) =>
                       selected
                         .map((id) => {
-                          const office = offices.find(o => o.Id.toString() === id.toString());
+                          const office = offices.find(
+                            (o) => o.Id.toString() === id.toString(),
+                          );
                           return office ? office.OfficeName : id;
                         })
                         .join(", ")
@@ -1159,7 +1191,10 @@ function EmployeeList() {
                     {offices.map((office) => (
                       <MenuItem key={office.Id} value={office.Id}>
                         <Checkbox
-                          checked={formData.OfficeId?.includes(office.Id.toString()) || false}
+                          checked={
+                            formData.OfficeId?.includes(office.Id.toString()) ||
+                            false
+                          }
                         />
                         <ListItemText primary={office.OfficeName} />
                       </MenuItem>
@@ -1199,7 +1234,7 @@ function EmployeeList() {
           </form>
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={openDetail} onClose={handleCloseDetail}>
         <DialogTitle>Employee Details</DialogTitle>
         <DialogContent></DialogContent>
