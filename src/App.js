@@ -79,7 +79,10 @@ function App() {
             <Route
               path="/teachers/:empId"
               element={
-                <PrivateRoute element={EmployeeProfile} requiredRole="HR" />
+                <PrivateRoute
+                  element={EmployeeProfile}
+                  requiredRoles={["HR", "Admin"]}
+                />
               }
             />
             <Route
