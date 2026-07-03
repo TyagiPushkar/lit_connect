@@ -27,7 +27,7 @@ function TempAdmissionView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Checkpoint groups
   const sections = {
-    "Address for Correspondence": [15, 16],
+    "Address for Correspondence": [15, 62, 63, 64, 16, 65, 66, 67],
     "Academic Records of Qualifying Examination": [
       18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 55,
     ],
