@@ -149,6 +149,7 @@ const FeesPaymentList = () => {
       console.error("Error fetching employee status:", error);
     }
   };
+  //status were updated here
 
   const getStudentStatus = (studentId) => {
     // Check if student ID exists in employee status
