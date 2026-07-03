@@ -154,6 +154,11 @@ function Sidebar() {
   if (user?.role === "Examination") {
     allowedRoutes.push(
       {
+        path: "/report",
+        name: "Report",
+        icon: <SummarizeIcon />,
+      },
+      {
         path: "/students",
         name: "Students",
         icon: <Person />,
@@ -163,6 +168,7 @@ function Sidebar() {
         name: "Student Certificate",
         icon: <WorkspacePremiumIcon />,
       },
+
       {
         path: "/certificate",
         name: "Certificate",
@@ -178,7 +184,7 @@ function Sidebar() {
 
       { path: "/policy", name: "Timetable", icon: <CalendarMonthIcon /> },
       { path: "/subjects", name: "Subjects", icon: <LibraryBooksIcon /> },
-
+      { path: "/mid-term", name: "Mid Term", icon: <MenuIcon /> },
       { path: "/notices", name: "Notices", icon: <MarkUnreadChatAltIcon /> },
       { path: "/news", name: "News", icon: <NewspaperIcon /> },
       { path: "/ndc", name: "NDC", icon: <SummarizeIcon /> },
@@ -187,10 +193,14 @@ function Sidebar() {
   // Combine all available routes
   const routes = [...defaultRoutes, ...allowedRoutes];
 
-  // For Principal: insert Report right after Attendance
+  // For Principal and: insert Report right after Attendance
   if (user?.role === "Principal") {
-    const attendanceIdx = routes.findIndex(r => r.path === "/attendance");
-    const reportRoute = { path: "/report", name: "Report", icon: <SummarizeIcon /> };
+    const attendanceIdx = routes.findIndex((r) => r.path === "/attendance");
+    const reportRoute = {
+      path: "/report",
+      name: "Report",
+      icon: <SummarizeIcon />,
+    };
     if (attendanceIdx !== -1) {
       routes.splice(attendanceIdx + 1, 0, reportRoute);
     } else {

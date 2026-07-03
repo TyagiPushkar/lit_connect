@@ -79,7 +79,10 @@ function App() {
             <Route
               path="/teachers/:empId"
               element={
-                <PrivateRoute element={EmployeeProfile} requiredRole="HR" />
+                <PrivateRoute
+                  element={EmployeeProfile}
+                  requiredRoles={["HR", "Admin"]}
+                />
               }
             />
             <Route
@@ -125,7 +128,7 @@ function App() {
               element={
                 <PrivateRoute
                   element={StudentReport}
-                  requiredRoles={["Teacher", "Principal"]}
+                  requiredRoles={["Teacher", "Principal", "Examination"]}
                 />
               }
             />
@@ -282,11 +285,21 @@ function App() {
             />
             <Route
               path="/subjects"
-              element={<PrivateRoute element={Subjects} requiredRole="HR" />}
+              element={
+                <PrivateRoute
+                  element={Subjects}
+                  requiredRoles={["HR", "Principal"]}
+                />
+              }
             />
             <Route
               path="/time-table"
-              element={<PrivateRoute element={TimeTable} requiredRole="HR" />}
+              element={
+                <PrivateRoute
+                  element={TimeTable}
+                  requiredRoles={["HR", "Principal"]}
+                />
+              }
             />
             <Route path="/form" element={<PrivateRoute element={Form} />} />
             <Route

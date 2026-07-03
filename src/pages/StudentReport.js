@@ -26,6 +26,9 @@ function StudentReport() {
   const [category, setCategory] = useState("Internal Exam");
   const { user } = useAuth();
   const isPrincipal = user?.role === "Principal";
+  const isExamination = user?.role === "Examination";
+  // Check if the user is either Principal OR Examination
+  const showPrincipalView = isPrincipal || isExamination;
 
   const renderComponent = () => {
     switch (category) {
@@ -56,8 +59,11 @@ function StudentReport() {
         <Navbar />
 
         <Box sx={{ px: 3, py: 2 }}>
-          {isPrincipal ? (
-            <Paper elevation={1} sx={{ p: 2, borderRadius: 2, backgroundColor: "#ffffff" }}>
+          {showPrincipalView ? (
+            <Paper
+              elevation={1}
+              sx={{ p: 2, borderRadius: 2, backgroundColor: "#ffffff" }}
+            >
               <PrincipalInternalExam />
             </Paper>
           ) : (
@@ -65,7 +71,12 @@ function StudentReport() {
               {/* Header & Category Selector */}
               <Paper
                 elevation={1}
-                sx={{ p: 2, mb: 3, borderRadius: 2, backgroundColor: "#ffffff" }}
+                sx={{
+                  p: 2,
+                  mb: 3,
+                  borderRadius: 2,
+                  backgroundColor: "#ffffff",
+                }}
               >
                 <Grid
                   container
@@ -80,7 +91,9 @@ function StudentReport() {
                   </Grid>
                   <Grid item xs={12} md={4}>
                     <FormControl fullWidth size="small">
-                      <InputLabel id="category-label">Report Category</InputLabel>
+                      <InputLabel id="category-label">
+                        Report Category
+                      </InputLabel>
                       <Select
                         labelId="category-label"
                         value={category}
