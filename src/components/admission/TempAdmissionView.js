@@ -99,18 +99,29 @@ function TempAdmissionView() {
       11: "Gender",
       12: "DOB",
       13: "ReligionCategory",
+      // permeent ke address new
       15: "PermanentAddress",
+      62: "PostOffice",
+      63: "District",
+      64: "PinCode",
+      // present ke address new
       16: "PresentAddress",
+      65: "PostOffice_PA",
+      66: "District_PA",
+      67: "PinCode_PA",
+      // end of this
       18: "Board10University",
+      // 20: "RollNo10",
+      // 21: "Stream10",
       19: "Year10Passing",
       22: "Percentage10",
-      21: "Board12University",
-      24: "Year12PassingAlt",
+      // 24: "Council12Name",
+      23: "Board12University",
+      // 24: "Year12PassingAlt",
+      24: "Year12Passing",
+      25: "RollNo12",
+      26: "Stream12",
       27: "Percentage12",
-      24: "Council12Name",
-      25: "Year12Passing",
-      26: "RollNo12",
-      27: "Stream12",
       28: "InterestInHostel",
       29: "InterestInTransport",
       31: "CharacterCertificate",
@@ -124,9 +135,9 @@ function TempAdmissionView() {
       53: "Disabled",
       54: "RefrenceBy",
       // ✅ ADD THESE NEW FIELDS
-      61: "mother_name",
       55: "last_institute_name",
       60: "AnnualIncome",
+      61: "mother_name",
     };
 
     const studentData = {

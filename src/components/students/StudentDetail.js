@@ -143,7 +143,14 @@ function StudentDetail() {
       title: "Address Details",
       fields: [
         { label: "Permanent Address", key: "PermanentAddress" },
+        // { label: "Permanent Address", key: "PermanentAddress" },
+        { label: "Post Office", key: "PostOffice" },
+        { label: "District", key: "District" },
+        { label: "Pin Code", key: "PinCode" },
         { label: "Present Address", key: "PresentAddress" },
+        { label: "Post Office (Present)", key: "PostOffice_PA" },
+        { label: "District (Present)", key: "District_PA" },
+        { label: "Pin Code (Present)", key: "PinCode_PA" },
       ],
     },
     {
