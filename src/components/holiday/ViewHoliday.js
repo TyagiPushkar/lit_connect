@@ -53,19 +53,7 @@ function ViewHoliday() {
 
     return (
       <div className="calendar-container">
-        <div style={{ display: "flex", gap: "100px" }}>
-          {(user && user.role === "HR") || (user && user.role === "Principal") ? (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setDialogOpen(true)}
-              sx={{ mb: 2 }}
-              style={{ backgroundColor: "#CC7A00" }}
-            >
-              Add Holiday
-            </Button>
-          ) : null}
-
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", width: "100%" }}>
           {/* Month and Year Picker */}
           <LocalizationProvider dateAdapter={AdapterLuxon}>
             <DatePicker
@@ -73,12 +61,23 @@ function ViewHoliday() {
               value={selectedDate}
               onChange={handleMonthYearChange}
               renderInput={(params) => (
-                <TextField {...params} label="Select Month and Year" />
+                <TextField {...params} label="Select Month and Year" size="small" />
               )}
             />
           </LocalizationProvider>
+
+          {(user && user.role === "HR") || (user && user.role === "Principal") ? (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setDialogOpen(true)}
+              size="small"
+              style={{ backgroundColor: "#CC7A00", height: "40px" }}
+            >
+              Add Holiday
+            </Button>
+          ) : null}
         </div>
-        <br />
 
         <div className="calendar-wrapper">
           <Calendar
@@ -86,7 +85,7 @@ function ViewHoliday() {
             events={holidays}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 600, width: "100%", margin: "0 auto" }}
+            style={{ height: 573, width: "100%", margin: "0 auto" }}
             views={["month", "agenda", "day"]}
             date={selectedDate.toJSDate()}
             onNavigate={(date) => setSelectedDate(DateTime.fromJSDate(date))} // Handle navigation in the calendar
@@ -112,6 +111,7 @@ function ViewHoliday() {
             flex-direction: column;
             align-items: center;
             box-sizing: border-box;
+            width: 100%;
           }
           .calendar-wrapper {
             width: 100%;

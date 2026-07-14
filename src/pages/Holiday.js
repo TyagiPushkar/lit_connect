@@ -18,9 +18,9 @@ function Holiday() {
         <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
           <Sidebar />
         </Box>
-        <Box component="main" sx={{ flexGrow: 1, p: 0, ml: drawerWidth }}>
+        <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
           <Navbar />
-          <div style={{ marginTop: "20px", marginLeft: "10px" }}>
+          <div style={{ padding: "20px" }}>
             {/* {user && user.role === 'HR' ? <AddHoliday /> : null} */}
             {user && (user.role === "HR" || user.role === "Principal") ? (
               <AddHoliday />

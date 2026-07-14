@@ -146,10 +146,10 @@ function App() {
                 path="/admissions/finalize"
                 element={<PrivateRoute element={AdmissionFinal} />}
               />
-              <Route
+              {/* <Route
                 path="/profile"
                 element={<PrivateRoute element={EmpProfile} />}
-              />
+              /> */}
               <Route
                 path="/student-certificate"
                 element={<PrivateRoute element={StudentCertificate} />}

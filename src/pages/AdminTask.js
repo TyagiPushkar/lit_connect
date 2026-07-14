@@ -15,7 +15,7 @@ function AdminTask() {
       <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
         <Sidebar />
       </Box>
-      <Box component="main" sx={{ flexGrow: 1, p: 0, ml: drawerWidth }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
         <Navbar />
         <div style={{ marginTop: "0px", marginLeft: "0px" }}>
           <AdminTaskList/>

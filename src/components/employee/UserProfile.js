@@ -116,20 +116,58 @@ const UserProfile = () => {
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <Grid container spacing={2}>
+          {/* 
+          <Grid container spacing={2.5}>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
                 Employee ID
               </Typography>
-              <Typography variant="body1">{user?.emp_id || "N/A"}</Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.emp_id || "N/A"}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
                 Email
               </Typography>
-              <Typography variant="body1">{user?.email || "N/A"}</Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.email || "N/A"}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
+                Designation
+              </Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.designation || "N/A"}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
+                Role / Department
+              </Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.role || "N/A"}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
+                Reporting Manager
+              </Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.rm || "N/A"}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
+                Work Shift
+              </Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.shift || "N/A"}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
+                Attendance Start Date
+              </Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.attendance_start_date || "N/A"}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={500}>
+                Inquiry Contact
+              </Typography>
+              <Typography variant="body1" fontWeight={600} color="text.primary">{user?.enquiry || "N/A"}</Typography>
             </Grid>
           </Grid>
+          */}
 
           <Box mt={3}>
             <Button

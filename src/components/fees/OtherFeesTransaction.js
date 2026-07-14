@@ -24,7 +24,9 @@ import {
   DialogActions,
   Button,
   Autocomplete,
-  CircularProgress
+  CircularProgress,
+  Typography,
+  Grid,
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -42,7 +44,7 @@ const OtherFeesTransaction = () => {
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(15);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -315,135 +317,234 @@ const [remarkFilter, setRemarkFilter] = useState("");
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, marginTop: 3 }}>
-          <h2>Other Fees Transactions</h2>
-          <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleOpenDialog} sx={{ mr: 2 }}>
+      <Box sx={{ pt: 1, px: 1 }}> {/* Overall container padding */}
+        {/* Header Title and Actions */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{
+            mb: 2.5,
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 2, sm: 0 },
+            width: "100%"
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 'bold',
+              color: '#CC7A00',
+              fontFamily: '"Outfit", "Inter", sans-serif'
+            }}
+          >
+            Other Fees Transactions
+          </Typography>
+          <Box display="flex" gap={1.5} sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleOpenDialog}
+              sx={{
+                height: 40,
+                textTransform: 'none',
+                fontWeight: 'medium'
+              }}
+            >
               Add Transaction
             </Button>
-
             <Button
               variant="contained"
               color="success"
               startIcon={<DownloadIcon />}
               onClick={exportToExcel}
-              sx={{ mr: 0 }}
-            >
-              
-            </Button>
-
-            <TextField
-              size="small"
-              placeholder="Search ID/Name"
-              variant="outlined"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />,
-                endAdornment: searchTerm && (
-                  <IconButton size="small" onClick={() => setSearchTerm("")}>
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                ),
+              sx={{
+                height: 40,
+                backgroundColor: '#2e7d32',
+                '&:hover': { backgroundColor: '#1b5e20' },
+                textTransform: 'none',
+                fontWeight: 'medium'
               }}
-              sx={{ width: 180 }}
-            />
-
-            <FormControl size="small" sx={{ width: 150 }}>
-              <InputLabel>Particular</InputLabel>
-              <Select value={particularFilter} label="Particular" onChange={(e) => setParticularFilter(e.target.value)}>
-                <MenuItem value="">All Particulars</MenuItem>
-                {particularOptions.map((particular) => (
-                  <MenuItem key={particular} value={particular}>{particular}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl size="small" sx={{ width: 150 }}>
-              <InputLabel>Category</InputLabel>
-              <Select value={categoryFilter} label="Category" onChange={(e) => setCategoryFilter(e.target.value)}>
-                <MenuItem value="">All Categories</MenuItem>
-                {[...examFeeCategories, ...otherCategories].map((category) => (
-                  <MenuItem key={category} value={category}>{category}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-  size="small"
-  placeholder="Search Remark"
-  variant="outlined"
-  value={remarkFilter}
-  onChange={(e) => setRemarkFilter(e.target.value)}
-  InputProps={{
-    startAdornment: <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />,
-    endAdornment: remarkFilter && (
-      <IconButton size="small" onClick={() => setRemarkFilter("")}>
-        <ClearIcon fontSize="small" />
-      </IconButton>
-    ),
-  }}
-  sx={{ width: 180 }}
-/>
-            
-            <FormControl size="small" sx={{ width: 150 }}>
-              <InputLabel>Session</InputLabel>
-              <Select value={sessionFilter} label="Session" onChange={(e) => setSessionFilter(e.target.value)}>
-                <MenuItem value="">All Sessions</MenuItem>
-                {uniqueSessions.map((session) => (
-                  <MenuItem key={session} value={session}>{session}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl size="small" sx={{ width: 150 }}>
-              <InputLabel>Payment Mode</InputLabel>
-              <Select value={modeFilter} label="Payment Mode" onChange={(e) => setModeFilter(e.target.value)}>
-                <MenuItem value="">All Modes</MenuItem>
-                {uniqueModes.map((mode) => (
-                  <MenuItem key={mode} value={mode}>{mode}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <DatePicker
-              label="From Date"
-              value={fromDate}
-              onChange={(newValue) => setFromDate(newValue)}
-              renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
-            />
-
-            <DatePicker
-              label="To Date"
-              value={toDate}
-              onChange={(newValue) => setToDate(newValue)}
-              renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
-              minDate={fromDate}
-            />
-
-            <Tooltip title="Clear filters">
-              <IconButton size="small" onClick={clearFilters} sx={{ border: '1px solid rgba(0, 0, 0, 0.23)', borderRadius: 1, p: '6px' }}>
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            >
+              Export
+            </Button>
           </Box>
-        </div>
-        
-        <TableContainer component={Paper}>
+        </Box>
+
+        {/* Filters Panel */}
+        <Paper
+          elevation={1}
+          sx={{
+            p: 2,
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: '#ffffff',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          <Grid container spacing={2} alignItems="center">
+            {/* Search ID/Name */}
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search ID/Name"
+                variant="outlined"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />,
+                  endAdornment: searchTerm && (
+                    <IconButton size="small" onClick={() => setSearchTerm("")}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Search Remark */}
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search Remark"
+                variant="outlined"
+                value={remarkFilter}
+                onChange={(e) => setRemarkFilter(e.target.value)}
+                InputProps={{
+                  startAdornment: <SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />,
+                  endAdornment: remarkFilter && (
+                    <IconButton size="small" onClick={() => setRemarkFilter("")}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Particular */}
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Particular</InputLabel>
+                <Select value={particularFilter} label="Particular" onChange={(e) => setParticularFilter(e.target.value)}>
+                  <MenuItem value="">All Particulars</MenuItem>
+                  {particularOptions.map((particular) => (
+                    <MenuItem key={particular} value={particular}>{particular}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Category */}
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Category</InputLabel>
+                <Select value={categoryFilter} label="Category" onChange={(e) => setCategoryFilter(e.target.value)}>
+                  <MenuItem value="">All Categories</MenuItem>
+                  {[...examFeeCategories, ...otherCategories].map((category) => (
+                    <MenuItem key={category} value={category}>{category}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Session */}
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Session</InputLabel>
+                <Select value={sessionFilter} label="Session" onChange={(e) => setSessionFilter(e.target.value)}>
+                  <MenuItem value="">All Sessions</MenuItem>
+                  {uniqueSessions.map((session) => (
+                    <MenuItem key={session} value={session}>{session}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Payment Mode */}
+            <Grid item xs={6} sm={4} md={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Payment Mode</InputLabel>
+                <Select value={modeFilter} label="Payment Mode" onChange={(e) => setModeFilter(e.target.value)}>
+                  <MenuItem value="">All Modes</MenuItem>
+                  {uniqueModes.map((mode) => (
+                    <MenuItem key={mode} value={mode}>{mode}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* From Date */}
+            <Grid item xs={12} sm={4} md={3}>
+              <DatePicker
+                label="From Date"
+                value={fromDate}
+                onChange={(newValue) => setFromDate(newValue)}
+                renderInput={(params) => <TextField {...params} fullWidth size="small" />}
+              />
+            </Grid>
+
+            {/* To Date */}
+            <Grid item xs={12} sm={4} md={3}>
+              <DatePicker
+                label="To Date"
+                value={toDate}
+                onChange={(newValue) => setToDate(newValue)}
+                renderInput={(params) => <TextField {...params} fullWidth size="small" />}
+                minDate={fromDate}
+              />
+            </Grid>
+
+            {/* Clear Filters Button */}
+            <Grid item xs={12} sm={4} md="auto">
+              <Tooltip title="Clear filters">
+                <IconButton
+                  onClick={clearFilters}
+                  sx={{
+                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                    borderRadius: 1,
+                    height: 40,
+                    width: 40,
+                    backgroundColor: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      borderColor: 'rgba(0, 0, 0, 0.87)'
+                    }
+                  }}
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        <TableContainer
+          component={Paper}
+          sx={{
+            width: '100%',
+            overflowX: 'auto',
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(224, 224, 224, 1)'
+          }}
+        >
           <Table>
             <TableHead style={{ backgroundColor: "#CC7A00" }}>
               <TableRow>
-                <TableCell style={{ color: "white" }}>Student ID</TableCell>
-                <TableCell style={{ color: "white" }}>Student Name</TableCell>
-                <TableCell style={{ color: "white" }}>Particular</TableCell>
-                <TableCell style={{ color: "white" }}>Category</TableCell>
-                <TableCell style={{ color: "white" }}>Amount</TableCell>
-                <TableCell style={{ color: "white" }}>Payment Mode</TableCell>
-                <TableCell style={{ color: "white" }}>Mode ID</TableCell>
-                <TableCell style={{ color: "white" }}>Remark</TableCell>
-                <TableCell style={{ color: "white" }}>Payment Date</TableCell>
-                <TableCell style={{ color: "white" }}>Session</TableCell>
-                <TableCell style={{ color: "white" }}>Deposit By</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student ID</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student Name</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Particular</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Category</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Amount</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Payment Mode</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Mode ID</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Remark</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Payment Date</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Session</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Deposit By</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -654,7 +755,7 @@ const [remarkFilter, setRemarkFilter] = useState("");
           onClose={() => setOpenSnackbar(false)}
           message={snackbarMessage}
         />
-      </div>
+      </Box>
     </LocalizationProvider>
   );
 };

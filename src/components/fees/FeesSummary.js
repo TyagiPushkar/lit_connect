@@ -432,7 +432,7 @@ const FeesSummaryOptimized = () => {
     <div style={{ padding: "20px" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <Typography variant="h4" style={{ color: "#CC7A00", fontWeight: "bold" }}>
+        <Typography variant="h5" style={{ color: "#CC7A00", fontWeight: "bold" }}>
           <SummarizeIcon style={{ marginRight: 10, verticalAlign: "middle" }} />
           Fees Summary Report 
         </Typography>

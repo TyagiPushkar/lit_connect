@@ -351,6 +351,8 @@ const AttendanceList = () => {
     { value: 11, label: "December" },
   ];
 
+  console.log(selectedEmployee,"selectedEmployeeselectedEmployeeselectedEmployee")
+
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
@@ -887,7 +889,7 @@ const AttendanceList = () => {
           alignItems="center"
           mb={2}
         >
-          <Typography variant="h4" fontWeight="bold" color="primary">
+          <Typography variant="h5" fontWeight="bold"  style={{color: "#CC7A00"}}>
             Attendance Management
           </Typography>
           <Box display="flex" gap={1}>
@@ -904,6 +906,7 @@ const AttendanceList = () => {
           {user.role === "HR" && (
             <Grid item xs={12} sm={6} md={3}>
               <Autocomplete
+                size="small"
                 options={viewType === "employee" ? employees : students}
                 getOptionLabel={(option) =>
                   `${option.Name} (${option.EmpId || option.StudentId})`
@@ -928,6 +931,7 @@ const AttendanceList = () => {
                     label={`Select ${viewType === "employee" ? "Employee" : "Student"}`}
                     variant="outlined"
                     fullWidth
+                    size="small"
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: (
@@ -961,7 +965,7 @@ const AttendanceList = () => {
 
           {/* Month Selector */}
           <Grid item xs={12} sm={6} md={2}>
-            <FormControl fullWidth>
+            <FormControl fullWidth size="small">
               <InputLabel>Month</InputLabel>
               <Select
                 value={selectedMonth}
@@ -970,6 +974,7 @@ const AttendanceList = () => {
                 startAdornment={
                   <DateRange sx={{ mr: 1, color: "text.secondary" }} />
                 }
+                size="small"
               >
                 {months.map((month) => (
                   <MenuItem key={month.value} value={month.value}>
@@ -982,7 +987,7 @@ const AttendanceList = () => {
 
           {/* Year Selector */}
           <Grid item xs={12} sm={6} md={2}>
-            <FormControl fullWidth>
+            <FormControl fullWidth size="small">
               <InputLabel>Year</InputLabel>
               <Select
                 value={selectedYear}
@@ -991,6 +996,7 @@ const AttendanceList = () => {
                 startAdornment={
                   <CalendarToday sx={{ mr: 1, color: "text.secondary" }} />
                 }
+                size="small"
               >
                 {years.map((year) => (
                   <MenuItem key={year} value={year}>
@@ -1001,7 +1007,7 @@ const AttendanceList = () => {
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6} md={2}>
-            <ButtonGroup fullWidth>
+            <ButtonGroup fullWidth size="small" sx={{ height: 40 }}>
               <Button
                 variant={viewType === "employee" ? "contained" : "outlined"}
                 onClick={() => setViewType("employee")}
@@ -1017,12 +1023,12 @@ const AttendanceList = () => {
             </ButtonGroup>
           </Grid>
           <Grid item xs={12} sm={6} md={2}>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
               <Button
                 variant={viewMode === "calendar" ? "contained" : "outlined"}
                 onClick={() => setViewMode("calendar")}
                 startIcon={<CalendarToday />}
-                size="small"
+                sx={{ height: 40, flexGrow: 1 }}
               >
                 Calendar
               </Button>
@@ -1030,20 +1036,21 @@ const AttendanceList = () => {
                 variant={viewMode === "list" ? "contained" : "outlined"}
                 onClick={() => setViewMode("list")}
                 startIcon={<FilterList />}
-                size="small"
+                sx={{ height: 40, flexGrow: 1 }}
               >
                 List
               </Button>
             </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={12} md={3}>
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Grid item xs={12} sm={12} md={3} sx={{ ml: "auto", display: "flex", justifyContent: "flex-end" }}>
+            <Stack direction="row" spacing={1}>
               {user.role === "HR" && (
                 <Button
                   variant="outlined"
                   startIcon={<Settings />}
                   onClick={regularise}
+                  sx={{ height: 40 }}
                 >
                   Regularise
                 </Button>
@@ -1053,6 +1060,7 @@ const AttendanceList = () => {
                 startIcon={<Download />}
                 onClick={exportToCsv}
                 disabled={filteredActivities.length === 0}
+                sx={{ height: 40 }}
               >
                 Export CSV
               </Button>
@@ -1080,8 +1088,9 @@ const AttendanceList = () => {
             {holidayCount > 0 && ` • ${holidayCount} holidays`}
             {weekOffCount > 0 && ` • ${weekOffCount} week offs`}
             {leaveCount > 0 && ` • ${leaveCount} leaves`}
+         
             {selectedEmployee &&
-              ` • ${viewType === "employee" ? "Employee" : "Student"}: ${selectedEmployee.Name}`}
+              ` • ${viewType === "employee" ? "Employee" : "Student"}: ${selectedEmployee.Name||selectedEmployee.EmpId}`}
           </Typography>
         </Box>
       </Paper>
@@ -1111,7 +1120,7 @@ const AttendanceList = () => {
               background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
             }}
           >
-            <CardContent>
+            <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
               <Box
                 display="flex"
                 alignItems="center"
@@ -1128,7 +1137,7 @@ const AttendanceList = () => {
                     Attendance records
                   </Typography>
                 </Box>
-                <CalendarToday color="primary" sx={{ fontSize: 40 }} />
+                <CalendarToday color="primary" sx={{ fontSize: 30 }} />
               </Box>
             </CardContent>
           </Card>
@@ -1140,7 +1149,7 @@ const AttendanceList = () => {
               background: "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
             }}
           >
-            <CardContent>
+            <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
               <Box
                 display="flex"
                 alignItems="center"
@@ -1163,7 +1172,7 @@ const AttendanceList = () => {
                       : "0%"}
                   </Typography>
                 </Box>
-                <AccessTime color="success" sx={{ fontSize: 40 }} />
+                <AccessTime color="success" sx={{ fontSize: 30 }} />
               </Box>
             </CardContent>
           </Card>
@@ -1175,7 +1184,7 @@ const AttendanceList = () => {
               background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
             }}
           >
-            <CardContent>
+            <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
               <Box
                 display="flex"
                 alignItems="center"
@@ -1194,7 +1203,7 @@ const AttendanceList = () => {
                       : "0%"}
                   </Typography>
                 </Box>
-                <Schedule color="error" sx={{ fontSize: 40 }} />
+                <Schedule color="error" sx={{ fontSize: 30 }} />
               </Box>
             </CardContent>
           </Card>
@@ -1206,7 +1215,7 @@ const AttendanceList = () => {
               background: "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
             }}
           >
-            <CardContent>
+            <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
               <Box
                 display="flex"
                 alignItems="center"
@@ -1231,7 +1240,7 @@ const AttendanceList = () => {
                   badgeContent={`${holidayCount + weekOffCount + leaveCount}`}
                   color="warning"
                 >
-                  <Event color="warning" sx={{ fontSize: 40 }} />
+                  <Event color="warning" sx={{ fontSize: 30 }} />
                 </Badge>
               </Box>
             </CardContent>
