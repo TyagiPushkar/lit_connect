@@ -57,7 +57,7 @@ export default function LoginPage() {
       if (response.data.success) {
         login(response.data.data);
         setTimeout(() => {
-          navigate("/profile");
+          navigate("/attendance");
         }, 1000);
         setLoading(false);
       } else {

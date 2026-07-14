@@ -529,11 +529,11 @@ const NDCList = () => {
           marginBottom: 16,
         }}
       >
-        <div>
-          <Typography variant="h4" gutterBottom>
+      
+          <Typography variant="h5" style={{color: "#CC7A00"}} gutterBottom fontWeight="bold">
             NDC Dues List
           </Typography>
-        </div>
+       
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Button
             variant="contained"

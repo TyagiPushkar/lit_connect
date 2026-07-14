@@ -32,11 +32,15 @@ import {
   FormControl,
   ButtonGroup,
   Chip,
+  Grid,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DownloadIcon from "@mui/icons-material/Download";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
 import BlockIcon from "@mui/icons-material/Block";
@@ -1234,59 +1238,48 @@ const FeesPaymentList = () => {
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
+    <Box sx={{ pt: 1, px: 2 }}>
+      {/* Header Title and Actions */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          mb: 2.5,
+          flexDirection: { xs: "column", sm: "row" },
+          gap: { xs: 2, sm: 0 },
+          width: "100%",
         }}
       >
-        <h2 style={{ margin: 0, color: "#CC7A00" }}>Student Fees Management</h2>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <Autocomplete
-            options={distinctSessions}
-            value={selectedSession}
-            onChange={handleSessionChange}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Filter by Session"
-                variant="outlined"
-                size="small"
-              />
-            )}
-            style={{ minWidth: 200 }}
-            clearOnEscape
-            isOptionEqualToValue={(option, value) => option === value}
-          />
-
-          <Autocomplete
-            options={distinctCourses}
-            value={selectedCourse}
-            onChange={handleCourseChange}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Filter by Course"
-                variant="outlined"
-                size="small"
-              />
-            )}
-            style={{ minWidth: 200 }}
-            clearOnEscape
-            isOptionEqualToValue={(option, value) => option === value}
-            getOptionLabel={(option) => option || ""}
-          />
-
-          <ButtonGroup variant="contained" disabled={isDownloading}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "bold",
+            color: "#CC7A00",
+            fontFamily: '"Outfit", "Inter", sans-serif',
+          }}
+        >
+          Student Fees Management
+        </Typography>
+        <Box
+          display="flex"
+          gap={1.5}
+          sx={{ width: { xs: "100%", sm: "auto" }, justifyContent: "flex-end" }}
+        >
+          <ButtonGroup
+            variant="contained"
+            disabled={isDownloading}
+            size="small"
+            sx={{ height: 40 }}
+          >
             <Button
               onClick={openFilteredReportDialog}
               startIcon={<FilterListIcon />}
-              style={{
+              sx={{
                 backgroundColor: "#CC7A00",
                 "&:hover": { backgroundColor: "#B8690A" },
+                textTransform: "none",
+                fontWeight: "medium",
               }}
             >
               Filtered Report
@@ -1294,25 +1287,109 @@ const FeesPaymentList = () => {
             <Button
               onClick={openFullReportDialog}
               startIcon={<DownloadIcon />}
-              style={{
+              sx={{
                 backgroundColor: "#CC7A00",
                 "&:hover": { backgroundColor: "#B8690A" },
+                textTransform: "none",
+                fontWeight: "medium",
               }}
             >
               Full Report
             </Button>
           </ButtonGroup>
-          <TextField
-            label="Search by Student ID or Name or Contact"
-            variant="outlined"
-            size="small"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ minWidth: 300 }}
-          />
-        </div>
-      </div>
-      <TableContainer component={Paper} elevation={3}>
+        </Box>
+      </Box>
+
+      {/* Filters Panel */}
+      <Paper
+        elevation={1}
+        sx={{
+          p: 2,
+          mb: 3,
+          borderRadius: 2,
+          backgroundColor: "#ffffff",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+        }}
+      >
+        <Grid container spacing={2} alignItems="center">
+          {/* Search by Student ID or Name or Contact */}
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              label="Search by Student ID or Name or Contact"
+              variant="outlined"
+              size="small"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <SearchIcon fontSize="small" sx={{ color: "action.active", mr: 1 }} />
+                ),
+                endAdornment: searchQuery && (
+                  <IconButton size="small" onClick={() => setSearchQuery("")}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ),
+              }}
+            />
+          </Grid>
+
+          {/* Filter by Course */}
+          <Grid item xs={12} sm={6} md={3.5}>
+            <Autocomplete
+              size="small"
+              options={distinctCourses}
+              value={selectedCourse}
+              onChange={handleCourseChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Filter by Course"
+                  variant="outlined"
+                  size="small"
+                />
+              )}
+              fullWidth
+              clearOnEscape
+              isOptionEqualToValue={(option, value) => option === value}
+              getOptionLabel={(option) => option || ""}
+            />
+          </Grid>
+
+          {/* Filter by Session */}
+          <Grid item xs={12} sm={6} md={3.5}>
+            <Autocomplete
+              size="small"
+              options={distinctSessions}
+              value={selectedSession}
+              onChange={handleSessionChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Filter by Session"
+                  variant="outlined"
+                  size="small"
+                />
+              )}
+              fullWidth
+              clearOnEscape
+              isOptionEqualToValue={(option, value) => option === value}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <TableContainer
+        component={Paper}
+        elevation={3}
+        sx={{
+          width: "100%",
+          overflowX: "auto",
+          borderRadius: 2,
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+          border: "1px solid rgba(224, 224, 224, 1)",
+        }}
+      >
         <Table>
           <TableHead style={{ backgroundColor: "#CC7A00" }}>
             <TableRow>
@@ -1623,7 +1700,7 @@ const FeesPaymentList = () => {
         onClose={() => setOpenSnackbar(false)}
         message={snackbarMessage}
       />
-    </div>
+    </Box>
   );
 };
 

@@ -389,7 +389,7 @@ const StudentsList = () => {
           marginBottom: 16,
         }}
       >
-        <h2>Students List</h2>
+        <h2 style={{color: "#CC7A00"}}>Students List</h2>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Tooltip title="Export to Excel">
             <IconButton

@@ -22,6 +22,7 @@ import {
   Box,
   IconButton,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -57,7 +58,7 @@ const VariableFeesTransaction = () => {
   const [structures, setStructures] = useState([]);
   const [filteredStructures, setFilteredStructures] = useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(15);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const navigate = useNavigate(); // Keep if used elsewhere, otherwise can be removed
@@ -228,123 +229,185 @@ const VariableFeesTransaction = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ pt:1 }}> {/* Added a Box for overall padding */}
-        <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-          <Grid item xs={12} md={4}>
-            <h2>Variable Fee Transaction List</h2>
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={1} alignItems="center"> {/* Inner grid for filters */}
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Search ID/Name"
-                  variant="outlined"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (<SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />),
-                    endAdornment: searchTerm && (<IconButton size="small" onClick={() => setSearchTerm("")}><ClearIcon fontSize="small" /></IconButton>),
+      <Box sx={{ pt: 1, px: 1 }}> {/* Overall container padding */}
+        {/* Header Title and Actions */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{
+            mb: 2.5,
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 2, sm: 0 },
+            width: "100%"
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 'bold',
+              color: '#CC7A00',
+              fontFamily: '"Outfit", "Inter", sans-serif'
+            }}
+          >
+            Variable Fee Transaction List
+          </Typography>
+          <Box display="flex" gap={1.5} sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<DownloadIcon />}
+              onClick={exportToExcel}
+              sx={{
+                height: 40,
+                backgroundColor: '#2e7d32',
+                '&:hover': { backgroundColor: '#1b5e20' },
+                textTransform: 'none',
+                fontWeight: 'medium'
+              }}
+            >
+              Export
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Filters Panel */}
+        <Paper
+          elevation={1}
+          sx={{
+            p: 2,
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: '#ffffff',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          <Grid container spacing={2} alignItems="center">
+            {/* Search ID/Name */}
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search ID/Name"
+                variant="outlined"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (<SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />),
+                  endAdornment: searchTerm && (
+                    <IconButton size="small" onClick={() => setSearchTerm("")}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Search Remark */}
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search Remark"
+                variant="outlined"
+                value={remarkSearchTerm}
+                onChange={(e) => setRemarkSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (<SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />),
+                  endAdornment: remarkSearchTerm && (
+                    <IconButton size="small" onClick={() => setRemarkSearchTerm("")}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Course */}
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Course</InputLabel>
+                <Select value={courseFilter} label="Course" onChange={(e) => setCourseFilter(e.target.value)}>
+                  <MenuItem value="">All Courses</MenuItem>
+                  {uniqueCourses.map((course) => (
+                    <MenuItem key={course} value={course}>{course}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Session */}
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Session</InputLabel>
+                <Select value={sessionFilter} label="Session" onChange={(e) => setSessionFilter(e.target.value)}>
+                  <MenuItem value="">All Sessions</MenuItem>
+                  {uniqueSessions.map((session) => (
+                    <MenuItem key={session} value={session}>
+                      {session}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Payment Mode */}
+            <Grid item xs={6} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Payment Mode</InputLabel>
+                <Select value={modeFilter} label="Payment Mode" onChange={(e) => setModeFilter(e.target.value)}>
+                  <MenuItem value="">All Modes</MenuItem>
+                  {uniqueModes.map((mode) => (
+                    <MenuItem key={mode} value={mode}>{mode}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* From Date */}
+            <Grid item xs={12} sm={4} md={3}>
+              <DatePicker
+                label="From Date"
+                value={fromDate}
+                onChange={(newValue) => setFromDate(newValue)}
+                renderInput={(params) => <TextField {...params} fullWidth size="small" />}
+              />
+            </Grid>
+
+            {/* To Date */}
+            <Grid item xs={12} sm={4} md={3}>
+              <DatePicker
+                label="To Date"
+                value={toDate}
+                onChange={(newValue) => setToDate(newValue)}
+                renderInput={(params) => <TextField {...params} fullWidth size="small" />}
+                minDate={fromDate}
+              />
+            </Grid>
+
+            {/* Clear Filters Button */}
+            <Grid item xs={12} sm={4} md="auto">
+              <Tooltip title="Clear filters">
+                <IconButton
+                  onClick={clearFilters}
+                  sx={{
+                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                    borderRadius: 1,
+                    height: 40,
+                    width: 40,
+                    backgroundColor: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      borderColor: 'rgba(0, 0, 0, 0.87)'
+                    }
                   }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Search Remark"
-                  variant="outlined"
-                  value={remarkSearchTerm}
-                  onChange={(e) => setRemarkSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (<SearchIcon fontSize="small" sx={{ color: 'action.active', mr: 1 }} />),
-                    endAdornment: remarkSearchTerm && (<IconButton size="small" onClick={() => setRemarkSearchTerm("")}><ClearIcon fontSize="small" /></IconButton>),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Course</InputLabel>
-                  <Select value={courseFilter} label="Course" onChange={(e) => setCourseFilter(e.target.value)}>
-                    <MenuItem value="">All Courses</MenuItem>
-                    {uniqueCourses.map((course) => (
-                      <MenuItem key={course} value={course}>{course}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-             
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Session</InputLabel>
-                  <Select value={sessionFilter} label="Session" onChange={(e) => setSessionFilter(e.target.value)}>
-                    <MenuItem value="">All Sessions</MenuItem>
-                    {uniqueSessions.map((session) => (
-                      <MenuItem key={session} value={session}>
-                        {session}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Payment Mode</InputLabel>
-                  <Select value={modeFilter} label="Payment Mode" onChange={(e) => setModeFilter(e.target.value)}>
-                    <MenuItem value="">All Modes</MenuItem>
-                    {uniqueModes.map((mode) => (
-                      <MenuItem key={mode} value={mode}>{mode}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={2.5}>
-                <DatePicker
-                  label="From Date"
-                  value={fromDate}
-                  onChange={(newValue) => setFromDate(newValue)}
-                  renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={2.5}>
-                <DatePicker
-                  label="To Date"
-                  value={toDate}
-                  onChange={(newValue) => setToDate(newValue)}
-                  renderInput={(params) => <TextField {...params} fullWidth size="small" />}
-                  minDate={fromDate}
-                />
-              </Grid>
-              <Grid item xs={6} sm={3} md="auto">
-                <Tooltip title="Clear filters">
-                  <IconButton
-                    size="small"
-                    onClick={clearFilters}
-                    sx={{
-                      border: '1px solid rgba(0, 0, 0, 0.23)',
-                      borderRadius: 1,
-                      p: '6px'
-                    }}
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Grid>
-              <Grid item xs={6} sm={3} md="auto">
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<DownloadIcon />}
-                  onClick={exportToExcel}
-                  fullWidth
                 >
-                  Export
-                </Button>
-              </Grid>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Grid>
           </Grid>
-        </Grid>
+        </Paper>
 
         {/* AddFeeStructureDialog is assumed to be an external component */}
         <AddFeeStructureDialog
@@ -353,23 +416,32 @@ const VariableFeesTransaction = () => {
           onSuccess={fetchFeeStructures}
         />
 
-        <TableContainer component={Paper}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            width: '100%',
+            overflowX: 'auto',
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(224, 224, 224, 1)'
+          }}
+        >
           <Table>
             <TableHead style={{ backgroundColor: "#CC7A00" }}>
               <TableRow>
-                <TableCell style={{ color: "white" }}>Student ID</TableCell>
-                <TableCell style={{ color: "white" }}>Student Name</TableCell>
-                <TableCell style={{ color: "white" }}>Course</TableCell>
-                <TableCell style={{ color: "white" }}>Session</TableCell>
-                <TableCell style={{ color: "white" }}>Particular</TableCell>
-                <TableCell style={{ color: "white" }}>Mode</TableCell>
-                <TableCell style={{ color: "white" }}>Mode Id</TableCell>
-                <TableCell style={{ color: "white" }}>Total Amount</TableCell>
-                <TableCell style={{ color: "white" }}>Deposit Amount</TableCell>
-                <TableCell style={{ color: "white" }}>Balance Amount</TableCell>
-                <TableCell style={{ color: "white" }}>Payment Date</TableCell>
-                <TableCell style={{ color: "white" }}>Remark</TableCell>
-                <TableCell style={{ color: "white" }}>Deposit By</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student ID</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student Name</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Course</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Session</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Particular</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Mode</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Mode Id</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Total Amount</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Deposit Amount</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Balance Amount</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Payment Date</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Remark</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Deposit By</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -381,7 +453,7 @@ const VariableFeesTransaction = () => {
                     <TableCell>{row.CandidateName}</TableCell>
                     <TableCell>{row.course}</TableCell>
                     <TableCell>{row.Session}</TableCell>
-                   <TableCell>{row.particular}</TableCell>
+                    <TableCell>{row.particular}</TableCell>
                     <TableCell>{row.mode}</TableCell>
                     <TableCell>{row.mode_id}</TableCell>
                     <TableCell>{row.total_amount}</TableCell>
