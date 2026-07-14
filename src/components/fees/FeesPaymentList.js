@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Button,
   Table,
@@ -49,13 +49,23 @@ const FeesPaymentList = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [selectedSession, setSelectedSession] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    () => sessionStorage.getItem("fees_searchQuery") || ""
+  );
+  const [page, setPage] = useState(
+    () => parseInt(sessionStorage.getItem("fees_page") || "0", 10)
+  );
+  const [rowsPerPage, setRowsPerPage] = useState(
+    () => parseInt(sessionStorage.getItem("fees_rowsPerPage") || "10", 10)
+  );
+  const [selectedSession, setSelectedSession] = useState(
+    () => sessionStorage.getItem("fees_selectedSession") || ""
+  );
   const [distinctSessions, setDistinctSessions] = useState([]);
   const [distinctCourses, setDistinctCourses] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState(
+    () => sessionStorage.getItem("fees_selectedCourse") || ""
+  );
   const [employeeStatus, setEmployeeStatus] = useState({});
 
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
@@ -90,9 +100,27 @@ const FeesPaymentList = () => {
     fetchEmployeeStatus();
   }, []);
 
+  const isFirstFilter = useRef(true);
+
   useEffect(() => {
-    handleSearch(searchQuery);
+    if (transactions.length === 0) return;
+
+    if (isFirstFilter.current) {
+      isFirstFilter.current = false;
+      handleSearch(searchQuery, selectedSession, selectedCourse, false);
+    } else {
+      handleSearch(searchQuery, selectedSession, selectedCourse, true);
+    }
   }, [transactions, searchQuery, selectedSession, selectedCourse]);
+
+  // Keep sessionStorage in sync
+  useEffect(() => {
+    sessionStorage.setItem("fees_searchQuery", searchQuery);
+    sessionStorage.setItem("fees_selectedSession", selectedSession);
+    sessionStorage.setItem("fees_selectedCourse", selectedCourse);
+    sessionStorage.setItem("fees_page", page.toString());
+    sessionStorage.setItem("fees_rowsPerPage", rowsPerPage.toString());
+  }, [searchQuery, selectedSession, selectedCourse, page, rowsPerPage]);
 
   const fetchLibraryTransactions = async () => {
     setLoading(true);
@@ -161,12 +189,12 @@ const FeesPaymentList = () => {
   };
 
   const handleSearch = (
-    query,
+    query = searchQuery,
     session = selectedSession,
     course = selectedCourse,
+    shouldResetPage = false
   ) => {
-    setSearchQuery(query);
-    const lower = query.toLowerCase();
+    const lower = (query || "").toLowerCase();
 
     const filtered = transactions.filter((tx) => {
       const matchesQuery =
@@ -183,26 +211,28 @@ const FeesPaymentList = () => {
     });
 
     setFilteredTransactions(filtered);
-    setPage(0);
+    if (shouldResetPage) {
+      setPage(0);
+    } else {
+      const maxPage = Math.max(0, Math.ceil(filtered.length / rowsPerPage) - 1);
+      if (page > maxPage) {
+        setPage(maxPage);
+      }
+    }
   };
 
   const handleSessionChange = (event, newValue) => {
-    const sessionValue = newValue || "";
-    setSelectedSession(sessionValue);
-    handleSearch(searchQuery, sessionValue, selectedCourse);
+    setSelectedSession(newValue || "");
   };
 
   const handleCourseChange = (event, newValue) => {
-    const courseValue = newValue || "";
-    setSelectedCourse(courseValue);
-    handleSearch(searchQuery, selectedSession, courseValue);
+    setSelectedCourse(newValue || "");
   };
 
   const clearAllFilters = () => {
     setSelectedSession("");
     setSelectedCourse("");
     setSearchQuery("");
-    setFilteredTransactions(transactions);
     setPage(0);
   };
 
@@ -357,10 +387,28 @@ const FeesPaymentList = () => {
         throw new Error(errorMessage);
       }
 
+      // Fetch all transactions once to avoid thousands of individual calls
+      const transactionMap = new Map();
+      try {
+        const transactionsResponse = await axios.get(
+          "https://namami-infotech.com/LIT/src/fees/get_all_transactions.php",
+          { timeout: 15000 }
+        );
+        if (transactionsResponse.data.success && Array.isArray(transactionsResponse.data.data)) {
+          transactionsResponse.data.data.forEach((tx) => {
+            if (tx.id) {
+              transactionMap.set(String(tx.id), tx);
+            }
+          });
+        }
+      } catch (txError) {
+        console.error("Error fetching all transactions:", txError);
+      }
+
       setTotalStudents(allStudents.length);
       const reportData = [];
-      const BATCH_SIZE = 3; // Reduced for better debugging
-      const DELAY_BETWEEN_BATCHES = 500;
+      const BATCH_SIZE = 15; // Increased batch size since we only make 1 request per student now
+      const DELAY_BETWEEN_BATCHES = 50;
 
       console.log("Starting student processing...");
 
@@ -372,7 +420,7 @@ const FeesPaymentList = () => {
           batch.map((s) => s.StudentID),
         );
 
-        const batchPromises = batch.map((student) => processStudent(student));
+        const batchPromises = batch.map((student) => processStudent(student, transactionMap));
 
         // Wait for current batch to complete
         const batchResults = await Promise.allSettled(batchPromises);
@@ -396,31 +444,17 @@ const FeesPaymentList = () => {
                   reportFilters.installments.includes(inst.installmentNo),
               );
 
-              // Only include student if they have installments matching the filter
-              // if (filteredInstallments.length > 0) {
-              //   reportData.push({
-              //     ...studentData,
-              //     installments: filteredInstallments,
-              //   });
-              //   console.log(
-              //     `✓ Student ${studentData.studentId} included with ${filteredInstallments.length} matching installments`,
-              //   );
-              if (filteredInstallments.length > 0) {
-                reportData.push({
-                  ...studentData,
-                  installments: filteredInstallments,
-                  // Recalculate totals based on filtered installments
-                  totalPaid: filteredInstallments.reduce((sum, inst) => sum + (inst.amountPaid || 0), 0),
-                  totalDue: filteredInstallments.reduce((sum, inst) => sum + (inst.balanceAmount || 0), 0),
-                });
-                console.log(
-                  `✓ Student ${studentData.studentId} included with ${filteredInstallments.length} matching installments`,
-                );
-              } else {
-                console.log(
-                  `✗ Student ${studentData.studentId} excluded - no matching installments`,
-                );
-              }
+              // Include all processed students in the report, showing only the filtered installments
+              reportData.push({
+                ...studentData,
+                installments: filteredInstallments,
+                // Recalculate totals based on filtered installments
+                totalPaid: filteredInstallments.reduce((sum, inst) => sum + (inst.amountPaid || 0), 0),
+                totalDue: filteredInstallments.reduce((sum, inst) => sum + (inst.balanceAmount || 0), 0),
+              });
+              console.log(
+                `✓ Student ${studentData.studentId} included (installments filtered: ${filteredInstallments.length} match)`,
+              );
             } else {
               // For full reports or filtered reports without installment filter, include all
               reportData.push(studentData);
@@ -709,7 +743,7 @@ const FeesPaymentList = () => {
   //   }
   // };
 
-  const processStudent = async (student) => {
+  const processStudent = async (student, transactionMap) => {
     try {
       console.log(
         `Processing student: ${student.StudentID} - ${student.CandidateName}`,
@@ -785,30 +819,13 @@ const FeesPaymentList = () => {
               .map((id) => id.trim())
               .filter((id) => id);
   
-            // Fetch all transactions for this installment
-            const transactionPromises = transactionIds.map(
-              async (transactionId) => {
-                try {
-                  const response = await axios.get(
-                    `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
-                    { timeout: 10000 },
-                  );
-                  if (response.data.success && response.data.data) {
-                    return response.data.data;
-                  }
-                  return null;
-                } catch (error) {
-                  console.error(
-                    `Error fetching transaction ${transactionId}:`,
-                    error.message,
-                  );
-                  return null;
-                }
-              },
-            );
-  
-            const transactions = await Promise.all(transactionPromises);
-            transactionDetails = transactions.filter((tx) => tx !== null);
+            // Get all transactions for this installment from preloaded map
+            transactionIds.forEach((transactionId) => {
+              const transaction = transactionMap.get(String(transactionId));
+              if (transaction) {
+                transactionDetails.push(transaction);
+              }
+            });
   
             // Calculate total paid amount (subtracting variable fees)
             totalPaidForInstallment = transactionDetails.reduce((sum, tx) => {
@@ -861,7 +878,7 @@ const FeesPaymentList = () => {
               : "Due",
             paymentDate:
               transactionDetails.length > 0
-                ? transactionDetails[0].date_time
+                ? transactionDetails[0].date_time || transactionDetails[0].payment_date
                 : "",
             paymentMode:
               transactionDetails.length > 0 ? transactionDetails[0].mode : "",
@@ -1290,7 +1307,7 @@ const FeesPaymentList = () => {
             variant="outlined"
             size="small"
             value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
             style={{ minWidth: 300 }}
           />
         </div>

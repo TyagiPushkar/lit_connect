@@ -6,14 +6,10 @@ import {
   CircularProgress,
   Button,
   TextField,
-  IconButton,
   List,
   ListItem
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
-import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 
 const FinalizeAdmissionView = () => {

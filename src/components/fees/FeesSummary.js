@@ -54,21 +54,46 @@ const FeesSummaryOptimized = () => {
 
     try {
       setLoadingText("Fetching students...")
-      setLoadingProgress(10)
+      setLoadingProgress(5)
 
       // Step 1: Get all students
       const studentsResponse = await axios.get("https://namami-infotech.com/LIT/src/students/get_student.php")
 
+      console.log(studentsResponse,"studentsResponse")
       if (!studentsResponse.data.success) {
         throw new Error("Failed to fetch student data")
       }
 
       const students = studentsResponse.data.data
+      setLoadingProgress(10)
+
+      setLoadingText("Fetching transactions...")
+      setLoadingProgress(15)
+
+      // Step 2: Fetch all transactions once to avoid thousands of individual calls
+      const transactionMap = new Map()
+      try {
+        const transactionsResponse = await axios.get(
+          "https://namami-infotech.com/LIT/src/fees/get_all_transactions.php",
+          { timeout: 15000 }
+        )
+        if (transactionsResponse.data.success && Array.isArray(transactionsResponse.data.data)) {
+          transactionsResponse.data.data.forEach((tx) => {
+            if (tx.id) {
+              transactionMap.set(String(tx.id), tx)
+            }
+          })
+        }
+      } catch (txError) {
+        console.error("Error fetching all transactions:", txError)
+      }
+
       setLoadingProgress(20)
       setLoadingText(`Processing ${students.length} students...`)
+      
 
-      // Step 2: Batch process students in parallel (MUCH FASTER!)
-      const BATCH_SIZE = 10 // Process 10 students at once
+      // Step 3: Batch process students in parallel (MUCH FASTER!)
+      const BATCH_SIZE = 15 // Process 15 students at once since we only make 1 request per student now
       const summaryMap = new Map()
 
       for (let i = 0; i < students.length; i += BATCH_SIZE) {
@@ -79,8 +104,8 @@ const FeesSummaryOptimized = () => {
           `Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(students.length / BATCH_SIZE)}...`,
         )
 
-        // Process batch in parallel
-        const batchPromises = batch.map((student) => processStudentOptimized(student))
+        // Process batch in parallel, passing the pre-loaded transactionMap
+        const batchPromises = batch.map((student) => processStudentOptimized(student, transactionMap))
         const batchResults = await Promise.allSettled(batchPromises)
 
         // Aggregate results
@@ -126,7 +151,7 @@ const FeesSummaryOptimized = () => {
 
         // Small delay to prevent overwhelming the server
         if (i + BATCH_SIZE < students.length) {
-          await new Promise((resolve) => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 50))
         }
       }
 
@@ -145,27 +170,30 @@ const FeesSummaryOptimized = () => {
 
       setLoadingProgress(100)
       setLoadingText("Complete!")
+      
     } catch (error) {
       console.error("Error fetching summary data:", error)
       setSnackbarMessage("Error fetching summary data: " + error.message)
       setOpenSnackbar(true)
     } finally {
-      setTimeout(() => setLoading(false), 500) // Small delay to show completion
+      setTimeout(() => setLoading(false), 200) // Small delay to show completion
     }
   }
 
-  const processStudentOptimized = async (student) => {
+  const processStudentOptimized = async (student, transactionMap) => {
     try {
       // Get fee structure with timeout
       const feeResponse = await axios.get(
         `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
         { timeout: 10000 },
       )
-  
+
+      console.log("feeResponse", feeResponse)
+
       if (!feeResponse.data.success || !feeResponse.data.data) {
         return null
       }
-  
+
       const feeStructure = feeResponse.data.data
       const studentSummary = {
         firstYear: { netFee: 0, paid: 0, due: 0 },
@@ -175,55 +203,22 @@ const FeesSummaryOptimized = () => {
         totalPaid: 0,
         totalDue: 0,
       }
-  
-      // Get all unique transaction IDs first
-      const transactionIds = new Set()
-      feeStructure.forEach((installment) => {
-        if (installment.Paid && installment.Paid !== "0") {
-          installment.Paid.split(",").forEach((id) => {
-            if (id.trim()) transactionIds.add(id.trim())
-          })
-        }
-      })
-  
-      // Fetch all transactions in parallel (MUCH FASTER!)
-      const transactionPromises = Array.from(transactionIds).map(async (transactionId) => {
-        try {
-          const response = await axios.get(
-            `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
-            { timeout: 5000 },
-          )
-          return response.data.success ? { id: transactionId, data: response.data.data } : null
-        } catch (error) {
-          console.error(`Error fetching transaction ${transactionId}:`, error)
-          return null
-        }
-      })
-  
-      const transactionResults = await Promise.allSettled(transactionPromises)
-      const transactionMap = new Map()
-  
-      transactionResults.forEach((result) => {
-        if (result.status === "fulfilled" && result.value) {
-          transactionMap.set(result.value.id, result.value.data)
-        }
-      })
-  
+
       // Process installments
       feeStructure.forEach((installment) => {
         // Check if this installment has any regular fees (not just variable fees)
-        const hasRegularFees = 
+        const hasRegularFees =
           Number(installment.tution_fees || 0) > 0 ||
           Number(installment.hostel_fees || 0) > 0 ||
           Number(installment.exam_fees || 0) > 0 ||
           Number(installment.admission_fees || 0) > 0 ||
-          Number(installment.prospectus_fees || 0) > 0;
-  
+          Number(installment.prospectus_fees || 0) > 0
+
         // Skip installments that only have variable fees
         if (!hasRegularFees) {
-          return;
+          return
         }
-  
+
         const installmentTotal =
           Number(installment.tution_fees || 0) +
           Number(installment.exam_fees || 0) +
@@ -231,27 +226,27 @@ const FeesSummaryOptimized = () => {
           Number(installment.admission_fees || 0) +
           Number(installment.prospectus_fees || 0) -
           Number(installment.Scholarship || 0)
-  
+
         const year = Math.ceil(Number(installment.installment) / 4)
         let yearData = studentSummary.firstYear
-  
+
         if (year === 2) yearData = studentSummary.secondYear
         else if (year === 3) yearData = studentSummary.thirdYear
-  
+
         yearData.netFee += installmentTotal
-  
+
         if (installment.Paid && installment.Paid !== "0") {
           const transactionIds = installment.Paid.split(",").map((id) => id.trim())
           let totalPaid = 0
-  
+
           transactionIds.forEach((transactionId) => {
-            const transaction = transactionMap.get(transactionId)
+            const transaction = transactionMap.get(String(transactionId))
             if (transaction) {
               // Only count payments for installments with regular fees
               totalPaid += Number(transaction.deposit_amount - transaction.variable_fees || 0)
             }
           })
-  
+
           // Ensure we don't count more than the installment total
           const applicablePayment = Math.min(totalPaid, installmentTotal)
           yearData.paid += applicablePayment
@@ -260,7 +255,7 @@ const FeesSummaryOptimized = () => {
           yearData.due += installmentTotal
         }
       })
-  
+
       // Calculate totals
       studentSummary.totalNetFee =
         studentSummary.firstYear.netFee + studentSummary.secondYear.netFee + studentSummary.thirdYear.netFee
@@ -268,7 +263,7 @@ const FeesSummaryOptimized = () => {
         studentSummary.firstYear.paid + studentSummary.secondYear.paid + studentSummary.thirdYear.paid
       studentSummary.totalDue =
         studentSummary.firstYear.due + studentSummary.secondYear.due + studentSummary.thirdYear.due
-  
+
       return studentSummary
     } catch (error) {
       console.error(`Error processing student ${student.StudentID}:`, error)
@@ -439,7 +434,7 @@ const FeesSummaryOptimized = () => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <Typography variant="h4" style={{ color: "#CC7A00", fontWeight: "bold" }}>
           <SummarizeIcon style={{ marginRight: 10, verticalAlign: "middle" }} />
-          Fees Summary Report
+          Fees Summary Report 
         </Typography>
         <Button
           variant="contained"
