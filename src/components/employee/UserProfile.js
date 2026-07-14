@@ -31,6 +31,11 @@ const UserProfile = () => {
     setOpen(true);
   };
 
+
+  console.log(user,"useruseruseruser")
+
+
+
   const handleClose = () => {
     setOpen(false);
     setCurrentPassword("");
@@ -72,9 +77,9 @@ const UserProfile = () => {
         margin: "auto",
         mt: 4,
         p: 3,
-        background: "linear-gradient(135deg, #f3f4f6, #fff)",
+        // background: "linear-gradient(135deg, #f3f4f6, #fff)",
         borderRadius: 4,
-        boxShadow: 6,
+        boxShadow: 2,
       }}
     >
       <Paper
@@ -87,7 +92,7 @@ const UserProfile = () => {
           gap: 4,
           background: "#fff",
           borderRadius: 4,
-          boxShadow: 3,
+          // boxShadow: 3,
         }}
       >
         {/* Avatar */}

@@ -359,6 +359,9 @@ const StudentsList = () => {
         },
       );
       const data = await response.json();
+
+      console.log(data);
+
       if (data.success) {
         alert("Mobile ID removed successfully.");
         fetchLibraryTransactions();
@@ -386,7 +389,7 @@ const StudentsList = () => {
           marginBottom: 16,
         }}
       >
-        <h2>Students</h2>
+        <h2>Students List</h2>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Tooltip title="Export to Excel">
             <IconButton

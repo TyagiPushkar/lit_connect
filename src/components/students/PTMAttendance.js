@@ -187,8 +187,10 @@ export default function PTMAttendance({ studentId, currentSem, studentName }) {
             rows={4}
             value={editRecord?.Remarks || ""}
             onChange={(e) => setEditRecord((prev) => ({ ...prev, Remarks: e.target.value }))}
+            inputProps={{ maxLength: 250 }}
             fullWidth
-            helperText="Adding remarks will mark the student as Attended. Leaving empty marks as Not Attended."
+            error={editRecord?.Remarks?.length >= 250}
+            helperText={`${editRecord?.Remarks?.length || 0}/250 - Adding remarks will mark the student as Attended. Leaving empty marks as Not Attended.`}
           />
         </DialogContent>
         <DialogActions>

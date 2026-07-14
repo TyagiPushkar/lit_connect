@@ -120,6 +120,10 @@ const [paidVariableFees, setPaidVariableFees] = useState([])
                 const res = await axios.get(
                   `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
                 )
+
+                console.log(res,"resresresresresresresresres")
+
+
                 if (res.data.success && res.data.data) {
                   if (!statusMap[fee.id]) {
                     statusMap[fee.id] = {
@@ -143,11 +147,12 @@ const [paidVariableFees, setPaidVariableFees] = useState([])
 
         await Promise.all(transactionPromises)
 await fetchPaidVariableFees()
-        // Sort transactions by date and determine final status
+        // Sort transactions by id ascending and determine final status from the last transaction
         Object.keys(statusMap).forEach((feeId) => {
           if (statusMap[feeId].transactions.length > 0) {
-            statusMap[feeId].transactions.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date))
-            const latestTransaction = statusMap[feeId].transactions[0]
+            statusMap[feeId].transactions.sort((a, b) => Number(a.id) - Number(b.id))
+            const latestTransaction = statusMap[feeId].transactions[statusMap[feeId].transactions.length - 1]
+            console.log(latestTransaction, "latestTransaction")
             statusMap[feeId].status = latestTransaction.balance_amount > 0 ? "partially_paid" : "fully_paid"
             statusMap[feeId].currentBalance = latestTransaction.balance_amount
           }
@@ -489,29 +494,33 @@ const handleOpenVariableFeesDialog = () => {
                       {/* Show transaction receipts if paid or partially paid */}
                       {paymentStatus !== "unpaid" && transactionStatus[fee.id]?.transactions?.length > 0 && (
                         <>
-                          {transactionStatus[fee.id].transactions.map((transaction, index) => (
-                            <Button
-                              key={index}
-                              variant="outlined"
-                              fullWidth
-                              size="small"
-                              sx={{
-                                color: transaction.balance_amount > 0 ? "orange" : "green",
-                                borderColor: transaction.balance_amount > 0 ? "orange" : "green",
-                                mb: index < transactionStatus[fee.id].transactions.length - 1 ? 1 : 0,
-                              }}
-                              onClick={() => {
-                                setTransactionData({
-                                  ...transaction,
-                                  receiptIndex: index + 1,
-                                  totalReceipts: transactionStatus[fee.id].transactions.length,
-                                })
-                                setTransactionDialogOpen(true)
-                              }}
-                            >
-                              Receipt {index + 1} {transaction.balance_amount > 0 ? "(Partial)" : "(Full)"}
-                            </Button>
-                          ))}
+                          {[...transactionStatus[fee.id].transactions].reverse().map((transaction, index) => {
+                            const totalReceipts = transactionStatus[fee.id].transactions.length
+                            const receiptNumber = totalReceipts - index
+                            return (
+                              <Button
+                                key={index}
+                                variant="outlined"
+                                fullWidth
+                                size="small"
+                                sx={{
+                                  color: transaction.balance_amount > 0 ? "orange" : "green",
+                                  borderColor: transaction.balance_amount > 0 ? "orange" : "green",
+                                  mb: index < totalReceipts - 1 ? 1 : 0,
+                                }}
+                                onClick={() => {
+                                  setTransactionData({
+                                    ...transaction,
+                                    receiptIndex: receiptNumber,
+                                    totalReceipts: totalReceipts,
+                                  })
+                                  setTransactionDialogOpen(true)
+                                }}
+                              >
+                                Receipt {receiptNumber} {transaction.balance_amount > 0 ? "(Partial)" : "(Full)"}
+                              </Button>
+                            )
+                          })}
                         </>
                       )}
 

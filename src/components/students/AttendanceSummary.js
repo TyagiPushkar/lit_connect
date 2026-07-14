@@ -7,11 +7,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Typography,
   CircularProgress,
   Alert,
-  Grid,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -23,7 +21,7 @@ import {
   isSunday,
   parseISO,
 } from "date-fns";
-import { over } from "lodash";
+
 
 const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
   console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
@@ -331,10 +329,10 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
     return (
       <Box
         sx={{
-          border: "1px dashed #999",
+          border: "1px dashed #111",
           padding: "20px",
           textAlign: "center",
-          fontFamily: '"Courier New", monospace',
+          fontFamily: 'Inter, Roboto, Arial, sans-serif',
           backgroundColor: "#fafafa",
         }}
       >
@@ -348,11 +346,11 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
   return (
     <Box
       sx={{
-        border: "2px solid #333",
+        border: "1px solid #111",
         padding: "20px",
         marginBottom: "0px",
         backgroundColor: "#fafafa",
-        fontFamily: '"Courier New", monospace',
+        fontFamily: 'Inter, Roboto, Arial, sans-serif',
         position: "relative",
       }}
     >
@@ -364,10 +362,12 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           left: "20px",
           backgroundColor: "#f5f5f5",
           padding: "0 10px",
-          fontFamily: '"Courier New", monospace',
+          fontFamily: '"Georgia", serif',
           fontWeight: "bold",
-          fontSize: "14px",
+          fontSize: "20px",
           letterSpacing: "1px",
+          color: "#111",
+          border: "1px solid #111",
         }}
       >
         ATTENDANCE RECORD
@@ -379,7 +379,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           severity="error"
           sx={{
             mb: 2,
-            fontFamily: '"Courier New", monospace',
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
             border: "1px solid #f44336",
           }}
         >
@@ -392,7 +392,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           severity="warning"
           sx={{
             mb: 2,
-            fontFamily: '"Courier New", monospace',
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
             border: "1px solid #ff9800",
           }}
         >
@@ -408,7 +408,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
             justifyContent: "center",
             alignItems: "center",
             py: 3,
-            fontFamily: '"Courier New", monospace',
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
           }}
         >
           <CircularProgress size={24} sx={{ mr: 2 }} />
@@ -427,12 +427,13 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
             sx={{
               fontWeight: 600,
               mb: 2,
-              color: "#1a237e",
-              fontFamily: "Inter, Roboto, sans-serif",
+              color: "#111",
+              fontFamily: 'Inter, Roboto, Arial, sans-serif',
               letterSpacing: "0.5px",
-              borderBottom: "2px solid #e0e0e0",
+              borderBottom: "2px solid #111",
               pb: 0.5,
               display: "inline-block",
+              fontSize: "22px",
             }}
           >
             Monthly Attendance Summary (Latest 6 Months)
@@ -442,12 +443,14 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
             <Table
               size="small"
               sx={{
-                fontFamily: '"Courier New", monospace',
-                border: "1px solid #333",
+                border: "1px solid #111",
                 "& .MuiTableCell-root": {
-                  padding: "4px 8px",
-                  fontSize: "16px",
-                  lineHeight: 1.2,
+                  padding: "6px 10px",
+                  fontSize: "20px",
+                  lineHeight: 1.3,
+                  fontFamily: 'Inter, Roboto, Arial, sans-serif',
+                  color: "#000000",
+                  border: "1px solid #111",
                 },
               }}
             >
@@ -455,50 +458,44 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                 <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
                   <TableCell
                     sx={{
-                      border: "1px solid #333",
                       fontWeight: "bold",
-                      textAlign: "",
-                      padding: "",
+                      fontSize: "20px",
                     }}
                   >
                     Academic Month
                   </TableCell>
                   <TableCell
                     sx={{
-                      border: "1px solid #333",
                       fontWeight: "bold",
                       textAlign: "center",
-                      padding: "",
+                      fontSize: "20px",
                     }}
                   >
                     Total Working Days
                   </TableCell>
                   <TableCell
                     sx={{
-                      border: "1px solid #333",
                       fontWeight: "bold",
                       textAlign: "center",
-                      padding: "",
+                      fontSize: "20px",
                     }}
                   >
                     Days Present
                   </TableCell>
                   <TableCell
                     sx={{
-                      border: "1px solid #333",
                       fontWeight: "bold",
                       textAlign: "center",
-                      padding: "",
+                      fontSize: "20px",
                     }}
                   >
                     Days Absent
                   </TableCell>
                   <TableCell
                     sx={{
-                      border: "1px solid #333",
                       fontWeight: "bold",
                       textAlign: "center",
-                      padding: "",
+                      fontSize: "20px",
                     }}
                   >
                     Attendance Percentage
@@ -517,31 +514,27 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                   >
                     <TableCell
                       sx={{
-                        border: "1px solid #333",
-                        padding: "",
+                        border: "1px solid #111",
                         fontWeight: "500",
-                        fontSize: "15px",
-                        fontbold: "500",
+                        fontSize: "20px",
                       }}
                     >
                       {row.monthName}
                     </TableCell>
                     <TableCell
                       sx={{
-                        border: "1px solid #333",
-                        padding: "",
+                        border: "1px solid #111",
                         textAlign: "center",
                         fontWeight: "500",
-                        fontSize: "15px",
+                        fontSize: "20px",
                       }}
                     >
                       {row.totalClasses}
                     </TableCell>
                     <TableCell
                       sx={{
-                        border: "1px solid #333",
-                        padding: "",
-                        fontSize: "15px",
+                        border: "1px solid #111",
+                        fontSize: "20px",
                         textAlign: "center",
                         color: "#2e7d32",
                         fontWeight: "bold",
@@ -551,9 +544,8 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                     </TableCell>
                     <TableCell
                       sx={{
-                        border: "1px solid #333",
-                        padding: "",
-                        fontSize: "15px",
+                        border: "1px solid #111",
+                        fontSize: "20px",
                         fontWeight: "bold",
                         textAlign: "center",
                         color: "#d32f2f",
@@ -563,9 +555,8 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                     </TableCell>
                     <TableCell
                       sx={{
-                        border: "1px solid #333",
-                        padding: "",
-                        fontSize: "15px",
+                        border: "1px solid #111",
+                        fontSize: "20px",
                         textAlign: "center",
                       }}
                     >
@@ -573,6 +564,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         sx={{
                           display: "inline-block",
                           padding: "2px 12px",
+                          fontSize: "20px",
                           backgroundColor:
                             row.percentage >= 75
                               ? "#e8f5e8"
@@ -599,16 +591,17 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
               </TableBody>
               <TableRow sx={{}}>
                 <TableCell
-                  sx={{ border: "1px solid #333", fontWeight: "bold" }}
+                  sx={{ border: "1px solid #111", fontWeight: "bold", fontSize: "20px" }}
                 >
                   Total Average
                 </TableCell>
 
                 <TableCell
                   sx={{
-                    border: "1px solid #333",
+                    border: "1px solid #111",
                     textAlign: "center",
                     fontWeight: "bold",
+                    fontSize: "20px",
                   }}
                 >
                   {totalWorkingDays}
@@ -616,9 +609,10 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
 
                 <TableCell
                   sx={{
-                    border: "1px solid #333",
+                    border: "1px solid #111",
                     textAlign: "center",
                     fontWeight: "bold",
+                    fontSize: "20px",
                   }}
                 >
                   {totalPresent}
@@ -626,9 +620,10 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
 
                 <TableCell
                   sx={{
-                    border: "1px solid #333",
+                    border: "1px solid #111",
                     textAlign: "center",
                     fontWeight: "bold",
+                    fontSize: "20px",
                   }}
                 >
                   {totalAbsent}
@@ -636,9 +631,10 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
 
                 <TableCell
                   sx={{
-                    border: "1px solid #333",
+                    border: "1px solid #111",
                     textAlign: "center",
                     fontWeight: "bold",
+                    fontSize: "20px",
                   }}
                 >
                   {overallPercentage}%
@@ -648,143 +644,19 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           </TableContainer>
 
           {/* Overall Summary */}
-          {/* {summaryData.length > 0 && (
-            <Box
-              sx={{
-                mt: 3,
-                pt: 2,
-                borderTop: "1px solid #333",
-                backgroundColor: "#f5f5f5",
-                padding: "15px",
-                borderRadius: "2px",
-              }}
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontFamily: '"Courier New", monospace' }}
-                  >
-                    <strong>Total Months:</strong> {summaryData.length}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontFamily: '"Courier New", monospace' }}
-                  >
-                    <strong>Total Holidays:</strong> {holidays.length}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontFamily: '"Courier New", monospace' }}
-                  >
-                    <strong>Student ID:</strong> {EmpId}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: '"Courier New", monospace',
-                      color: "#1976d2",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    <strong>Latest:</strong> {summaryData[0]?.percentage}%
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          )} */}
-          {/* {summaryData.length > 0 && (
-            <Box
-              sx={{
-                mt: 3,
-                pt: 2,
-                borderTop: "1px solid #333",
-                padding: "15px",
-                borderRadius: "2px",
-                fontFamily: "Poppins, Roboto, sans-serif",
-              }}
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: "Poppins, Roboto, sans-serif",
-                      fontWeight: 500,
-                      fontSize: "14px",
-                    }}
-                  >
-                    <strong>Total Months:</strong> {summaryData.length}
-                  </Typography>
-                </Grid>
-
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: "Poppins, Roboto, sans-serif",
-                      fontWeight: 500,
-                      fontSize: "14px",
-                    }}
-                  >
-                    <strong>Total Holidays:</strong> {holidays.length}
-                  </Typography>
-                </Grid>
-
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: "Poppins, Roboto, sans-serif",
-                      fontWeight: 500,
-                      fontSize: "14px",
-                    }}
-                  >
-                    <strong>Student ID:</strong> {EmpId}
-                  </Typography>
-                </Grid>
-
-                <Grid item xs={6} md={3}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: "Poppins, Roboto, sans-serif",
-                      color: "#1976d2",
-                      fontWeight: 600,
-                      fontSize: "14px",
-                    }}
-                  >
-                    <strong>Latest:</strong> {summaryData[0]?.percentage}%
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          )} */}
           {/* Legend */}
           <Box
             sx={{
               mt: 2,
               pt: 1,
-              borderTop: "1px dashed #999",
-              fontFamily: '"Courier New", monospace',
+              borderTop: "1px dashed #111",
+              fontFamily: 'Inter, Roboto, Arial, sans-serif',
             }}
           >
-            <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
+            <Typography variant="caption" sx={{ display: "block", mb: 0.5, color: "#111", fontSize: "17px" }}>
               <strong>Note:</strong> Working days exclude Sundays and declared
               institute holidays
             </Typography>
-            {/* <Typography
-              variant="caption"
-              sx={{ display: "block", fontStyle: "italic" }}
-            >
-              Academic year follows July to June cycle
-            </Typography> */}
           </Box>
         </>
       ) : !(loading || holidayLoading) && summaryData.length === 0 ? (
@@ -792,18 +664,18 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           sx={{
             textAlign: "center",
             py: 3,
-            fontFamily: '"Courier New", monospace',
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
           }}
         >
           <Typography
             variant="body2"
-            sx={{ fontStyle: "italic", color: "#666" }}
+            sx={{ fontStyle: "italic", color: "#111", fontSize: "19px" }}
           >
             No attendance records found for this student
           </Typography>
           <Typography
             variant="caption"
-            sx={{ display: "block", mt: 1, color: "#999" }}
+            sx={{ display: "block", mt: 1, color: "#555", fontSize: "17px" }}
           >
             Attendance data may not be available for the current academic
             session

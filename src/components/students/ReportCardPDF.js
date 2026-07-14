@@ -174,17 +174,13 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
   }, []);
-
   const onDownloadPDF = async () => {
     if (!reportRef.current) return;
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
+      const container = reportRef.current;
+      const containerRect = container.getBoundingClientRect();
+      const blocks = Array.from(container.querySelectorAll(".pdf-block"));
 
       const pdf = new jsPDF({
         orientation: "p",
@@ -198,45 +194,113 @@ export default function ReportCardPDF({ studentId, sem, year }) {
       const marginBottom = 10; // mm
       const contentH = pageH - marginTop - marginBottom;
 
-      // Canvas pixels that fit in one page's content area
-      const contentHeightPx = Math.floor((canvas.width * contentH) / pageW);
+      // Height of one PDF page in DOM pixels
+      const pageH_dom = (containerRect.width * contentH) / pageW;
 
-      let yOffset = 0;
-      let firstPage = true;
+      // Get relative ranges of each block
+      const blockRanges = blocks.map((block) => {
+        const rect = block.getBoundingClientRect();
+        return {
+          top: rect.top - containerRect.top,
+          bottom: rect.bottom - containerRect.top,
+        };
+      });
 
-      while (yOffset < canvas.height) {
-        const sliceH = Math.min(contentHeightPx, canvas.height - yOffset);
+      const totalHeight = containerRect.height;
+      const pageBreaks = [0];
+      let currentY = 0;
+
+      while (currentY < totalHeight) {
+        let targetY = currentY + pageH_dom;
+        if (targetY >= totalHeight) {
+          pageBreaks.push(totalHeight);
+          break;
+        }
+
+        // Adjust targetY so we don't break inside a block
+        let adjusted = false;
+        for (const block of blockRanges) {
+          if (block.top + 2 < targetY && block.bottom - 2 > targetY) {
+            if (block.top > currentY + 5) {
+              targetY = block.top;
+              adjusted = true;
+              break;
+            }
+          }
+        }
+
+        if (adjusted) {
+          let doubleCheck = true;
+          while (doubleCheck) {
+            doubleCheck = false;
+            for (const block of blockRanges) {
+              if (block.top + 2 < targetY && block.bottom - 2 > targetY) {
+                if (block.top > currentY + 5) {
+                  targetY = block.top;
+                  doubleCheck = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // Safety fallback to prevent infinite loops
+        if (targetY <= currentY + 10) {
+          targetY = currentY + pageH_dom;
+        }
+
+        pageBreaks.push(targetY);
+        currentY = targetY;
+      }
+
+      // Generate the full canvas
+      const canvas = await html2canvas(container, {
+        scale: 2.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const scaleRatio = canvas.height / totalHeight;
+      const canvasBreaks = pageBreaks.map((y) => y * scaleRatio);
+
+      for (let i = 0; i < pageBreaks.length - 1; i++) {
+        const yStartCanvas = canvasBreaks[i];
+        const yEndCanvas = canvasBreaks[i + 1];
+        const sliceHCanvas = yEndCanvas - yStartCanvas;
 
         const sliceCanvas = document.createElement("canvas");
         sliceCanvas.width = canvas.width;
-        sliceCanvas.height = contentHeightPx;
+        sliceCanvas.height = sliceHCanvas;
+
         const ctx = sliceCanvas.getContext("2d");
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
         ctx.drawImage(
           canvas,
           0,
-          yOffset,
+          yStartCanvas,
           canvas.width,
-          sliceH,
+          sliceHCanvas,
           0,
           0,
           canvas.width,
-          sliceH,
+          sliceHCanvas,
         );
 
-        if (!firstPage) pdf.addPage();
+        if (i > 0) pdf.addPage();
+
+        const pdfSliceH = (sliceHCanvas / canvas.width) * pageW;
+
         pdf.addImage(
-          sliceCanvas.toDataURL("image/jpeg", 0.85),
+          sliceCanvas.toDataURL("image/jpeg", 0.95),
           "JPEG",
           0,
           marginTop,
           pageW,
-          contentH,
+          pdfSliceH,
         );
-
-        yOffset += contentHeightPx;
-        firstPage = false;
       }
 
       pdf.save(`ReportCard_${studCode || studentId}_Sem${semester || ""}.pdf`);
@@ -295,23 +359,13 @@ export default function ReportCardPDF({ studentId, sem, year }) {
           ref={reportRef}
           id="reportCard"
           elevation={0}
-          // sx={{
-          //   p: 0,
-          //   fontFamily: '"Courier New", Courier, monospace',
-          //   background: "linear-gradient(to bottom, #ffffff 0%, #f9f9f9 100%)",
-          //   border: "2px solid #333",
-          //   position: "relative",
-          //   overflow: "visible",
-          //   // minHeight: "29.7cm",
-          //   boxSizing: "border-box",
-          // }}
           sx={{
             // 🔥 IMPORTANT
             minHeight: "297mm",
             p: "2mm", // thoda padding dena zaroori hai
-            fontFamily: '"Courier New", Courier, monospace',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
             background: "#fff",
-            border: "1px solid #333",
+            border: "1px solid #111",
             position: "relative",
             overflow: "visible",
             boxSizing: "border-box",
@@ -327,7 +381,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               bottom: 0,
               opacity: 0.03,
               backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='Courier New' font-size='14' text-anchor='middle' dominant-baseline='middle'%3ELIT%3C/text%3E%3C/svg%3E\")",
+                "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' text-anchor='middle' dominant-baseline='middle'%3ELIT%3C/text%3E%3C/svg%3E\")",
               pointerEvents: "none",
               zIndex: 0,
             }}
@@ -336,8 +390,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
           {/* Official Letterhead Header */}
           <Box
             sx={{
-              backgroundColor: "#f5f5f5",
-              borderBottom: "3px double #333",
+              backgroundColor: "#fffcfcff",
+              borderBottom: "3px double #111",
               p: 3,
               position: "relative",
               zIndex: 1,
@@ -359,13 +413,18 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   }
                   alt="Institute Seal"
                   sx={{
-                    width: 90,
-                    height: 90,
+                    
+                    width: {
+                      xs: 120,
+                      sm: 150,
+                      md: 180,
+                    },
+                    height: {
+                      xs: 120,
+                      sm: 150,
+                      md: 180,
+                    },
                     objectFit: "contain",
-                    filter: "grayscale(100%)",
-                    border: "1px solid #999",
-                    borderRadius: "50%",
-                    padding: "4px",
                   }}
                   crossOrigin="anonymous"
                 />
@@ -383,9 +442,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   sx={{
                     fontWeight: "bold",
                     letterSpacing: "1px",
-                    color: "#2c3e50",
+                    color: "#1a252f",
                     textTransform: "uppercase",
                     fontFamily: '"Georgia", serif',
+                    fontSize: "30px",
                   }}
                 >
                   Lakshya Institute of Technology
@@ -393,8 +453,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   variant="subtitle2"
                   sx={{
-                    color: "#7f8c8d",
+                    color: "#2c3e50",
                     fontStyle: "italic",
+                    fontSize: "20px",
                     mt: 0.5,
                   }}
                 >
@@ -403,10 +464,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: "#555",
+                    color: "#111",
                     mt: 1,
                     fontFamily: "Inter, Roboto, sans-serif",
-                    fontSize: "0.95rem",
+                    fontSize: "19px",
                     lineHeight: 1.6,
                     letterSpacing: "0.3px",
                   }}
@@ -416,10 +477,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: "#555",
+                    color: "#111",
                     mt: 1,
                     fontFamily: "Inter, Roboto, sans-serif",
-                    fontSize: "0.95rem",
+                    fontSize: "19px",
                     lineHeight: 1.6,
                     letterSpacing: "0.3px",
                   }}
@@ -431,7 +492,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               <Box sx={{ textAlign: "right" }}>
                 <Box
                   sx={{
-                    border: "2px solid #333",
+                    bgcolor: "transparent",
                     padding: "8px",
                     display: "inline-block",
                     textAlign: "center",
@@ -440,7 +501,12 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 >
                   <Typography
                     variant="caption"
-                    sx={{ display: "block", fontStyle: "italic" }}
+                    sx={{
+                      display: "block",
+                      fontStyle: "italic",
+                      fontSize: "19px",
+                      color: "#111",
+                    }}
                   >
                     Date: {generatedOn}
                   </Typography>
@@ -453,7 +519,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               sx={{
                 height: "2px",
                 background:
-                  "linear-gradient(to right, transparent, #333, transparent)",
+                  "linear-gradient(to right, transparent, #111, transparent)",
                 margin: "10px 0",
               }}
             />
@@ -465,10 +531,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 fontWeight: "bold",
                 textTransform: "uppercase",
                 letterSpacing: "3px",
-                color: "#2c3e50",
-                textDecoration: "underline",
+                color: "#1a252f",
+                // textDecoration: "underline",
                 mt: 2,
-                fontFamily: '"Times New Roman", serif',
+                fontFamily: '"Georgia", serif',
+                fontSize: "38px",
               }}
             >
               Report Card
@@ -477,10 +544,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               variant="h6"
               align="center"
               sx={{
-                color: "#555",
+                color: "#111",
                 mt: 1,
                 fontFamily: "Inter, Roboto, sans-serif",
-                fontSize: "0.95rem",
+                fontSize: "21px",
                 lineHeight: 1.6,
                 letterSpacing: "0.3px",
               }}
@@ -493,6 +560,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
           <Box sx={{ p: 4, position: "relative", zIndex: 1 }}>
             {/* Student Information Box */}
             <Box
+              className="pdf-block"
               sx={{
                 border: "2px solid #333",
                 padding: "20px",
@@ -509,48 +577,16 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   left: "20px",
                   backgroundColor: "#f5f5f5",
                   padding: "0 10px",
-                  fontFamily: '"Courier New", monospace',
+                  fontFamily: '"Georgia", serif',
                   fontWeight: "bold",
-                  fontSize: "15px",
+                  fontSize: "20px",
+                  color: "#111",
                 }}
               >
                 STUDENT PARTICULARS
               </Box>
               {/* student bio data */}
               <Grid container spacing={3}>
-                {/* <Grid item xs={6}>
-                  <Typography
-                    sx={{
-                      color: "#555",
-                      mt: 1,
-                      fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "0.95rem",
-                      lineHeight: 1.6,
-                      letterSpacing: "0.3px",
-                    }}
-                  >
-                    <span style={{ fontWeight: "bold", marginRight: "10px" }}>
-                      Name:
-                    </span>
-                    {student?.CandidateName || "N/A"}
-                  </Typography>
-                  <Typography
-                    sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}
-                  >
-                    <span style={{ fontWeight: "bold", marginRight: "10px" }}>
-                      Father's Name:
-                    </span>
-                    {student?.FatherName || student?.GuardianName || "-"}
-                  </Typography>
-                  <Typography
-                    sx={{ mb: 1, fontFamily: '"Courier New", monospace' }}
-                  >
-                    <span style={{ fontWeight: "bold", marginRight: "10px" }}>
-                      Course:
-                    </span>
-                    {course || "N/A"}
-                  </Typography>
-                </Grid> */}
                 <Grid item xs={6}>
                   <Typography
                     sx={{
@@ -558,15 +594,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "18px",
-                      color: "#444",
+                      fontSize: "21px",
+                      color: "#111",
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         minWidth: "140px",
-                        color: "#222",
+                        color: "#000",
                       }}
                     >
                       Name
@@ -580,15 +616,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "18px",
-                      color: "#444",
+                      fontSize: "21px",
+                      color: "#111",
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         minWidth: "140px",
-                        color: "#222",
+                        color: "#000",
                       }}
                     >
                       Father's Name
@@ -602,15 +638,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "18px",
-                      color: "#444",
+                      fontSize: "21px",
+                      color: "#111",
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         minWidth: "140px",
-                        color: "#222",
+                        color: "#000",
                       }}
                     >
                       Course
@@ -625,15 +661,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "18px",
-                      color: "#444",
+                      fontSize: "21px",
+                      color: "#111",
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         minWidth: "140px",
-                        color: "#222",
+                        color: "#000",
                       }}
                     >
                       Roll No
@@ -646,15 +682,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "18px",
-                      color: "#444",
+                      fontSize: "21px",
+                      color: "#111",
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         minWidth: "140px",
-                        color: "#222",
+                        color: "#000",
                       }}
                     >
                       Semester
@@ -667,15 +703,15 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       alignItems: "center",
                       mb: 1,
                       fontFamily: "Inter, Roboto, sans-serif",
-                      fontSize: "18px",
-                      color: "#444",
+                      fontSize: "21px",
+                      color: "#111",
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         minWidth: "140px",
-                        color: "#222",
+                        color: "#000",
                       }}
                     >
                       Contact No
@@ -686,20 +722,20 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 </Grid>
               </Grid>
             </Box>
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: 2 }} className="pdf-block">
               <AttendanceSummary EmpId={studentId} sem={sem} year={year} />
             </Box>
             {/* Internal Examination Results */}
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: 2 }} className="pdf-block">
               <Typography
                 variant="h6"
                 sx={{
-                  backgroundColor: "#333",
+                  backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Courier New", monospace',
+                  fontFamily: '"Georgia", serif',
                   fontWeight: "bold",
                   textTransform: "uppercase",
                 }}
@@ -714,7 +750,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     padding: "20px",
                     textAlign: "center",
                     fontStyle: "italic",
-                    color: "#666",
+                    color: "#333",
                   }}
                 >
                   No internal examination data available for this semester.
@@ -724,12 +760,14 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   <TableContainer
                     size="small"
                     sx={{
-                      fontFamily: '"Courier New", monospace',
-                      border: "1px solid #333",
+                      border: "1px solid #111",
                       "& .MuiTableCell-root": {
-                        padding: "4px 8px",
-                        fontSize: "16px",
-                        lineHeight: 1.2,
+                        padding: "6px 10px",
+                        fontSize: "20px",
+                        lineHeight: 1.3,
+                        fontFamily: "Inter, Roboto, Arial, sans-serif",
+                        color: "#000000",
+                        border: "1px solid #111",
                       },
                     }}
                   >
@@ -740,7 +778,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             sx={{
                               border: "1px solid #333",
                               fontWeight: "bold",
-                              fontSize: "14px",
+                              fontSize: "20px",
                               textAlign: "center",
                             }}
                           >
@@ -750,7 +788,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             sx={{
                               border: "1px solid #333",
                               fontWeight: "bold",
-                              fontSize: "14px",
+                              fontSize: "20px",
                               textAlign: "center",
                             }}
                           >
@@ -761,7 +799,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
-                              fontSize: "14px",
+                              fontSize: "20px",
                             }}
                           >
                             Max Marks
@@ -771,7 +809,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
-                              fontSize: "14px",
+                              fontSize: "20px",
                             }}
                           >
                             Marks Obtained
@@ -781,7 +819,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
-                              fontSize: "14px",
+                              fontSize: "20px",
                             }}
                           >
                             Percentage
@@ -791,7 +829,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               border: "1px solid #333",
                               fontWeight: "bold",
                               textAlign: "center",
-                              fontSize: "14px",
+                              fontSize: "20px",
                             }}
                           >
                             Grade
@@ -815,7 +853,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
-                                  fontSize: "14px",
+                                  fontSize: "20px",
                                 }}
                               >
                                 {subjectCodeMap[row?.Subject] ||
@@ -825,7 +863,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               <TableCell
                                 sx={{
                                   border: "1px solid #333",
-                                  fontSize: "14px",
+                                  fontSize: "20px",
                                 }}
                               >
                                 {row?.Subject || "-"}
@@ -834,7 +872,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
-                                  fontSize: "14px",
+                                  fontSize: "20px",
                                 }}
                               >
                                 {max}
@@ -844,7 +882,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   border: "1px solid #333",
                                   textAlign: "center",
                                   fontWeight: "bold",
-                                  fontSize: "14px",
+                                  fontSize: "20px",
                                   color: absent ? "#f44336" : "inherit",
                                 }}
                               >
@@ -854,7 +892,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
-                                  fontSize: "14px",
+                                  fontSize: "20px",
                                 }}
                               >
                                 {absent ? "-" : formatPct(pct)}
@@ -863,7 +901,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 sx={{
                                   border: "1px solid #333",
                                   textAlign: "center",
-                                  fontSize: "14px",
+                                  fontSize: "20px",
                                 }}
                               >
                                 {absent ? (
@@ -873,7 +911,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                     sx={{
                                       display: "inline-block",
                                       padding: "2px 8px",
-                                      fontSize: "14px",
+                                      fontSize: "20px",
                                       backgroundColor:
                                         grade === "A"
                                           ? "#e8f5e8"
@@ -909,12 +947,12 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   {/* Summary Box */}
                   <Box
                     sx={{
-                      border: "2px solid #333",
+                      border: "1px solid #111",
                       mt: 2,
                       px: 2,
                       py: 1,
                       backgroundColor: "#f9f9f9",
-                      fontFamily: '"Courier New", monospace',
+                      fontFamily: "Inter, Roboto, Arial, sans-serif",
                     }}
                   >
                     <Grid container alignItems="center">
@@ -926,8 +964,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             <Grid item xs={4} sx={{ textAlign: "center" }}>
                               <Typography
                                 sx={{
-                                  fontFamily: '"Courier New", monospace',
+                                  fontFamily:
+                                    "Inter, Roboto, Arial, sans-serif",
                                   fontWeight: "bold",
+                                  color: "#000",
+                                  fontSize: "20px",
                                 }}
                               >
                                 Total Marks:{" "}
@@ -939,8 +980,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             <Grid item xs={4}>
                               <Typography
                                 sx={{
-                                  fontFamily: '"Courier New", monospace',
+                                  fontFamily:
+                                    "Inter, Roboto, Arial, sans-serif",
                                   fontWeight: "bold",
+                                  color: "#000",
+                                  fontSize: "20px",
                                 }}
                               >
                                 Overall Percentage:{" "}
@@ -950,8 +994,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             <Grid item xs={4}>
                               <Typography
                                 sx={{
-                                  fontFamily: '"Courier New", monospace',
+                                  fontFamily:
+                                    "Inter, Roboto, Arial, sans-serif",
                                   fontWeight: "bold",
+                                  color: "#000",
+                                  fontSize: "20px",
                                 }}
                               >
                                 Final Grade:{" "}
@@ -968,16 +1015,16 @@ export default function ReportCardPDF({ studentId, sem, year }) {
             </Box>
 
             {/* Class Tests Section */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4 }} className="pdf-block">
               <Typography
                 variant="h6"
                 sx={{
-                  backgroundColor: "#555",
+                  backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Courier New", monospace',
+                  fontFamily: '"Georgia", serif',
                   fontWeight: "bold",
                 }}
               >
@@ -987,8 +1034,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   sx={{
                     fontStyle: "italic",
-                    color: "#777",
+                    color: "#111",
                     mt: 3,
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
                   }}
                 >
                   No class test data recorded.
@@ -1001,10 +1049,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     return (
                       <Grid item xs={12} sm={6} md={6} key={section.category}>
                         <Box
+                          className="pdf-block"
                           sx={{
                             background: "#fff",
-                            borderRadius: "10px",
-                            border: "1px solid #333",
+                            borderRadius: "4px",
+                            border: "1px solid #111",
                             overflow: "hidden",
                           }}
                         >
@@ -1014,10 +1063,17 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               background: "#f5f7fa",
                               px: 2,
                               py: 1,
-                              // borderBottom: "1px solid #e0e0e0",
+                              borderBottom: "1px solid #111",
                             }}
                           >
-                            <Typography sx={{ fontWeight: 600 }}>
+                            <Typography
+                              sx={{
+                                fontWeight: 600,
+                                color: "#111",
+                                fontFamily: "Inter, Roboto, Arial, sans-serif",
+                                fontSize: "19px",
+                              }}
+                            >
                               {section.category}
                             </Typography>
                           </Box>
@@ -1025,12 +1081,14 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           <TableContainer
                             size="small"
                             sx={{
-                              fontFamily: '"Courier New", monospace',
-                              // border: "1px solid #333",
+                              border: "1px solid #111",
                               "& .MuiTableCell-root": {
-                                padding: "4px 8px",
-                                fontSize: "16px",
-                                lineHeight: 1.2,
+                                padding: "6px 10px",
+                                fontSize: "19px",
+                                lineHeight: 1.3,
+                                fontFamily: "Inter, Roboto, Arial, sans-serif",
+                                color: "#000000",
+                                border: "1px solid #111",
                               },
                             }}
                           >
@@ -1043,9 +1101,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 >
                                   <TableCell
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
-                                      fontSize: "14px",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Subject
@@ -1053,9 +1110,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
-                                      fontSize: "14px",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Max
@@ -1063,9 +1119,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
-                                      fontSize: "14px",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Obt
@@ -1073,9 +1128,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
-                                      fontSize: "14px",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     %
@@ -1083,9 +1137,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
-                                      fontSize: "14px",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Grade
@@ -1113,7 +1166,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                       <TableCell
                                         sx={{
                                           border: "1px solid #333",
-                                          fontSize: "14px",
+                                          fontSize: "19px",
                                         }}
                                       >
                                         {row.Subject}
@@ -1123,7 +1176,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                         sx={{
                                           border: "1px solid #333",
                                           textAlign: "center",
-                                          fontSize: "14px",
+                                          fontSize: "19px",
                                         }}
                                       >
                                         {row.MaxMarks}
@@ -1133,7 +1186,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                         sx={{
                                           border: "1px solid #333",
                                           textAlign: "center",
-                                          fontSize: "14px",
+                                          fontSize: "19px",
                                           color: absent ? "#f44336" : "inherit",
                                         }}
                                       >
@@ -1144,7 +1197,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                         sx={{
                                           border: "1px solid #333",
                                           textAlign: "center",
-                                          fontSize: "14px",
+                                          fontSize: "19px",
                                         }}
                                       >
                                         {absent ? "-" : `${pct.toFixed(1)}%`}
@@ -1155,7 +1208,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                         sx={{
                                           border: "1px solid #333",
                                           fontweight: "bold",
-                                          fontSize: "14px",
+                                          fontSize: "19px",
                                           color: absent
                                             ? "#555"
                                             : grade === "A"
@@ -1182,16 +1235,16 @@ export default function ReportCardPDF({ studentId, sem, year }) {
             </Box>
 
             {/* CBT Section */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4 }} className="pdf-block">
               <Typography
                 variant="h6"
                 sx={{
-                  backgroundColor: "#555",
+                  backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Courier New", monospace',
+                  fontFamily: '"Georgia", serif',
                   fontWeight: "bold",
                 }}
               >
@@ -1203,8 +1256,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   sx={{
                     fontStyle: "italic",
-                    color: "#666",
-                    fontFamily: '"Courier New", monospace',
+                    color: "#111",
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
                   }}
                 >
                   No CBT data recorded.
@@ -1216,10 +1269,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                     return (
                       <Grid item xs={6} md={6} key={section.category}>
                         <Box
+                          className="pdf-block"
                           sx={{
                             background: "#fff",
-                            borderRadius: "10px",
-                            border: "1px solid #333",
+                            borderRadius: "4px",
+                            border: "1px solid #111",
                             overflow: "hidden",
                           }}
                         >
@@ -1229,25 +1283,34 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               background: "#f5f7fa",
                               px: 2,
                               py: 1,
-                              // borderBottom: "1px solid #e0e0e0",
+                              borderBottom: "1px solid #111",
                             }}
                           >
-                            <Typography sx={{ fontWeight: 600 }}>
+                            <Typography
+                              sx={{
+                                fontWeight: 600,
+                                color: "#111",
+                                fontFamily: "Inter, Roboto, Arial, sans-serif",
+                                fontSize: "19px",
+                              }}
+                            >
                               {section.category}
                             </Typography>
                           </Box>
                           <TableContainer
                             sx={{
-                              fontFamily: '"Courier New", monospace',
-                              // border: "1px solid #333",
+                              border: "1px solid #111",
                               "& .MuiTableCell-root": {
-                                padding: "4px 8px",
-                                fontSize: "16px",
-                                lineHeight: 1.2,
+                                padding: "6px 10px",
+                                fontSize: "19px",
+                                lineHeight: 1.3,
+                                fontFamily: "Inter, Roboto, Arial, sans-serif",
+                                color: "#000000",
+                                border: "1px solid #111",
                               },
                             }}
                           >
-                            <Table size="small" sx={{ Width: "100%" }}>
+                            <Table size="small" sx={{ width: "100%" }}>
                               <TableHead>
                                 <TableRow
                                   sx={{
@@ -1256,8 +1319,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 >
                                   <TableCell
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Subject
@@ -1265,8 +1328,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Max
@@ -1274,8 +1337,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Obt
@@ -1283,8 +1346,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     %
@@ -1292,8 +1355,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   <TableCell
                                     align="center"
                                     sx={{
-                                      border: "1px solid #333",
                                       fontWeight: "bold",
+                                      fontSize: "19px",
                                     }}
                                   >
                                     Grade
@@ -1383,16 +1446,16 @@ export default function ReportCardPDF({ studentId, sem, year }) {
             </Box>
 
             {/* vst section */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4 }} className="pdf-block">
               <Typography
                 variant="h6"
                 sx={{
-                  backgroundColor: "#555",
+                  backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Courier New", monospace',
+                  fontFamily: '"Georgia", serif',
                   fontWeight: "bold",
                 }}
               >
@@ -1403,8 +1466,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   sx={{
                     fontStyle: "italic",
-                    color: "#666",
-                    fontFamily: '"Courier New", monospace',
+                    color: "#111",
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
                   }}
                 >
                   No vst data recorded.
@@ -1413,11 +1476,14 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <TableContainer
                   size="small"
                   sx={{
-                    fontFamily: '"Courier New", monospace',
+                    border: "1px solid #111",
                     "& .MuiTableCell-root": {
-                      padding: "4px 8px",
-                      fontSize: "16px",
-                      lineHeight: 1.2,
+                      padding: "6px 10px",
+                      fontSize: "20px",
+                      lineHeight: 1.3,
+                      fontFamily: "Inter, Roboto, Arial, sans-serif",
+                      color: "#000000",
+                      border: "1px solid #111",
                     },
                   }}
                 >
@@ -1426,54 +1492,54 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                       <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Subject Code
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Subject Name
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Max Marks
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Marks Obtained
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Percentage
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Grade
@@ -1496,6 +1562,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               sx={{
                                 border: "1px solid #333",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {subjectCodeMap[row?.Subject] ||
@@ -1506,6 +1573,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               sx={{
                                 border: "1px solid #333",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {row?.Subject || "-"}
@@ -1514,6 +1582,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               sx={{
                                 border: "1px solid #333",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {max}
@@ -1523,6 +1592,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                 border: "1px solid #333",
                                 textAlign: "center",
                                 fontWeight: "bold",
+                                fontSize: "20px",
                                 color: absent ? "#f44336" : "inherit",
                               }}
                             >
@@ -1532,6 +1602,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               sx={{
                                 border: "1px solid #333",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {absent ? "-" : formatPct(pct)}
@@ -1540,6 +1611,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               sx={{
                                 border: "1px solid #333",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {absent ? (
@@ -1549,6 +1621,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   sx={{
                                     display: "inline-block",
                                     padding: "2px 8px",
+                                    fontSize: "20px",
                                     backgroundColor:
                                       grade === "A"
                                         ? "#e8f5e8"
@@ -1583,16 +1656,16 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               )}
             </Box>
             {/* Assignment section */}
-            <Box sx={{ mt: 4 }}>
+            <Box sx={{ mt: 4 }} className="pdf-block">
               <Typography
                 variant="h6"
                 sx={{
-                  backgroundColor: "#555",
+                  backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Courier New", monospace',
+                  fontFamily: '"Georgia", serif',
                   fontWeight: "bold",
                 }}
               >
@@ -1602,8 +1675,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 <Typography
                   sx={{
                     fontStyle: "italic",
-                    color: "#666",
-                    fontFamily: '"Courier New", monospace',
+                    color: "#111",
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
                   }}
                 >
                   No Assignment recorded.
@@ -1611,58 +1684,61 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               ) : (
                 <TableContainer
                   sx={{
-                    fontFamily: '"Courier New", monospace',
+                    border: "1px solid #111",
                     "& .MuiTableCell-root": {
-                      padding: "4px 8px",
-                      fontSize: "16px",
-                      lineHeight: 1.2,
+                      padding: "6px 10px",
+                      fontSize: "20px",
+                      lineHeight: 1.3,
+                      fontFamily: "Inter, Roboto, Arial, sans-serif",
+                      color: "#000000",
+                      border: "1px solid #111",
                     },
                   }}
                 >
                   <Table>
                     <TableHead>
-                      <TableRow>
+                      <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Month
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           sem
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           No Of Class
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Present Class
                         </TableCell>
                         <TableCell
                           sx={{
-                            border: "1px solid #333",
                             fontWeight: "bold",
                             textAlign: "center",
+                            fontSize: "20px",
                           }}
                         >
                           Percentage
@@ -1679,42 +1755,47 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           <TableRow key={assignment.Id}>
                             <TableCell
                               sx={{
-                                border: "1px solid #333",
+                                border: "1px solid #111",
                                 fontWeight: "bold",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {assignment.Month}
                             </TableCell>
                             <TableCell
                               sx={{
-                                border: "1px solid #333",
+                                border: "1px solid #111",
                                 fontWeight: "bold",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {assignment.Semester}
                             </TableCell>
                             <TableCell
                               sx={{
-                                border: "1px solid #333",
+                                border: "1px solid #111",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {assignment.NoOfClasses}
                             </TableCell>
                             <TableCell
                               sx={{
-                                border: "1px solid #333",
+                                border: "1px solid #111",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {assignment.PresentClass}
                             </TableCell>
                             <TableCell
                               sx={{
-                                border: "1px solid #333",
+                                border: "1px solid #111",
                                 textAlign: "center",
+                                fontSize: "20px",
                               }}
                             >
                               {pct.toFixed(1)}%
@@ -1730,18 +1811,21 @@ export default function ReportCardPDF({ studentId, sem, year }) {
 
             {/* Footer */}
             <Box
+              className="pdf-block"
               sx={{
                 mt: 2,
                 pt: 1,
-                borderTop: "2px solid #333",
+                borderTop: "2px solid #111",
                 textAlign: "center",
               }}
             >
               <Typography
                 variant="caption"
                 sx={{
-                  fontFamily: '"Courier New", monospace',
-                  color: "#666",
+                  fontFamily: "Inter, Roboto, Arial, sans-serif",
+                  color: "#000000",
+                  fontSize: "17px",
+                  fontWeight: "bold",
                 }}
               >
                 This is a computer generated document. No signature is required.
@@ -1750,8 +1834,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 variant="caption"
                 sx={{
                   display: "block",
-                  fontFamily: '"Courier New", monospace',
-                  color: "#999",
+                  fontFamily: "Inter, Roboto, Arial, sans-serif",
+                  color: "#111111",
+                  fontSize: "17px",
                 }}
               >
                 Report ID: {studCode || studentId}-{semester || "NA"}-
