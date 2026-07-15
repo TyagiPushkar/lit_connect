@@ -18,7 +18,7 @@ function Holiday() {
         <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
           <Sidebar />
         </Box>
-        <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
+        <Box component="main" className="scrollable-y" sx={{ flexGrow: 1, p: 0 }}>
           <Navbar />
           <div style={{ padding: "20px" }}>
             {/* {user && user.role === 'HR' ? <AddHoliday /> : null} */}

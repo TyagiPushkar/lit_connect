@@ -217,7 +217,7 @@ const FeesTransaction = () => {
   };
 
   // Get unique values for filters
-  const uniqueCourses = [...new Set(structures.map(item => item.course))].filter(Boolean);
+  const uniqueCourses = [...new Set(structures.map(item => item.course ? item.course.trim() : ""))].filter(course => course && course !== "N/A");
   const uniqueInstallments = [...new Set(structures.map(item => item.installment))].filter(Boolean);
   const uniqueSessions = [...new Set(structures.map(item => item.Session))].filter(Boolean);
   const uniqueModes = [...new Set(structures.map(item => item.mode))].filter(Boolean);
@@ -233,17 +233,18 @@ const FeesTransaction = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ pt: 1, px: 1 }}> {/* Overall container padding */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}> {/* Overall container padding */}
         {/* Header Title and Actions */}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
           sx={{
-            mb: 2.5,
+            mb: 2,
             flexDirection: { xs: 'column', sm: 'row' },
             gap: { xs: 2, sm: 0 },
-            width: "100%"
+            width: "100%",
+            flexShrink: 0
           }}
         >
           <Typography
@@ -295,10 +296,11 @@ const FeesTransaction = () => {
           elevation={1}
           sx={{
             p: 2,
-            mb: 3,
+            mb: 2,
             borderRadius: 2,
             backgroundColor: '#ffffff',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+            flexShrink: 0
           }}
         >
           <Grid container spacing={2} alignItems="center">
@@ -452,14 +454,21 @@ const FeesTransaction = () => {
           component={Paper}
           sx={{
             width: '100%',
-            overflowX: 'auto',
+            flexGrow: 1,
+            overflowY: 'auto',
             borderRadius: 2,
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
             border: '1px solid rgba(224, 224, 224, 1)'
           }}
         >
-          <Table>
-            <TableHead style={{ backgroundColor: "#CC7A00" }}>
+          <Table stickyHeader>
+            <TableHead sx={{ 
+              '& th': { 
+                backgroundColor: '#CC7A00 !important', 
+                color: 'white', 
+                fontWeight: 'bold' 
+              } 
+            }}>
               <TableRow>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student ID</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student Name</TableCell>
@@ -503,7 +512,13 @@ const FeesTransaction = () => {
                   </TableRow>
                 ))}
             </TableBody>
-            <TableFooter>
+            <TableFooter sx={{ 
+              position: 'sticky', 
+              bottom: 0, 
+              backgroundColor: '#ffffff', 
+              zIndex: 1,
+              '& td': { backgroundColor: '#ffffff' }
+            }}>
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 15, 25]}

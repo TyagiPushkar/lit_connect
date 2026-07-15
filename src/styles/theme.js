@@ -9,6 +9,13 @@ const theme = createTheme({
             main: '#f50057',
         },
     },
+    components: {
+        MuiTable: {
+            defaultProps: {
+                stickyHeader: true,
+            },
+        },
+    },
 });
 
 export default theme;

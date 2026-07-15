@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -20,181 +20,246 @@ import {
   CardContent,
   Grid,
   LinearProgress,
-} from "@mui/material"
-import axios from "axios"
-import DownloadIcon from "@mui/icons-material/Download"
-import SummarizeIcon from "@mui/icons-material/Summarize"
-import * as XLSX from "xlsx"
+} from "@mui/material";
+import axios from "axios";
+import DownloadIcon from "@mui/icons-material/Download";
+import SummarizeIcon from "@mui/icons-material/Summarize";
+import * as XLSX from "xlsx";
+
+// Helper function to perform Axios requests with retries and exponential backoff
+const axiosGetWithRetry = async (url, options = {}, retries = 3, backoff = 1000) => {
+  try {
+    return await axios.get(url, options);
+  } catch (error) {
+    const isTimeout = error.code === "ECONNABORTED" || error.message?.includes("timeout");
+    const isNetworkError = !error.response;
+    const is5xx = error.response && error.response.status >= 500;
+
+    if (retries > 0 && (isTimeout || isNetworkError || is5xx)) {
+      console.warn(
+        `Request to ${url} failed (${error.message}). Retrying in ${backoff}ms... (${retries} retries remaining)`
+      );
+      await new Promise((resolve) => setTimeout(resolve, backoff));
+      return axiosGetWithRetry(url, options, retries - 1, backoff * 1.5);
+    }
+    throw error;
+  }
+};
+
+// Helper function to process items in parallel with controlled concurrency
+const runWithConcurrency = async (items, limit, workerFn, onProgress) => {
+  const results = [];
+  let index = 0;
+  let processedCount = 0;
+
+  const runWorker = async () => {
+    while (index < items.length) {
+      const currentIndex = index++;
+      const item = items[currentIndex];
+      try {
+        results[currentIndex] = {
+          status: "fulfilled",
+          value: await workerFn(item, currentIndex)
+        };
+      } catch (error) {
+        results[currentIndex] = {
+          status: "rejected",
+          reason: error
+        };
+      }
+      processedCount++;
+      if (onProgress) {
+        onProgress(processedCount, items.length);
+      }
+    }
+  };
+
+  const workers = Array(Math.min(limit, items.length))
+    .fill(null)
+    .map(() => runWorker());
+
+  await Promise.all(workers);
+  return results;
+};
 
 const FeesSummaryOptimized = () => {
-  const [loading, setLoading] = useState(true)
-  const [loadingProgress, setLoadingProgress] = useState(0)
-  const [loadingText, setLoadingText] = useState("Initializing...")
-  const [summaryData, setSummaryData] = useState([])
-  const [filteredData, setFilteredData] = useState([])
-  const [selectedSession, setSelectedSession] = useState("")
-  const [selectedBranch, setSelectedBranch] = useState("")
-  const [distinctSessions, setDistinctSessions] = useState([])
-  const [distinctBranches, setDistinctBranches] = useState([])
-  const [openSnackbar, setOpenSnackbar] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState("")
+  const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState("Initializing...");
+  const [summaryData, setSummaryData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [selectedSession, setSelectedSession] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [distinctSessions, setDistinctSessions] = useState([]);
+  const [distinctBranches, setDistinctBranches] = useState([]);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   useEffect(() => {
-    fetchSummaryDataOptimized()
-  }, [])
+    fetchSummaryDataOptimized();
+  }, []);
 
   useEffect(() => {
-    applyFilters()
-  }, [summaryData, selectedSession, selectedBranch])
+    applyFilters();
+  }, [summaryData, selectedSession, selectedBranch]);
 
   // 🚀 OPTIMIZED VERSION - Much Faster!
   const fetchSummaryDataOptimized = async () => {
-    setLoading(true)
-    setLoadingProgress(0)
+    setLoading(true);
+    setLoadingProgress(0);
 
     try {
-      setLoadingText("Fetching students...")
-      setLoadingProgress(5)
+      setLoadingText("Fetching students...");
+      setLoadingProgress(5);
 
       // Step 1: Get all students
-      const studentsResponse = await axios.get("https://namami-infotech.com/LIT/src/students/get_student.php")
+      const studentsResponse = await axios.get(
+        "https://namami-infotech.com/LIT/src/students/get_student.php",
+      );
 
-      console.log(studentsResponse,"studentsResponse")
+      console.log(studentsResponse, "studentsResponse");
       if (!studentsResponse.data.success) {
-        throw new Error("Failed to fetch student data")
+        throw new Error("Failed to fetch student data");
       }
 
-      const students = studentsResponse.data.data
-      setLoadingProgress(10)
+      const students = studentsResponse.data.data;
+      setLoadingProgress(10);
 
-      setLoadingText("Fetching transactions...")
-      setLoadingProgress(15)
+      setLoadingText("Fetching transactions...");
+      setLoadingProgress(15);
 
       // Step 2: Fetch all transactions once to avoid thousands of individual calls
-      const transactionMap = new Map()
+      const transactionMap = new Map();
       try {
-        const transactionsResponse = await axios.get(
+        const transactionsResponse = await axiosGetWithRetry(
           "https://namami-infotech.com/LIT/src/fees/get_all_transactions.php",
-          { timeout: 15000 }
-        )
-        if (transactionsResponse.data.success && Array.isArray(transactionsResponse.data.data)) {
+          { timeout: 25000 },
+          3,
+          1000
+        );
+        if (
+          transactionsResponse.data.success &&
+          Array.isArray(transactionsResponse.data.data)
+        ) {
           transactionsResponse.data.data.forEach((tx) => {
             if (tx.id) {
-              transactionMap.set(String(tx.id), tx)
+              transactionMap.set(String(tx.id), tx);
             }
-          })
+          });
         }
       } catch (txError) {
-        console.error("Error fetching all transactions:", txError)
+        console.error("Error fetching all transactions:", txError);
       }
 
-      setLoadingProgress(20)
-      setLoadingText(`Processing ${students.length} students...`)
-      
+      setLoadingProgress(20);
+      setLoadingText(`Processing ${students.length} students...`);
 
-      // Step 3: Batch process students in parallel (MUCH FASTER!)
-      const BATCH_SIZE = 15 // Process 15 students at once since we only make 1 request per student now
-      const summaryMap = new Map()
+      // Step 3: Process students with controlled concurrency (MUCH FASTER & LESS SERVER LOAD!)
+      const summaryMap = new Map();
+      const failedStudents = [];
+      const CONCURRENCY_LIMIT = 5; // Limit to 5 parallel requests to avoid thundering herd and session locks
 
-      for (let i = 0; i < students.length; i += BATCH_SIZE) {
-        const batch = students.slice(i, i + BATCH_SIZE)
-        const progress = 20 + (i / students.length) * 70
-        setLoadingProgress(progress)
-        setLoadingText(
-          `Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(students.length / BATCH_SIZE)}...`,
-        )
-
-        // Process batch in parallel, passing the pre-loaded transactionMap
-        const batchPromises = batch.map((student) => processStudentOptimized(student, transactionMap))
-        const batchResults = await Promise.allSettled(batchPromises)
-
-        // Aggregate results
-        batchResults.forEach((result, index) => {
-          if (result.status === "fulfilled" && result.value) {
-            const student = batch[index]
-            const key = `${student.Session}-${student.Course}`
-
-            if (!summaryMap.has(key)) {
-              summaryMap.set(key, {
-                session: student.Session || "Unknown",
-                branch: student.Course || "Unknown",
-                firstYear: { netFee: 0, paid: 0, due: 0 },
-                secondYear: { netFee: 0, paid: 0, due: 0 },
-                thirdYear: { netFee: 0, paid: 0, due: 0 },
-                totalNetFee: 0,
-                totalPaid: 0,
-                totalDue: 0,
-              })
-            }
-
-            const summary = summaryMap.get(key)
-            const studentData = result.value
-
-            // Aggregate student data into summary
-            summary.firstYear.netFee += studentData.firstYear.netFee
-            summary.firstYear.paid += studentData.firstYear.paid
-            summary.firstYear.due += studentData.firstYear.due
-
-            summary.secondYear.netFee += studentData.secondYear.netFee
-            summary.secondYear.paid += studentData.secondYear.paid
-            summary.secondYear.due += studentData.secondYear.due
-
-            summary.thirdYear.netFee += studentData.thirdYear.netFee
-            summary.thirdYear.paid += studentData.thirdYear.paid
-            summary.thirdYear.due += studentData.thirdYear.due
-
-            summary.totalNetFee += studentData.totalNetFee
-            summary.totalPaid += studentData.totalPaid
-            summary.totalDue += studentData.totalDue
-          }
-        })
-
-        // Small delay to prevent overwhelming the server
-        if (i + BATCH_SIZE < students.length) {
-          await new Promise((resolve) => setTimeout(resolve, 50))
+      const batchResults = await runWithConcurrency(
+        students,
+        CONCURRENCY_LIMIT,
+        (student) => processStudentOptimized(student, transactionMap),
+        (processed, total) => {
+          const progress = 20 + (processed / total) * 70;
+          setLoadingProgress(progress);
+          setLoadingText(`Processed ${processed}/${total} students...`);
         }
-      }
+      );
 
-      setLoadingProgress(95)
-      setLoadingText("Finalizing data...")
+      // Aggregate results
+      batchResults.forEach((result, index) => {
+        const student = students[index];
+        if (result.status === "fulfilled" && result.value) {
+          const session = student.Session ? student.Session.trim() : "Unknown";
+          const course = student.Course ? student.Course.trim() : "Unknown";
+          const key = `${session}-${course}`;
 
-      const summaryArray = Array.from(summaryMap.values())
-      setSummaryData(summaryArray)
+          if (!summaryMap.has(key)) {
+            summaryMap.set(key, {
+              session: session,
+              branch: course,
+              firstYear: { netFee: 0, paid: 0, due: 0 },
+              secondYear: { netFee: 0, paid: 0, due: 0 },
+              thirdYear: { netFee: 0, paid: 0, due: 0 },
+              totalNetFee: 0,
+              totalPaid: 0,
+              totalDue: 0,
+            });
+          }
+
+          const summary = summaryMap.get(key);
+          const studentData = result.value;
+
+          // Aggregate student data into summary
+          summary.firstYear.netFee += studentData.firstYear.netFee;
+          summary.firstYear.paid += studentData.firstYear.paid;
+          summary.firstYear.due += studentData.firstYear.due;
+
+          summary.secondYear.netFee += studentData.secondYear.netFee;
+          summary.secondYear.paid += studentData.secondYear.paid;
+          summary.secondYear.due += studentData.secondYear.due;
+
+          summary.thirdYear.netFee += studentData.thirdYear.netFee;
+          summary.thirdYear.paid += studentData.thirdYear.paid;
+          summary.thirdYear.due += studentData.thirdYear.due;
+
+          summary.totalNetFee += studentData.totalNetFee;
+          summary.totalPaid += studentData.totalPaid;
+          summary.totalDue += studentData.totalDue;
+        } else {
+          failedStudents.push(student.StudentID || student.StudentId || "Unknown");
+        }
+      });
+
+      setLoadingProgress(95);
+      setLoadingText("Finalizing data...");
+
+      const summaryArray = Array.from(summaryMap.values());
+      setSummaryData(summaryArray);
 
       // Extract distinct values for filters
-      const sessions = [...new Set(summaryArray.map((item) => item.session))].filter(Boolean)
-      const branches = [...new Set(summaryArray.map((item) => item.branch))].filter(Boolean)
+      const sessions = [
+        ...new Set(summaryArray.map((item) => item.session)),
+      ].filter(Boolean);
+      const branches = [
+        ...new Set(summaryArray.map((item) => item.branch)),
+      ].filter(Boolean);
 
-      setDistinctSessions(sessions)
-      setDistinctBranches(branches)
+      setDistinctSessions(sessions);
+      setDistinctBranches(branches);
 
-      setLoadingProgress(100)
-      setLoadingText("Complete!")
-      
+      setLoadingProgress(100);
+      setLoadingText("Complete!");
     } catch (error) {
-      console.error("Error fetching summary data:", error)
-      setSnackbarMessage("Error fetching summary data: " + error.message)
-      setOpenSnackbar(true)
+      console.error("Error fetching summary data:", error);
+      setSnackbarMessage("Error fetching summary data: " + error.message);
+      setOpenSnackbar(true);
     } finally {
-      setTimeout(() => setLoading(false), 200) // Small delay to show completion
+      setTimeout(() => setLoading(false), 200); // Small delay to show completion
     }
-  }
+  };
 
   const processStudentOptimized = async (student, transactionMap) => {
     try {
-      // Get fee structure with timeout
-      const feeResponse = await axios.get(
+      // Get fee structure with timeout and retries
+      const feeResponse = await axiosGetWithRetry(
         `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
         { timeout: 10000 },
-      )
+        1, // Retry only once to prevent connection queue buildup
+        1500
+      );
 
-      console.log("feeResponse", feeResponse)
+      console.log("feeResponse", feeResponse);
 
       if (!feeResponse.data.success || !feeResponse.data.data) {
-        return null
+        return null;
       }
 
-      const feeStructure = feeResponse.data.data
+      const feeStructure = feeResponse.data.data;
       const studentSummary = {
         firstYear: { netFee: 0, paid: 0, due: 0 },
         secondYear: { netFee: 0, paid: 0, due: 0 },
@@ -202,7 +267,7 @@ const FeesSummaryOptimized = () => {
         totalNetFee: 0,
         totalPaid: 0,
         totalDue: 0,
-      }
+      };
 
       // Process installments
       feeStructure.forEach((installment) => {
@@ -212,11 +277,11 @@ const FeesSummaryOptimized = () => {
           Number(installment.hostel_fees || 0) > 0 ||
           Number(installment.exam_fees || 0) > 0 ||
           Number(installment.admission_fees || 0) > 0 ||
-          Number(installment.prospectus_fees || 0) > 0
+          Number(installment.prospectus_fees || 0) > 0;
 
         // Skip installments that only have variable fees
         if (!hasRegularFees) {
-          return
+          return;
         }
 
         const installmentTotal =
@@ -225,65 +290,75 @@ const FeesSummaryOptimized = () => {
           Number(installment.hostel_fees || 0) +
           Number(installment.admission_fees || 0) +
           Number(installment.prospectus_fees || 0) -
-          Number(installment.Scholarship || 0)
+          Number(installment.Scholarship || 0);
 
-        const year = Math.ceil(Number(installment.installment) / 4)
-        let yearData = studentSummary.firstYear
+        const year = Math.ceil(Number(installment.installment) / 4);
+        let yearData = studentSummary.firstYear;
 
-        if (year === 2) yearData = studentSummary.secondYear
-        else if (year === 3) yearData = studentSummary.thirdYear
+        if (year === 2) yearData = studentSummary.secondYear;
+        else if (year === 3) yearData = studentSummary.thirdYear;
 
-        yearData.netFee += installmentTotal
+        yearData.netFee += installmentTotal;
 
         if (installment.Paid && installment.Paid !== "0") {
-          const transactionIds = installment.Paid.split(",").map((id) => id.trim())
-          let totalPaid = 0
+          const transactionIds = installment.Paid.split(",").map((id) =>
+            id.trim(),
+          );
+          let totalPaid = 0;
 
           transactionIds.forEach((transactionId) => {
-            const transaction = transactionMap.get(String(transactionId))
+            const transaction = transactionMap.get(String(transactionId));
             if (transaction) {
               // Only count payments for installments with regular fees
-              totalPaid += Number(transaction.deposit_amount - transaction.variable_fees || 0)
+              totalPaid += Number(
+                transaction.deposit_amount - transaction.variable_fees || 0,
+              );
             }
-          })
+          });
 
           // Ensure we don't count more than the installment total
-          const applicablePayment = Math.min(totalPaid, installmentTotal)
-          yearData.paid += applicablePayment
-          yearData.due += Math.max(0, installmentTotal - applicablePayment)
+          const applicablePayment = Math.min(totalPaid, installmentTotal);
+          yearData.paid += applicablePayment;
+          yearData.due += Math.max(0, installmentTotal - applicablePayment);
         } else {
-          yearData.due += installmentTotal
+          yearData.due += installmentTotal;
         }
-      })
+      });
 
       // Calculate totals
       studentSummary.totalNetFee =
-        studentSummary.firstYear.netFee + studentSummary.secondYear.netFee + studentSummary.thirdYear.netFee
+        studentSummary.firstYear.netFee +
+        studentSummary.secondYear.netFee +
+        studentSummary.thirdYear.netFee;
       studentSummary.totalPaid =
-        studentSummary.firstYear.paid + studentSummary.secondYear.paid + studentSummary.thirdYear.paid
+        studentSummary.firstYear.paid +
+        studentSummary.secondYear.paid +
+        studentSummary.thirdYear.paid;
       studentSummary.totalDue =
-        studentSummary.firstYear.due + studentSummary.secondYear.due + studentSummary.thirdYear.due
+        studentSummary.firstYear.due +
+        studentSummary.secondYear.due +
+        studentSummary.thirdYear.due;
 
-      return studentSummary
+      return studentSummary;
     } catch (error) {
-      console.error(`Error processing student ${student.StudentID}:`, error)
-      return null
+      console.error(`Error processing student ${student.StudentID}:`, error);
+      return null;
     }
-  }
+  };
 
   const applyFilters = () => {
-    let filtered = summaryData
+    let filtered = summaryData;
 
     if (selectedSession) {
-      filtered = filtered.filter((item) => item.session === selectedSession)
+      filtered = filtered.filter((item) => item.session === selectedSession);
     }
 
     if (selectedBranch) {
-      filtered = filtered.filter((item) => item.branch === selectedBranch)
+      filtered = filtered.filter((item) => item.branch === selectedBranch);
     }
 
-    setFilteredData(filtered)
-  }
+    setFilteredData(filtered);
+  };
 
   const calculateTotals = () => {
     return filteredData.reduce(
@@ -315,12 +390,12 @@ const FeesSummaryOptimized = () => {
         totalPaid: 0,
         totalDue: 0,
       },
-    )
-  }
+    );
+  };
 
   const exportToExcel = () => {
     try {
-      const totals = calculateTotals()
+      const totals = calculateTotals();
 
       const worksheetData = [
         [
@@ -371,70 +446,114 @@ const FeesSummaryOptimized = () => {
           totals.totalPaid,
           totals.totalDue,
         ],
-      ]
+      ];
 
-      const wb = XLSX.utils.book_new()
-      const ws = XLSX.utils.aoa_to_sheet(worksheetData)
-      ws["!cols"] = Array(14).fill({ wch: 15 })
-      XLSX.utils.book_append_sheet(wb, ws, "Fees Summary")
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+      ws["!cols"] = Array(14).fill({ wch: 15 });
+      XLSX.utils.book_append_sheet(wb, ws, "Fees Summary");
 
-      const date = new Date().toISOString().split("T")[0]
-      XLSX.writeFile(wb, `Fees_Summary_${date}.xlsx`)
+      const date = new Date().toISOString().split("T")[0];
+      XLSX.writeFile(wb, `Fees_Summary_${date}.xlsx`);
 
-      setSnackbarMessage("Summary report exported successfully!")
-      setOpenSnackbar(true)
+      setSnackbarMessage("Summary report exported successfully!");
+      setOpenSnackbar(true);
     } catch (error) {
-      setSnackbarMessage("Error exporting summary report")
-      setOpenSnackbar(true)
+      setSnackbarMessage("Error exporting summary report");
+      setOpenSnackbar(true);
     }
-  }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
-  const totals = calculateTotals()
+  const totals = calculateTotals();
 
   const statsCards = [
-    { title: "Total Net Fees", value: totals.totalNetFee, color: "#1976d2", icon: "💰" },
-    { title: "Total Paid", value: totals.totalPaid, color: "#2e7d32", icon: "✅" },
-    { title: "Total Due", value: totals.totalDue, color: "#d32f2f", icon: "⏰" },
+    {
+      title: "Total Net Fees",
+      value: totals.totalNetFee,
+      color: "#1976d2",
+      icon: "💰",
+    },
+    {
+      title: "Total Paid",
+      value: totals.totalPaid,
+      color: "#2e7d32",
+      icon: "✅",
+    },
+    {
+      title: "Total Due",
+      value: totals.totalDue,
+      color: "#d32f2f",
+      icon: "⏰",
+    },
     {
       title: "Collection Rate",
-      value: totals.totalNetFee > 0 ? (totals.totalPaid / totals.totalNetFee) * 100 : 0,
+      value:
+        totals.totalNetFee > 0
+          ? (totals.totalPaid / totals.totalNetFee) * 100
+          : 0,
       color: "#ed6c02",
       icon: "📊",
     },
-  ]
+  ];
 
   if (loading) {
     return (
-      <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="60vh" gap={3}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        height="60vh"
+        gap={3}
+      >
         <CircularProgress size={60} thickness={5} />
         <Box width="300px">
           <Typography variant="body1" align="center" gutterBottom>
             {loadingText}
           </Typography>
-          <LinearProgress variant="determinate" value={loadingProgress} sx={{ height: 8, borderRadius: 4 }} />
-          <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 1 }}>
+          <LinearProgress
+            variant="determinate"
+            value={loadingProgress}
+            sx={{ height: 8, borderRadius: 4 }}
+          />
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            align="center"
+            sx={{ mt: 1 }}
+          >
             {Math.round(loadingProgress)}% Complete
           </Typography>
         </Box>
       </Box>
-    )
+    );
   }
 
   return (
     <div style={{ padding: "20px" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <Typography variant="h5" style={{ color: "#CC7A00", fontWeight: "bold" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+        }}
+      >
+        <Typography
+          variant="h5"
+          style={{ color: "#CC7A00", fontWeight: "bold" }}
+        >
           <SummarizeIcon style={{ marginRight: 10, verticalAlign: "middle" }} />
-          Fees Summary Report 
+          Fees Summary Report
         </Typography>
         <Button
           variant="contained"
@@ -453,10 +572,19 @@ const FeesSummaryOptimized = () => {
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Card elevation={3}>
               <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   <Box>
-                    <Typography variant="h6" style={{ color: card.color, fontWeight: "bold" }}>
-                      {card.title === "Collection Rate" ? `${card.value.toFixed(1)}%` : formatCurrency(card.value)}
+                    <Typography
+                      variant="h6"
+                      style={{ color: card.color, fontWeight: "bold" }}
+                    >
+                      {card.title === "Collection Rate"
+                        ? `${card.value.toFixed(1)}%`
+                        : formatCurrency(card.value)}
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
                       {card.title}
@@ -471,12 +599,26 @@ const FeesSummaryOptimized = () => {
       </Grid>
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: "20px", marginBottom: 20, alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          marginBottom: 20,
+          alignItems: "center",
+        }}
+      >
         <Autocomplete
           options={distinctSessions}
           value={selectedSession}
           onChange={(_, newValue) => setSelectedSession(newValue || "")}
-          renderInput={(params) => <TextField {...params} label="Filter by Session" variant="outlined" size="small" />}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Filter by Session"
+              variant="outlined"
+              size="small"
+            />
+          )}
           style={{ minWidth: 200 }}
           clearOnEscape
         />
@@ -485,7 +627,14 @@ const FeesSummaryOptimized = () => {
           options={distinctBranches}
           value={selectedBranch}
           onChange={(_, newValue) => setSelectedBranch(newValue || "")}
-          renderInput={(params) => <TextField {...params} label="Filter by Branch" variant="outlined" size="small" />}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Filter by Branch"
+              variant="outlined"
+              size="small"
+            />
+          )}
           style={{ minWidth: 200 }}
           clearOnEscape
         />
@@ -497,129 +646,253 @@ const FeesSummaryOptimized = () => {
 
       {/* Summary Table */}
       <div style={{ overflowX: "auto", width: "100%" }}>
-      <TableContainer component={Paper} elevation={3}>
-        <Table>
-          <TableHead style={{ backgroundColor: "#CC7A00" }}>
-            <TableRow>
-              <TableCell style={{ color: "white", fontWeight: "bold" }}>SESSION</TableCell>
-              <TableCell style={{ color: "white", fontWeight: "bold" }}>BRANCH</TableCell>
-              <TableCell style={{ color: "white", fontWeight: "bold", textAlign: "center" }} colSpan={3}>
-                1ST YEAR
-              </TableCell>
-              <TableCell style={{ color: "white", fontWeight: "bold", textAlign: "center" }} colSpan={3}>
-                2ND YEAR
-              </TableCell>
-              <TableCell style={{ color: "white", fontWeight: "bold", textAlign: "center" }} colSpan={3}>
-                3RD YEAR
-              </TableCell>
-              <TableCell style={{ color: "white", fontWeight: "bold", textAlign: "center" }} colSpan={3}>
-                TOTAL
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell style={{ backgroundColor: "#CC7A00" }}></TableCell>
-              <TableCell style={{ backgroundColor: "#CC7A00" }}></TableCell>
-              {Array(4)
-                .fill(null)
-                .map((_, yearIndex) =>
-                  Array(3)
-                    .fill(null)
-                    .map((_, colIndex) => (
-                      <TableCell
-                        key={`${yearIndex}-${colIndex}`}
-                        style={{ color: "white", fontWeight: "bold", backgroundColor: "#CC7A00" }}
-                      >
-                        {colIndex === 0 ? "NET FEE" : colIndex === 1 ? "PAID" : "DUE"}
-                      </TableCell>
-                    )),
-                )}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredData.map((row, index) => (
-              <TableRow
-                key={`${row.session}-${row.branch}`}
-                style={{ backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white" }}
-              >
-                <TableCell style={{ fontWeight: "bold" }}>{row.session}</TableCell>
-                <TableCell style={{ fontWeight: "bold" }}>{row.branch}</TableCell>
-                <TableCell style={{ textAlign: "right" }}>{formatCurrency(row.firstYear.netFee)}</TableCell>
-                <TableCell style={{ textAlign: "right", color: "#2e7d32" }}>
-                  {formatCurrency(row.firstYear.paid)}
+        <TableContainer component={Paper} elevation={3}>
+          <Table>
+            <TableHead style={{ backgroundColor: "#CC7A00" }}>
+              <TableRow>
+                <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                  SESSION
                 </TableCell>
-                <TableCell style={{ textAlign: "right", color: "#d32f2f" }}>
-                  {formatCurrency(row.firstYear.due)}
+                <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                  BRANCH
                 </TableCell>
-                <TableCell style={{ textAlign: "right" }}>{formatCurrency(row.secondYear.netFee)}</TableCell>
-                <TableCell style={{ textAlign: "right", color: "#2e7d32" }}>
-                  {formatCurrency(row.secondYear.paid)}
+                <TableCell
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  colSpan={3}
+                >
+                  1ST YEAR
                 </TableCell>
-                <TableCell style={{ textAlign: "right", color: "#d32f2f" }}>
-                  {formatCurrency(row.secondYear.due)}
+                <TableCell
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  colSpan={3}
+                >
+                  2ND YEAR
                 </TableCell>
-                <TableCell style={{ textAlign: "right" }}>{formatCurrency(row.thirdYear.netFee)}</TableCell>
-                <TableCell style={{ textAlign: "right", color: "#2e7d32" }}>
-                  {formatCurrency(row.thirdYear.paid)}
+                <TableCell
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  colSpan={3}
+                >
+                  3RD YEAR
                 </TableCell>
-                <TableCell style={{ textAlign: "right", color: "#d32f2f" }}>
-                  {formatCurrency(row.thirdYear.due)}
-                </TableCell>
-                <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
-                  {formatCurrency(row.totalNetFee)}
-                </TableCell>
-                <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#2e7d32" }}>
-                  {formatCurrency(row.totalPaid)}
-                </TableCell>
-                <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#d32f2f" }}>
-                  {formatCurrency(row.totalDue)}
+                <TableCell
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  colSpan={3}
+                >
+                  TOTAL
                 </TableCell>
               </TableRow>
-            ))}
-            {/* Totals Row */}
-            <TableRow style={{ backgroundColor: "#e0e0e0", fontWeight: "bold" }}>
-              <TableCell style={{ fontWeight: "bold", fontSize: "1.1em" }}>TOTAL</TableCell>
-              <TableCell></TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
-                {formatCurrency(totals.firstYear.netFee)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#2e7d32" }}>
-                {formatCurrency(totals.firstYear.paid)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#d32f2f" }}>
-                {formatCurrency(totals.firstYear.due)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
-                {formatCurrency(totals.secondYear.netFee)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#2e7d32" }}>
-                {formatCurrency(totals.secondYear.paid)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#d32f2f" }}>
-                {formatCurrency(totals.secondYear.due)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
-                {formatCurrency(totals.thirdYear.netFee)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#2e7d32" }}>
-                {formatCurrency(totals.thirdYear.paid)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", color: "#d32f2f" }}>
-                {formatCurrency(totals.thirdYear.due)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", fontSize: "1.1em" }}>
-                {formatCurrency(totals.totalNetFee)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", fontSize: "1.1em", color: "#2e7d32" }}>
-                {formatCurrency(totals.totalPaid)}
-              </TableCell>
-              <TableCell style={{ textAlign: "right", fontWeight: "bold", fontSize: "1.1em", color: "#d32f2f" }}>
-                {formatCurrency(totals.totalDue)}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
-</div>
+              <TableRow>
+                <TableCell style={{ backgroundColor: "#CC7A00" }}></TableCell>
+                <TableCell style={{ backgroundColor: "#CC7A00" }}></TableCell>
+                {Array(4)
+                  .fill(null)
+                  .map((_, yearIndex) =>
+                    Array(3)
+                      .fill(null)
+                      .map((_, colIndex) => (
+                        <TableCell
+                          key={`${yearIndex}-${colIndex}`}
+                          style={{
+                            color: "white",
+                            fontWeight: "bold",
+                            backgroundColor: "#CC7A00",
+                          }}
+                        >
+                          {colIndex === 0
+                            ? "NET FEE"
+                            : colIndex === 1
+                              ? "PAID"
+                              : "DUE"}
+                        </TableCell>
+                      )),
+                  )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredData.map((row, index) => (
+                <TableRow
+                  key={`${row.session}-${row.branch}`}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
+                  }}
+                >
+                  <TableCell style={{ fontWeight: "bold" }}>
+                    {row.session}
+                  </TableCell>
+                  <TableCell style={{ fontWeight: "bold" }}>
+                    {row.branch}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right" }}>
+                    {formatCurrency(row.firstYear.netFee)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", color: "#2e7d32" }}>
+                    {formatCurrency(row.firstYear.paid)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", color: "#d32f2f" }}>
+                    {formatCurrency(row.firstYear.due)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right" }}>
+                    {formatCurrency(row.secondYear.netFee)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", color: "#2e7d32" }}>
+                    {formatCurrency(row.secondYear.paid)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", color: "#d32f2f" }}>
+                    {formatCurrency(row.secondYear.due)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right" }}>
+                    {formatCurrency(row.thirdYear.netFee)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", color: "#2e7d32" }}>
+                    {formatCurrency(row.thirdYear.paid)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", color: "#d32f2f" }}>
+                    {formatCurrency(row.thirdYear.due)}
+                  </TableCell>
+                  <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
+                    {formatCurrency(row.totalNetFee)}
+                  </TableCell>
+                  <TableCell
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "bold",
+                      color: "#2e7d32",
+                    }}
+                  >
+                    {formatCurrency(row.totalPaid)}
+                  </TableCell>
+                  <TableCell
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "bold",
+                      color: "#d32f2f",
+                    }}
+                  >
+                    {formatCurrency(row.totalDue)}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {/* Totals Row */}
+              <TableRow
+                style={{ backgroundColor: "#e0e0e0", fontWeight: "bold" }}
+              >
+                <TableCell style={{ fontWeight: "bold", fontSize: "1.1em" }}>
+                  TOTAL
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
+                  {formatCurrency(totals.firstYear.netFee)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    color: "#2e7d32",
+                  }}
+                >
+                  {formatCurrency(totals.firstYear.paid)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    color: "#d32f2f",
+                  }}
+                >
+                  {formatCurrency(totals.firstYear.due)}
+                </TableCell>
+                <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
+                  {formatCurrency(totals.secondYear.netFee)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    color: "#2e7d32",
+                  }}
+                >
+                  {formatCurrency(totals.secondYear.paid)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    color: "#d32f2f",
+                  }}
+                >
+                  {formatCurrency(totals.secondYear.due)}
+                </TableCell>
+                <TableCell style={{ textAlign: "right", fontWeight: "bold" }}>
+                  {formatCurrency(totals.thirdYear.netFee)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    color: "#2e7d32",
+                  }}
+                >
+                  {formatCurrency(totals.thirdYear.paid)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    color: "#d32f2f",
+                  }}
+                >
+                  {formatCurrency(totals.thirdYear.due)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    fontSize: "1.1em",
+                  }}
+                >
+                  {formatCurrency(totals.totalNetFee)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    fontSize: "1.1em",
+                    color: "#2e7d32",
+                  }}
+                >
+                  {formatCurrency(totals.totalPaid)}
+                </TableCell>
+                <TableCell
+                  style={{
+                    textAlign: "right",
+                    fontWeight: "bold",
+                    fontSize: "1.1em",
+                    color: "#d32f2f",
+                  }}
+                >
+                  {formatCurrency(totals.totalDue)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
@@ -627,7 +900,7 @@ const FeesSummaryOptimized = () => {
         message={snackbarMessage}
       />
     </div>
-  )
-}
+  );
+};
 
-export default FeesSummaryOptimized
+export default FeesSummaryOptimized;

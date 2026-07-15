@@ -1012,13 +1012,13 @@ const AttendanceList = () => {
                 variant={viewType === "employee" ? "contained" : "outlined"}
                 onClick={() => setViewType("employee")}
               >
-                Employees
+                Emp
               </Button>
               <Button
                 variant={viewType === "student" ? "contained" : "outlined"}
                 onClick={() => setViewType("student")}
               >
-                Students
+                Std
               </Button>
             </ButtonGroup>
           </Grid>
@@ -1030,7 +1030,7 @@ const AttendanceList = () => {
                 startIcon={<CalendarToday />}
                 sx={{ height: 40, flexGrow: 1 }}
               >
-                Calendar
+                Cal
               </Button>
               <Button
                 variant={viewMode === "list" ? "contained" : "outlined"}
