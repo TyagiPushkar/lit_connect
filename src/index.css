@@ -11,3 +11,78 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* --- Global Sticky Table and Viewport Layout System --- */
+
+/* 1. Viewport constraint for the main container layout */
+main:not(.scrollable-y) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  min-width: 0 !important; /* Prevent horizontal expansion under sidebar */
+}
+
+/* Page wrapper container */
+main:not(.scrollable-y) > div {
+  flex-grow: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 8px !important;
+  margin-top: 0 !important;
+  min-width: 0 !important; /* Prevent horizontal expansion */
+}
+
+/* 2. Flex grow chain for all ancestors of any TableContainer */
+main div:has(.MuiTableContainer-root) {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-grow: 1 !important;
+  min-height: 0 !important;
+  min-width: 0 !important; /* Prevent horizontal expansion */
+}
+
+/* Prevent non-table items in the flex chain from shrinking */
+.MuiGrid-root, 
+.MuiPaper-root:not(.MuiTableContainer-root), 
+.MuiAppBar-root,
+header {
+  flex-shrink: 0 !important;
+}
+
+/* 3. TableContainer vertical and horizontal scrolling */
+.MuiTableContainer-root {
+  flex-grow: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important; /* Horizontal scroll for columns */
+  min-height: 0 !important;
+  width: 100% !important; /* Bind width to parent container */
+}
+
+/* Direct container parent of TableContainer to prevent horizontal expansion */
+div:has(> .MuiTableContainer-root) {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important; /* Only TableContainer itself should scroll */
+}
+
+/* 4. Sticky Header with Gold Background & White Text */
+.MuiTableCell-stickyHeader {
+  background-color: #CC7A00 !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+/* 5. Sticky Footer/Pagination at the bottom */
+.MuiTableFooter-root {
+  position: sticky !important;
+  bottom: 0 !important;
+  background-color: #ffffff !important;
+  z-index: 1 !important;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05) !important;
+}
+
+.MuiTableFooter-root td {
+  background-color: #ffffff !important;
+}

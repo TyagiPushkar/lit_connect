@@ -35,6 +35,10 @@ function StudentDetail() {
   const [openImage, setOpenImage] = useState(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [studentId]);
+
+  useEffect(() => {
     const fetchStudent = async () => {
       try {
         const res = await fetch(

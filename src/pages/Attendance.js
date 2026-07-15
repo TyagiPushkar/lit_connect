@@ -11,16 +11,15 @@ function Attendance() {
     const drawerWidth = isMobile ? 0 : 100;
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh' }}>
+        <Box sx={{ display: 'flex' }}>
             {/* Sidebar with fixed width */}
             <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
                 <Sidebar />
             </Box>
-            <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
+            <Box component="main" className="scrollable-y" sx={{ flexGrow: 1, p: 0 }}>
                 <Navbar />
                 <Box sx={{ mt: 1,p: 1 }}>
                     <AttendanceList />
-                  
                 </Box>
             </Box>
         </Box>

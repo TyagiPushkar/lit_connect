@@ -126,6 +126,9 @@ const FeesPaymentList = () => {
     sessionStorage.setItem("fees_rowsPerPage", rowsPerPage.toString());
   }, [searchQuery, selectedSession, selectedCourse, page, rowsPerPage]);
 
+
+  console.log(distinctCourses, "distinctCoursesdistinctCourses")
+
   const fetchLibraryTransactions = async () => {
     setLoading(true);
     try {
@@ -133,20 +136,28 @@ const FeesPaymentList = () => {
         "https://namami-infotech.com/LIT/src/students/get_student.php",
       );
       if (response.data.success) {
-        setTransactions(response.data.data);
-        setFilteredTransactions(response.data.data);
+        const normalizedData = response.data.data.map((item) => ({
+          ...item,
+          Session: item.Session ? item.Session.trim() : "",
+          Course: item.Course ? item.Course.trim() : "",
+        }));
+
+        setTransactions(normalizedData);
+        setFilteredTransactions(normalizedData);
 
         // Extract distinct sessions and courses
         const sessions = [
           ...new Set(
-            response.data.data.map((item) => item.Session).filter(Boolean),
+            normalizedData.map((item) => item.Session).filter(Boolean),
           ),
         ];
         const courses = [
           ...new Set(
-            response.data.data.map((item) => item.Course).filter(Boolean),
+            normalizedData.map((item) => item.Course).filter(Boolean),
           ),
         ];
+
+        console.log(courses, "coursescoursescourses")
 
         setDistinctSessions(sessions);
         setDistinctCourses(courses);
@@ -532,232 +543,18 @@ const FeesPaymentList = () => {
     }
   };
 
-  // const processStudent = async (student) => {
-  //   try {
-  //     console.log(
-  //       `Processing student: ${student.StudentID} - ${student.CandidateName}`,
-  //     );
-
-  //     // Fetch fee structure
-  //     let feeStructure = [];
-  //     try {
-  //       const feeResponse = await axios.get(
-  //         `https://namami-infotech.com/LIT/src/fees/get_student_fee_structure.php?StudentId=${student.StudentID}`,
-  //         { timeout: 10000 },
-  //       );
-  //       if (feeResponse.data.success && feeResponse.data.data) {
-  //         feeStructure = feeResponse.data.data;
-  //         console.log(
-  //           `Student ${student.StudentID} has ${feeStructure.length} fee structure entries`,
-  //         );
-  //       } else {
-  //         console.log(`Student ${student.StudentID} has no fee structure data`);
-  //         feeStructure = [];
-  //       }
-  //     } catch (error) {
-  //       console.error(
-  //         `Error fetching fee structure for ${student.StudentID}:`,
-  //         error.message,
-  //       );
-  //       return null;
-  //     }
-
-  //     // If no fee structure, return basic student info
-  //     if (feeStructure.length === 0) {
-  //       return {
-  //         studentId: student.StudentID,
-  //         studentName: student.CandidateName,
-  //         course: student.Course,
-  //         session: student.Session,
-  //         gender: student.Gender,
-  //         guardianName: student.GuardianName,
-  //         guardianContact: student.GuardianContactNo,
-  //         studentContact: student.StudentContactNo,
-  //         address: student.PermanentAddress,
-  //         RefrenceBy: student.RefrenceBy,
-  //         isActive: getStudentStatus(student.StudentID),
-  //         totalFees: 0,
-  //         totalScholarship: 0,
-  //         netFees: 0,
-  //         totalPaid: 0,
-  //         totalDue: 0,
-  //         installments: [],
-  //         hasFeeStructure: false,
-  //       };
-  //     }
-
-  //     // Process installments
-  //     const installments = [];
-  //     let totalPaid = 0;
-  //     let totalDue = 0;
-
-  //     for (const installment of feeStructure) {
-  //       try {
-  //         let transactionDetails = [];
-  //         let totalPaidForInstallment = 0;
-  //         let totalVariableFees = 0;
-
-  //         if (installment.Paid && installment.Paid !== "0") {
-  //           // Handle multiple transaction IDs (comma-separated)
-  //           const transactionIds = installment.Paid.split(",")
-  //             .map((id) => id.trim())
-  //             .filter((id) => id);
-
-  //           // Fetch all transactions for this installment
-  //           const transactionPromises = transactionIds.map(
-  //             async (transactionId) => {
-  //               try {
-  //                 const response = await axios.get(
-  //                   `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
-  //                   { timeout: 10000 },
-  //                 );
-  //                 if (response.data.success && response.data.data) {
-  //                   return response.data.data;
-  //                 }
-  //                 return null;
-  //               } catch (error) {
-  //                 console.error(
-  //                   `Error fetching transaction ${transactionId}:`,
-  //                   error.message,
-  //                 );
-  //                 return null;
-  //               }
-  //             },
-  //           );
-
-  //           const transactions = await Promise.all(transactionPromises);
-  //           transactionDetails = transactions.filter((tx) => tx !== null);
-
-  //           // Calculate total paid amount (subtracting variable fees)
-  //           totalPaidForInstallment = transactionDetails.reduce((sum, tx) => {
-  //             return (
-  //               sum +
-  //               (parseFloat(tx.deposit_amount) || 0) -
-  //               (parseFloat(tx.variable_fees) || 0)
-  //             );
-  //           }, 0);
-
-  //           // Sum all variable fees
-  //           totalVariableFees = transactionDetails.reduce(
-  //             (sum, tx) => sum + (parseFloat(tx.variable_fees) || 0),
-  //             0,
-  //           );
-  //         }
-
-  //         const installmentTotal =
-  //           (parseFloat(installment.tution_fees) || 0) +
-  //           (parseFloat(installment.hostel_fees) || 0) -
-  //           (parseFloat(installment.Scholarship) || 0);
-
-  //         const isPaid = installment.Paid && installment.Paid !== "0";
-  //         const amountPaid = Math.max(0, totalPaidForInstallment);
-  //         const balanceAmount = isPaid
-  //           ? installmentTotal - amountPaid
-  //           : installmentTotal;
-
-  //         if (isPaid) {
-  //           totalPaid += amountPaid;
-  //           totalDue += balanceAmount;
-  //         } else {
-  //           totalDue += installmentTotal;
-  //         }
-
-  //         installments.push({
-  //           installmentNo: parseInt(installment.installment) || 0,
-  //           dueDate: installment.due_date,
-  //           tuitionFees: parseFloat(installment.tution_fees) || 0,
-  //           examFees: parseFloat(installment.exam_fees) || 0,
-  //           hostelFees: parseFloat(installment.hostel_fees) || 0,
-  //           admissionFees: parseFloat(installment.admission_fees) || 0,
-  //           prospectusFees: parseFloat(installment.prospectus_fees) || 0,
-  //           scholarship: parseFloat(installment.Scholarship) || 0,
-  //           totalAmount: installmentTotal,
-  //           status: isPaid
-  //             ? balanceAmount === 0
-  //               ? "Paid"
-  //               : "Partially Paid"
-  //             : "Due",
-  //           paymentDate:
-  //             transactionDetails.length > 0
-  //               ? transactionDetails[0].date_time
-  //               : "",
-  //           paymentMode:
-  //             transactionDetails.length > 0 ? transactionDetails[0].mode : "",
-  //           amountPaid: amountPaid,
-  //           balanceAmount: balanceAmount,
-  //           transactionCount: transactionDetails.length,
-  //           totalVariableFees: totalVariableFees,
-  //         });
-  //       } catch (error) {
-  //         console.error(
-  //           `Error processing installment ${installment.installment} for ${student.StudentID}:`,
-  //           error.message,
-  //         );
-  //         continue;
-  //       }
-  //     }
-
-  //     // Calculate totals
-  //     const totalFees = feeStructure.reduce(
-  //       (sum, item) =>
-  //         sum +
-  //         (parseFloat(item.tution_fees) || 0) +
-  //         (parseFloat(item.exam_fees) || 0) +
-  //         (parseFloat(item.hostel_fees) || 0) +
-  //         (parseFloat(item.admission_fees) || 0) +
-  //         (parseFloat(item.prospectus_fees) || 0),
-  //       0,
-  //     );
-
-  //     const totalScholarship = feeStructure.reduce(
-  //       (sum, item) => sum + (parseFloat(item.Scholarship) || 0),
-  //       0,
-  //     );
-  //     const netFees = totalFees - totalScholarship;
-
-  //     console.log(
-  //       `Student ${student.StudentID} processed successfully: ${installments.length} installments`,
-  //     );
-
-  //     return {
-  //       studentId: student.StudentID,
-  //       studentName: student.CandidateName,
-  //       course: student.Course,
-  //       session: student.Session,
-  //       gender: student.Gender,
-  //       guardianName: student.GuardianName,
-  //       guardianContact: student.GuardianContactNo,
-  //       studentContact: student.StudentContactNo,
-  //       address: student.PermanentAddress,
-  //       RefrenceBy: student.RefrenceBy,
-  //       totalFees: totalFees,
-  //       totalScholarship: totalScholarship,
-  //       netFees: netFees,
-  //       totalPaid: totalPaid,
-  //       totalDue: totalDue,
-  //       installments: installments,
-  //       hasFeeStructure: true,
-  //     };
-  //   } catch (error) {
-  //     console.error(
-  //       `Error processing student ${student.StudentID}:`,
-  //       error.message,
-  //     );
-  //     return null;
-  //   }
-  // };
 
   const processStudent = async (student, transactionMap) => {
     try {
       console.log(
         `Processing student: ${student.StudentID} - ${student.CandidateName}`,
       );
-  
+
       // ============ ADD THIS LINE ============
       const isActive = getStudentStatus(student.StudentID);
       console.log(`Student ${student.StudentID} status: ${isActive ? 'Active' : 'Inactive'}`);
       // ======================================
-  
+
       // Fetch fee structure
       let feeStructure = [];
       try {
@@ -781,7 +578,7 @@ const FeesPaymentList = () => {
         );
         return null;
       }
-  
+
       // If no fee structure, return basic student info
       if (feeStructure.length === 0) {
         return {
@@ -805,24 +602,24 @@ const FeesPaymentList = () => {
           hasFeeStructure: false,
         };
       }
-  
+
       // Process installments
       const installments = [];
       let totalPaid = 0;
       let totalDue = 0;
-  
+
       for (const installment of feeStructure) {
         try {
           let transactionDetails = [];
           let totalPaidForInstallment = 0;
           let totalVariableFees = 0;
-  
+
           if (installment.Paid && installment.Paid !== "0") {
             // Handle multiple transaction IDs (comma-separated)
             const transactionIds = installment.Paid.split(",")
               .map((id) => id.trim())
               .filter((id) => id);
-  
+
             // Get all transactions for this installment from preloaded map
             transactionIds.forEach((transactionId) => {
               const transaction = transactionMap.get(String(transactionId));
@@ -830,7 +627,7 @@ const FeesPaymentList = () => {
                 transactionDetails.push(transaction);
               }
             });
-  
+
             // Calculate total paid amount (subtracting variable fees)
             totalPaidForInstallment = transactionDetails.reduce((sum, tx) => {
               return (
@@ -839,32 +636,32 @@ const FeesPaymentList = () => {
                 (parseFloat(tx.variable_fees) || 0)
               );
             }, 0);
-  
+
             // Sum all variable fees
             totalVariableFees = transactionDetails.reduce(
               (sum, tx) => sum + (parseFloat(tx.variable_fees) || 0),
               0,
             );
           }
-  
+
           const installmentTotal =
             (parseFloat(installment.tution_fees) || 0) +
             (parseFloat(installment.hostel_fees) || 0) -
             (parseFloat(installment.Scholarship) || 0);
-  
+
           const isPaid = installment.Paid && installment.Paid !== "0";
           const amountPaid = Math.max(0, totalPaidForInstallment);
           const balanceAmount = isPaid
             ? installmentTotal - amountPaid
             : installmentTotal;
-  
+
           if (isPaid) {
             totalPaid += amountPaid;
             totalDue += balanceAmount;
           } else {
             totalDue += installmentTotal;
           }
-  
+
           installments.push({
             installmentNo: parseInt(installment.installment) || 0,
             dueDate: installment.due_date,
@@ -899,7 +696,7 @@ const FeesPaymentList = () => {
           continue;
         }
       }
-  
+
       // Calculate totals
       const totalFees = feeStructure.reduce(
         (sum, item) =>
@@ -911,17 +708,17 @@ const FeesPaymentList = () => {
           (parseFloat(item.prospectus_fees) || 0),
         0,
       );
-  
+
       const totalScholarship = feeStructure.reduce(
         (sum, item) => sum + (parseFloat(item.Scholarship) || 0),
         0,
       );
       const netFees = totalFees - totalScholarship;
-  
+
       console.log(
         `Student ${student.StudentID} processed successfully: ${installments.length} installments`,
       );
-  
+
       // ============ ADD isActive to this return object ============
       return {
         studentId: student.StudentID,
@@ -1238,7 +1035,7 @@ const FeesPaymentList = () => {
   }
 
   return (
-    <Box sx={{ pt: 1, px: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', pt: 1, pr: 2 }}>
       {/* Header Title and Actions */}
       <Box
         display="flex"
@@ -1384,14 +1181,21 @@ const FeesPaymentList = () => {
         elevation={3}
         sx={{
           width: "100%",
-          overflowX: "auto",
+          flexGrow: 1,
+          overflowY: "auto",
           borderRadius: 2,
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
           border: "1px solid rgba(224, 224, 224, 1)",
         }}
       >
-        <Table>
-          <TableHead style={{ backgroundColor: "#CC7A00" }}>
+        <Table stickyHeader>
+          <TableHead sx={{
+            '& th': {
+              backgroundColor: '#CC7A00 !important',
+              color: 'white',
+              fontWeight: 'bold'
+            }
+          }}>
             <TableRow>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>
                 Student ID
@@ -1417,58 +1221,7 @@ const FeesPaymentList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {/* {filteredTransactions
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((tx, index) => (
-                const isActive = getStudentStatus(tx.StudentID);
-                return (
-                <TableRow
-                  key={tx.TransactionId || tx.StudentID}
-                  style={{
-                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
-                    "&:hover": { backgroundColor: "#f0f0f0" },
-                  }}
-                >
-                  <TableCell>{tx.StudentID}</TableCell>
-                  <TableCell>{tx.CandidateName}</TableCell>
-                  <TableCell>{tx.StudentContactNo}</TableCell>
-                  <TableCell>{tx.Course}</TableCell>
-                  <TableCell>{tx.Session}</TableCell>
-                  <TableCell>
-          <Chip
-            label={isActive ? "Active" : "Inactive"}
-            color={isActive ? "success" : "error"}
-            size="small"
-            icon={isActive ? <CheckCircleIcon /> : <BlockIcon />}
-          />
-        </TableCell>
-                  <TableCell>
-                    {(() => {
-                      const isActive = getStudentStatus(tx.StudentID);
-                      return (
-                        <Chip
-                          label={isActive ? "Active" : "Inactive"}
-                          color={isActive ? "success" : "error"}
-                          size="small"
-                          icon={isActive ? <CheckCircleIcon /> : <BlockIcon />}
-                        />
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell>
-                    <VisibilityIcon
-                      color="primary"
-                      sx={{
-                        cursor: "pointer",
-                        "&:hover": { color: "#CC7A00" },
-                      }}
-                      onClick={() => handleViewClick(tx.StudentID)}
-                      titleAccess="View Details"
-                    />
-                  </TableCell>
-                </TableRow>
-     );
-  })} */}
+
             {filteredTransactions
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((tx, index) => {
@@ -1509,7 +1262,13 @@ const FeesPaymentList = () => {
                 );
               })}
           </TableBody>
-          <TableFooter>
+          <TableFooter sx={{
+            position: 'sticky',
+            bottom: 0,
+            backgroundColor: '#ffffff',
+            zIndex: 1,
+            '& td': { backgroundColor: '#ffffff' }
+          }}>
             <TableRow>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, 50]}
