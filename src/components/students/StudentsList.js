@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Button, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Snackbar, TablePagination,
@@ -29,9 +29,15 @@ const StudentsList = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState(
+    () => sessionStorage.getItem("students_searchQuery") || ""
+  );
+  const [page, setPage] = useState(
+    () => parseInt(sessionStorage.getItem("students_page") || "0", 10)
+  );
+  const [rowsPerPage, setRowsPerPage] = useState(
+    () => parseInt(sessionStorage.getItem("students_rowsPerPage") || "10", 10)
+  );
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [particular, setParticular] = useState("");
@@ -40,11 +46,44 @@ const StudentsList = () => {
   const [loading, setLoading] = useState(false);
 
   // Filter states
-  const [courseFilter, setCourseFilter] = useState("");
-  const [batchFilter, setBatchFilter] = useState("");
-  const [semesterFilter, setSemesterFilter] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [isActiveFilter, setIsActiveFilter] = useState("all"); // 'all', 'active', 'inactive'
+  const [courseFilter, setCourseFilter] = useState(
+    () => sessionStorage.getItem("students_courseFilter") || ""
+  );
+  const [batchFilter, setBatchFilter] = useState(
+    () => sessionStorage.getItem("students_batchFilter") || ""
+  );
+  const [semesterFilter, setSemesterFilter] = useState(
+    () => sessionStorage.getItem("students_semesterFilter") || ""
+  );
+  const [showFilters, setShowFilters] = useState(
+    () => sessionStorage.getItem("students_showFilters") === "true"
+  );
+  const [isActiveFilter, setIsActiveFilter] = useState(
+    () => sessionStorage.getItem("students_isActiveFilter") || "all"
+  ); // 'all', 'active', 'inactive'
+
+  const isFirstFilter = useRef(true);
+
+  // Keep sessionStorage in sync
+  useEffect(() => {
+    sessionStorage.setItem("students_searchQuery", searchQuery);
+    sessionStorage.setItem("students_courseFilter", courseFilter);
+    sessionStorage.setItem("students_batchFilter", batchFilter);
+    sessionStorage.setItem("students_semesterFilter", semesterFilter);
+    sessionStorage.setItem("students_showFilters", showFilters.toString());
+    sessionStorage.setItem("students_isActiveFilter", isActiveFilter);
+    sessionStorage.setItem("students_page", page.toString());
+    sessionStorage.setItem("students_rowsPerPage", rowsPerPage.toString());
+  }, [
+    searchQuery,
+    courseFilter,
+    batchFilter,
+    semesterFilter,
+    showFilters,
+    isActiveFilter,
+    page,
+    rowsPerPage,
+  ]);
 
   // Extract unique values for filters
   const uniqueCourses = [
@@ -63,7 +102,15 @@ const StudentsList = () => {
   }, []);
 
   useEffect(() => {
-    applyFilters();
+    if (transactions.length === 0) return;
+
+    let shouldResetPage = true;
+    if (isFirstFilter.current) {
+      isFirstFilter.current = false;
+      shouldResetPage = false;
+    }
+
+    applyFilters(shouldResetPage);
   }, [
     transactions,
     employeeStatus,
@@ -124,7 +171,7 @@ const StudentsList = () => {
     return true;
   };
 
-  const applyFilters = () => {
+  const applyFilters = (shouldResetPage = true) => {
     let filtered = transactions;
 
     // Apply text search filter
@@ -162,7 +209,14 @@ const StudentsList = () => {
     }
 
     setFilteredTransactions(filtered);
-    setPage(0); // Reset to first page
+    if (shouldResetPage) {
+      setPage(0);
+    } else {
+      const maxPage = Math.max(0, Math.ceil(filtered.length / rowsPerPage) - 1);
+      if (page > maxPage) {
+        setPage(maxPage);
+      }
+    }
   };
 
   const handleSearch = (query) => {

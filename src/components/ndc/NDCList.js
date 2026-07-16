@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -49,18 +49,57 @@ const NDCList = () => {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState(
+    () => sessionStorage.getItem("ndc_searchQuery") || ""
+  );
+  const [page, setPage] = useState(
+    () => parseInt(sessionStorage.getItem("ndc_page") || "0", 10)
+  );
+  const [rowsPerPage, setRowsPerPage] = useState(
+    () => parseInt(sessionStorage.getItem("ndc_rowsPerPage") || "10", 10)
+  );
   const [isExporting, setIsExporting] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Filter states
-  const [courseFilter, setCourseFilter] = useState("");
-  const [batchFilter, setBatchFilter] = useState("");
-  const [semesterFilter, setSemesterFilter] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [courseFilter, setCourseFilter] = useState(
+    () => sessionStorage.getItem("ndc_courseFilter") || ""
+  );
+  const [batchFilter, setBatchFilter] = useState(
+    () => sessionStorage.getItem("ndc_batchFilter") || ""
+  );
+  const [semesterFilter, setSemesterFilter] = useState(
+    () => sessionStorage.getItem("ndc_semesterFilter") || ""
+  );
+  const [showFilters, setShowFilters] = useState(
+    () => sessionStorage.getItem("ndc_showFilters") === "true"
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    () => sessionStorage.getItem("ndc_statusFilter") || "all"
+  );
+
+  const isFirstFilter = useRef(true);
+
+  // Keep sessionStorage in sync
+  useEffect(() => {
+    sessionStorage.setItem("ndc_searchQuery", searchQuery);
+    sessionStorage.setItem("ndc_courseFilter", courseFilter);
+    sessionStorage.setItem("ndc_batchFilter", batchFilter);
+    sessionStorage.setItem("ndc_semesterFilter", semesterFilter);
+    sessionStorage.setItem("ndc_showFilters", showFilters.toString());
+    sessionStorage.setItem("ndc_statusFilter", statusFilter);
+    sessionStorage.setItem("ndc_page", page.toString());
+    sessionStorage.setItem("ndc_rowsPerPage", rowsPerPage.toString());
+  }, [
+    searchQuery,
+    courseFilter,
+    batchFilter,
+    semesterFilter,
+    showFilters,
+    statusFilter,
+    page,
+    rowsPerPage,
+  ]);
 
   // Action Menu
   const [anchorEl, setAnchorEl] = useState(null);
@@ -116,7 +155,15 @@ const NDCList = () => {
   }, []);
 
   useEffect(() => {
-    applyFilters();
+    if (students.length === 0) return;
+
+    let shouldResetPage = true;
+    if (isFirstFilter.current) {
+      isFirstFilter.current = false;
+      shouldResetPage = false;
+    }
+
+    applyFilters(shouldResetPage);
   }, [
     students,
     searchQuery,
@@ -148,7 +195,7 @@ const NDCList = () => {
     }
   };
 
-  const applyFilters = () => {
+  const applyFilters = (shouldResetPage = true) => {
     let filtered = students;
 
     if (searchQuery) {
@@ -182,7 +229,14 @@ const NDCList = () => {
     }
 
     setFilteredStudents(filtered);
-    setPage(0);
+    if (shouldResetPage) {
+      setPage(0);
+    } else {
+      const maxPage = Math.max(0, Math.ceil(filtered.length / rowsPerPage) - 1);
+      if (page > maxPage) {
+        setPage(maxPage);
+      }
+    }
   };
 
   const handleSearch = (query) => {
