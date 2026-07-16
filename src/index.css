@@ -35,7 +35,7 @@ main:not(.scrollable-y) > div {
 }
 
 /* 2. Flex grow chain for all ancestors of any TableContainer */
-main div:has(.MuiTableContainer-root) {
+main div:not(#reportCard):not(#reportCard *):has(.MuiTableContainer-root) {
   display: flex !important;
   flex-direction: column !important;
   flex-grow: 1 !important;
@@ -61,7 +61,7 @@ header {
 }
 
 /* Direct container parent of TableContainer to prevent horizontal expansion */
-div:has(> .MuiTableContainer-root) {
+div:not(#reportCard):not(#reportCard *):has(> .MuiTableContainer-root) {
   width: 100% !important;
   min-width: 0 !important;
   overflow: hidden !important; /* Only TableContainer itself should scroll */

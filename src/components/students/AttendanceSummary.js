@@ -358,7 +358,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
       <Box
         sx={{
           position: "absolute",
-          top: "-10px",
+          top: "-12px",
           left: "20px",
           backgroundColor: "#f5f5f5",
           padding: "0 10px",
@@ -426,6 +426,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
             variant="h8"
             sx={{
               fontWeight: 600,
+              mt: 2,
               mb: 2,
               color: "#111",
               fontFamily: 'Inter, Roboto, Arial, sans-serif',
@@ -439,209 +440,212 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
             Monthly Attendance Summary (Latest 6 Months)
           </Typography>
 
-          <TableContainer>
-            <Table
-              size="small"
-              sx={{
-                border: "1px solid #111",
-                "& .MuiTableCell-root": {
-                  padding: "6px 10px",
-                  fontSize: "20px",
-                  lineHeight: 1.3,
-                  fontFamily: 'Inter, Roboto, Arial, sans-serif',
-                  color: "#000000",
+          <Box sx={{ width: "100%", overflow: "hidden" }}>
+            <TableContainer>
+              <Table
+                size="small"
+                sx={{
                   border: "1px solid #111",
-                },
-              }}
-            >
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                    }}
-                  >
-                    Academic Month
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "20px",
-                    }}
-                  >
-                    Total Working Days
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "20px",
-                    }}
-                  >
-                    Days Present
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "20px",
-                    }}
-                  >
-                    Days Absent
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "20px",
-                    }}
-                  >
-                    Attendance Percentage
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {summaryData.slice(0, 6).map((row) => (
-                  <TableRow
-                    key={row.monthYear}
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.04)",
-                      },
-                    }}
-                  >
+                  "& .MuiTableCell-root": {
+                    padding: "6px 10px",
+                    fontSize: "20px",
+                    lineHeight: 1.3,
+                    fontFamily: 'Inter, Roboto, Arial, sans-serif',
+                    color: "#000000",
+                    border: "1px solid #111",
+                  },
+                }}
+              >
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
                     <TableCell
                       sx={{
-                        border: "1px solid #111",
-                        fontWeight: "500",
-                        fontSize: "20px",
-                      }}
-                    >
-                      {row.monthName}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        border: "1px solid #111",
-                        textAlign: "center",
-                        fontWeight: "500",
-                        fontSize: "20px",
-                      }}
-                    >
-                      {row.totalClasses}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        border: "1px solid #111",
-                        fontSize: "20px",
-                        textAlign: "center",
-                        color: "#2e7d32",
                         fontWeight: "bold",
+                        fontSize: "20px",
                       }}
                     >
-                      {row.present}
+                      Academic Month
                     </TableCell>
                     <TableCell
                       sx={{
-                        border: "1px solid #111",
-                        fontSize: "20px",
                         fontWeight: "bold",
                         textAlign: "center",
-                        color: "#d32f2f",
+                        fontSize: "20px",
                       }}
                     >
-                      {row.absent}
+                      Total Working Days
                     </TableCell>
                     <TableCell
                       sx={{
-                        border: "1px solid #111",
-                        fontSize: "20px",
+                        fontWeight: "bold",
                         textAlign: "center",
+                        fontSize: "20px",
                       }}
                     >
-                      <Box
-                        sx={{
-                          display: "inline-block",
-                          padding: "2px 12px",
-                          fontSize: "20px",
-                          backgroundColor:
-                            row.percentage >= 75
-                              ? "#e8f5e8"
-                              : row.percentage >= 60
-                                ? "#fff8e1"
-                                : "#ffebee",
-                          border: "1px solid",
-                          borderColor:
-                            row.percentage >= 75
-                              ? "#4caf50"
-                              : row.percentage >= 60
-                                ? "#ff9800"
-                                : "#f44336",
-                          borderRadius: "2px",
-                          fontWeight: "bold",
-                          minWidth: "60px",
-                        }}
-                      >
-                        {row.percentage}%
-                      </Box>
+                      Days Present
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        fontSize: "20px",
+                      }}
+                    >
+                      Days Absent
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        fontSize: "20px",
+                      }}
+                    >
+                      Attendance Percentage
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-              <TableRow sx={{}}>
-                <TableCell
-                  sx={{ border: "1px solid #111", fontWeight: "bold", fontSize: "20px" }}
-                >
-                  Total Average
-                </TableCell>
+                </TableHead>
+                <TableBody>
+                  {summaryData.slice(0, 6).map((row) => (
+                    <TableRow
+                      key={row.monthYear}
+                      className="pdf-block"
+                      sx={{
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      }}
+                    >
+                      <TableCell
+                        sx={{
+                          border: "1px solid #111",
+                          fontWeight: "500",
+                          fontSize: "20px",
+                        }}
+                      >
+                        {row.monthName}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          border: "1px solid #111",
+                          textAlign: "center",
+                          fontWeight: "500",
+                          fontSize: "20px",
+                        }}
+                      >
+                        {row.totalClasses}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          border: "1px solid #111",
+                          fontSize: "20px",
+                          textAlign: "center",
+                          color: "#2e7d32",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {row.present}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          border: "1px solid #111",
+                          fontSize: "20px",
+                          fontWeight: "bold",
+                          textAlign: "center",
+                          color: "#d32f2f",
+                        }}
+                      >
+                        {row.absent}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          border: "1px solid #111",
+                          fontSize: "20px",
+                          textAlign: "center",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "inline-block",
+                            padding: "2px 12px",
+                            fontSize: "20px",
+                            backgroundColor:
+                              row.percentage >= 75
+                                ? "#e8f5e8"
+                                : row.percentage >= 60
+                                  ? "#fff8e1"
+                                  : "#ffebee",
+                            border: "1px solid",
+                            borderColor:
+                              row.percentage >= 75
+                                ? "#4caf50"
+                                : row.percentage >= 60
+                                  ? "#ff9800"
+                                  : "#f44336",
+                            borderRadius: "2px",
+                            fontWeight: "bold",
+                            minWidth: "60px",
+                          }}
+                        >
+                          {row.percentage}%
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableRow sx={{}} className="pdf-block">
+                  <TableCell
+                    sx={{ border: "1px solid #111", fontWeight: "bold", fontSize: "20px" }}
+                  >
+                    Total Average
+                  </TableCell>
 
-                <TableCell
-                  sx={{
-                    border: "1px solid #111",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                    fontSize: "20px",
-                  }}
-                >
-                  {totalWorkingDays}
-                </TableCell>
+                  <TableCell
+                    sx={{
+                      border: "1px solid #111",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }}
+                  >
+                    {totalWorkingDays}
+                  </TableCell>
 
-                <TableCell
-                  sx={{
-                    border: "1px solid #111",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                    fontSize: "20px",
-                  }}
-                >
-                  {totalPresent}
-                </TableCell>
+                  <TableCell
+                    sx={{
+                      border: "1px solid #111",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }}
+                  >
+                    {totalPresent}
+                  </TableCell>
 
-                <TableCell
-                  sx={{
-                    border: "1px solid #111",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                    fontSize: "20px",
-                  }}
-                >
-                  {totalAbsent}
-                </TableCell>
+                  <TableCell
+                    sx={{
+                      border: "1px solid #111",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }}
+                  >
+                    {totalAbsent}
+                  </TableCell>
 
-                <TableCell
-                  sx={{
-                    border: "1px solid #111",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                    fontSize: "20px",
-                  }}
-                >
-                  {overallPercentage}%
-                </TableCell>
-              </TableRow>
-            </Table>
-          </TableContainer>
+                  <TableCell
+                    sx={{
+                      border: "1px solid #111",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }}
+                  >
+                    {overallPercentage}%
+                  </TableCell>
+                </TableRow>
+              </Table>
+            </TableContainer>
+          </Box>
 
           {/* Overall Summary */}
           {/* Legend */}

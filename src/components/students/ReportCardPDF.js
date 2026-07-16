@@ -722,7 +722,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 </Grid>
               </Grid>
             </Box>
-            <Box sx={{ mb: 2 }} className="pdf-block">
+            <Box sx={{ mb: 2, pt: "15px" }} className="pdf-block">
               <AttendanceSummary EmpId={studentId} sem={sem} year={year} />
             </Box>
             {/* Internal Examination Results */}
@@ -773,7 +773,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   >
                     <Table>
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+                        <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
                           <TableCell
                             sx={{
                               border: "1px solid #333",
@@ -848,7 +848,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           const grade =
                             pct !== null ? calculateGrade(pct) : null;
                           return (
-                            <TableRow key={idx} hover>
+                            <TableRow key={idx} hover className="pdf-block">
                               <TableCell
                                 sx={{
                                   border: "1px solid #333",
@@ -946,6 +946,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
 
                   {/* Summary Box */}
                   <Box
+                    className="pdf-block"
                     sx={{
                       border: "1px solid #111",
                       mt: 2,
@@ -1042,12 +1043,26 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   No class test data recorded.
                 </Typography>
               ) : (
-                <Grid container spacing={2}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "16px",
+                  }}
+                >
                   {ctAll.map((section) => {
                     if (!section.rows || section.rows.length === 0) return null;
 
                     return (
-                      <Grid item xs={12} sm={6} md={6} key={section.category}>
+                      <Box
+                        key={section.category}
+                        sx={{
+                          width: "calc(50% - 8px)",
+                          flexShrink: 0,
+                          flexGrow: 0,
+                          boxSizing: "border-box",
+                        }}
+                      >
                         <Box
                           className="pdf-block"
                           sx={{
@@ -1095,6 +1110,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             <Table size="small" sx={{ width: "100%" }}>
                               <TableHead>
                                 <TableRow
+                                  className="pdf-block"
                                   sx={{
                                     background: "#fafafa",
                                   }}
@@ -1158,6 +1174,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   return (
                                     <TableRow
                                       key={row.Id}
+                                      className="pdf-block"
                                       sx={{
                                         backgroundColor:
                                           index % 2 === 0 ? "#fff" : "#fafafa",
@@ -1227,10 +1244,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             </Table>
                           </TableContainer>
                         </Box>
-                      </Grid>
+                      </Box>
                     );
                   })}
-                </Grid>
+                </Box>
               )}
             </Box>
 
@@ -1263,11 +1280,25 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   No CBT data recorded.
                 </Typography>
               ) : (
-                <Grid container spacing={2}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "16px",
+                  }}
+                >
                   {cbtAll.map((section) => {
                     if (!section.rows || section.rows.length === 0) return null;
                     return (
-                      <Grid item xs={6} md={6} key={section.category}>
+                      <Box
+                        key={section.category}
+                        sx={{
+                          width: "calc(50% - 8px)",
+                          flexShrink: 0,
+                          flexGrow: 0,
+                          boxSizing: "border-box",
+                        }}
+                      >
                         <Box
                           className="pdf-block"
                           sx={{
@@ -1313,6 +1344,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             <Table size="small" sx={{ width: "100%" }}>
                               <TableHead>
                                 <TableRow
+                                  className="pdf-block"
                                   sx={{
                                     background: "#fafafa",
                                   }}
@@ -1375,6 +1407,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   return (
                                     <TableRow
                                       key={row.Id}
+                                      className="pdf-block"
                                       sx={{
                                         backgroundColor:
                                           index % 2 === 0 ? "#fff" : "#fafafa",
@@ -1420,6 +1453,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                         align="center"
                                         sx={{
                                           border: "1px solid #333",
+                                          fontWeight: "bold",
                                           color: absent
                                             ? "#555"
                                             : grade === "A"
@@ -1438,10 +1472,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             </Table>
                           </TableContainer>
                         </Box>
-                      </Grid>
+                      </Box>
                     );
                   })}
-                </Grid>
+                </Box>
               )}
             </Box>
 
@@ -1489,7 +1523,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 >
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+                      <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
                         <TableCell
                           sx={{
                             fontWeight: "bold",
@@ -1557,7 +1591,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           !absent && max > 0 ? (got / max) * 100 : null;
                         const grade = pct !== null ? calculateGrade(pct) : null;
                         return (
-                          <TableRow key={idx} hover>
+                          <TableRow key={idx} hover className="pdf-block">
                             <TableCell
                               sx={{
                                 border: "1px solid #333",
@@ -1697,7 +1731,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 >
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+                      <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
                         <TableCell
                           sx={{
                             fontWeight: "bold",
@@ -1752,7 +1786,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                           100;
 
                         return (
-                          <TableRow key={assignment.Id}>
+                          <TableRow key={assignment.Id} className="pdf-block">
                             <TableCell
                               sx={{
                                 border: "1px solid #111",
