@@ -103,6 +103,7 @@ function AdmissionFormLogic() {
               return (
                 <TextField
                   fullWidth
+                  size="small"
                   type={type === "Email" ? "email" : "text"}
                   value={value}
                   onChange={(e) => handleChange(cp.CheckpointId, e.target.value)}
@@ -116,6 +117,7 @@ function AdmissionFormLogic() {
               return (
                 <TextField
                   fullWidth
+                  size="small"
                   multiline
                   rows={4}
                   value={value}
@@ -130,6 +132,7 @@ function AdmissionFormLogic() {
               return (
                 <TextField
                   fullWidth
+                  size="small"
                   type="date"
                   InputLabelProps={{ shrink: true }}
                   value={value}
@@ -144,6 +147,7 @@ function AdmissionFormLogic() {
               return (
                 <TextField
                   fullWidth
+                  size="small"
                   select
                   value={value}
                   onChange={(e) => handleChange(cp.CheckpointId, e.target.value)}
@@ -213,6 +217,7 @@ function AdmissionFormLogic() {
               return (
                 <TextField
                   fullWidth
+                  size="small"
                   type="file"
                   inputProps={{ accept: "image/png, image/jpeg" }}
                   onChange={(e) =>
@@ -223,7 +228,7 @@ function AdmissionFormLogic() {
               );
 
             default:
-              return <TextField fullWidth disabled />;
+              return <TextField fullWidth size="small" disabled />;
           }
         })()}
       </Grid>

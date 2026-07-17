@@ -471,7 +471,7 @@ const NDCList = () => {
   const exportToExcel = () => {
     setIsExporting(true);
 
-    const dataForExport = students.map((student) => ({
+    const dataForExport = filteredStudents.map((student) => ({
       "Student ID": student.StudentID,
       Name: student.CandidateName,
       Course: student.Course,
@@ -602,7 +602,7 @@ const NDCList = () => {
           <Tooltip title="Export to Excel">
             <IconButton
               onClick={exportToExcel}
-              disabled={isExporting || students.length === 0}
+              disabled={isExporting || filteredStudents.length === 0}
               color="primary"
             >
               <FileDownloadIcon />
