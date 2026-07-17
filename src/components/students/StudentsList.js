@@ -349,7 +349,7 @@ const StudentsList = () => {
     setIsExporting(true);
 
     // Prepare the data for export
-    const dataForExport = transactions.map((student) => {
+    const dataForExport = filteredTransactions.map((student) => {
       const isActive = getStudentStatus(student.StudentID);
       return {
         "Student ID": student.StudentID,
@@ -448,7 +448,7 @@ const StudentsList = () => {
           <Tooltip title="Export to Excel">
             <IconButton
               onClick={exportToExcel}
-              disabled={isExporting}
+              disabled={isExporting || filteredTransactions.length === 0}
               color="primary"
             >
               <FileDownloadIcon />
