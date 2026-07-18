@@ -20,6 +20,7 @@ const FinalizeAdmissionView = () => {
   const [scholarshipAmount, setScholarshipAmount] = useState("");
   const navigate = useNavigate();
   const { state } = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const feeFields = { 
     tution_fees: "Tuition Fees",
@@ -106,7 +107,20 @@ const FinalizeAdmissionView = () => {
   };
 
   const handleSubmit = async () => {
+
+      if (isSubmitting) {
+    console.log("Blocked - Already submitting");
+    return;
+  }
+
+  // console.log("Submit Clicked");
+  setIsSubmitting(true);
     try {
+    //    console.log("Waiting 20 seconds...");
+    // await new Promise((resolve) => setTimeout(resolve, 20000));
+
+    // console.log("20 seconds completed");
+
       for (const data of formDataList) {
         await axios.post(
           "https://namami-infotech.com/LIT/src/fees/add_student_fee_structure.php",
@@ -120,7 +134,9 @@ const FinalizeAdmissionView = () => {
     } catch (error) {
       console.error("Submission error:", error);
       alert("An error occurred during submission.");
-    }
+    }finally {
+    setIsSubmitting(false);
+  }
   };
 
   if (loading) return <CircularProgress sx={{ mt: 5 }} />;
@@ -222,12 +238,34 @@ const FinalizeAdmissionView = () => {
           zIndex: 1000
         }}
       >
-        <Button
+        {/* <Button
           variant="contained"
           sx={{ backgroundColor: "#CC7A00" }}
           onClick={handleSubmit}
         >
           Submit
+        </Button> */}
+         <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "#CC7A00",
+                    pointerEvents: isSubmitting ? "none" : "auto",
+                  }}
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <CircularProgress
+                        size={20}
+                        color="inherit"
+                        sx={{ mr: 1 }}
+                      />
+                      Please Wait...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
         </Button>
       </Box>
     </Box>
