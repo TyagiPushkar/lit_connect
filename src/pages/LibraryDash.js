@@ -14,9 +14,9 @@ function LibraryDash() {
             <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
                 <Sidebar />
             </Box>
-            <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
+            <Box component="main" sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: '100vh', minWidth: 0, overflow: 'hidden', p: 0 }}>
                 <Navbar />
-                <Box sx={{ mt: -1, p: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, overflow: 'hidden', p: 1 }}>
                    <DashboardLib/>
                 </Box>
             </Box>

@@ -156,7 +156,7 @@ const StudentBooksView = () => {
   }
 
   return (
-    <Box sx={{ p: 2, backgroundColor: "#fff", minHeight: "100vh" }}>
+    <Box sx={{ p: 2, backgroundColor: "#fff", minHeight: "100vh", overflowY: "auto" }}>
       {/* Student Info */}
       <Paper
         sx={{

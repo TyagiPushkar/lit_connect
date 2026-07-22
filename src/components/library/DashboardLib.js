@@ -76,8 +76,8 @@ function DashboardLib() {
 
 
     return (
-        <Box sx={{ display: 'flex' }}>
-            <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', flexGrow: 1, minHeight: 0, overflow: 'hidden' }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                 {renderComponent()}
             </Box>
         </Box>
