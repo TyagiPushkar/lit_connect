@@ -26,7 +26,7 @@ const StudentCertificateEntry = () => {
   const [student, setStudent] = useState(null);
   const [certificates, setCertificates] = useState([]);
   const [snackbar, setSnackbar] = useState("");
-const navigate = useNavigate();
+  const navigate = useNavigate();
   useEffect(() => {
     fetchStudent();
     fetchCertificates();
@@ -47,17 +47,17 @@ const navigate = useNavigate();
 
   const fetchStudent = async () => {
     const res = await axios.get(
-      "https://namami-infotech.com/LIT/src/students/get_student.php"
+      "https://namami-infotech.com/LIT/src/students/get_student.php",
     );
     const found = res.data.data.find(
-      (s) => String(s.StudentID) === String(studentId)
+      (s) => String(s.StudentID) === String(studentId),
     );
     setStudent(found);
   };
 
   const fetchCertificates = async () => {
     const res = await axios.get(
-      `https://namami-infotech.com/LIT/src/students/get_student_certificate.php?StudentId=${studentId}`
+      `https://namami-infotech.com/LIT/src/students/get_student_certificate.php?StudentId=${studentId}`,
     );
 
     const processed = res.data.data.map((c) => {
@@ -78,7 +78,7 @@ const navigate = useNavigate();
         StudentId: studentId,
         CertificateId: certificateId,
         Action: action,
-      }
+      },
     );
 
     setSnackbar(`Certificate ${action} successfully`);
@@ -86,7 +86,13 @@ const navigate = useNavigate();
   };
 
   return (
-    <Box p={2}>
+    <Box
+      sx={{
+        p: 2,
+        height: "100vh", // ya calc(100vh - 80px)
+        overflowY: "auto",
+      }}
+    >
       {/* STUDENT DETAILS – SINGLE ROW */}
       {student && (
         <Box
@@ -112,7 +118,6 @@ const navigate = useNavigate();
               >
                 Lakshya Institute Of Technology
               </Typography>
-              
             </Box>
           </Box>
           <Avatar
@@ -175,8 +180,8 @@ const navigate = useNavigate();
                           c.Status === "Completed"
                             ? "success"
                             : c.Status === "Received"
-                            ? "info"
-                            : "warning"
+                              ? "info"
+                              : "warning"
                         }
                         size="small"
                       />
@@ -255,8 +260,8 @@ const navigate = useNavigate();
                           c.Status === "Completed"
                             ? "success"
                             : c.Status === "Received"
-                            ? "info"
-                            : "warning"
+                              ? "info"
+                              : "warning"
                         }
                       />
                     </TableCell>

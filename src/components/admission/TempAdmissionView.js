@@ -86,6 +86,8 @@ function TempAdmissionView() {
   };
 
   const handleNext = async () => {
+    // Prevent double click
+  if (isSubmitting) return;
     setIsSubmitting(true);
     const fieldMap = {
       3: "CandidateName",
@@ -167,6 +169,25 @@ function TempAdmissionView() {
           },
         },
       );
+
+        // console.log("Enroll clicked");
+
+  // Wait 20 seconds (Testing)
+  // await new Promise((resolve) => setTimeout(resolve, 20000));
+
+  // console.log("20 seconds completed");
+
+  // // Mock response
+  // const response = {
+  //   data: {
+  //     success: true,
+  //     data: {
+  //       StudentID: "STU12345",
+  //     },
+  //   },
+  // };
+
+      
 
       if (response.data.success) {
         const studentId = response.data.data.StudentID;
@@ -434,15 +455,26 @@ function TempAdmissionView() {
       >
         <Button
           variant="contained"
-          sx={{ backgroundColor: "#CC7A00" }}
+          // sx={{ backgroundColor: "#CC7A00" }}
           onClick={handleNext}
           disabled={isSubmitting}
-        >
+            sx={{
+    backgroundColor: "#CC7A00",
+    pointerEvents: isSubmitting ? "none" : "auto",
+  }}
+>
           {isSubmitting ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            "Enroll"
-          )}
+    <>
+      <CircularProgress
+        size={20}
+        color="inherit"
+        sx={{ mr: 1 }}
+      />
+      Please Wait...
+    </>
+  ) : (
+    "Enroll"
+  )}
         </Button>
       </Box>
     </Box>
