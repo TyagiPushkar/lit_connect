@@ -197,8 +197,8 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
     };
 
     return (
-        <Box sx={{ padding: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', minHeight: 0, overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2, flexShrink: 0 }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
                     variant="outlined"
@@ -273,7 +273,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                 </Box>
             ) : (
                 <>
-                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                         <Typography variant="body2" color="text.secondary">
                             Showing {filteredBooks.length} books
                             {statusFilter && ` • Status: ${statusFilter}`}
@@ -296,9 +296,9 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                         </Box>
                     </Box>
                     
-                    <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: '16px' }}>
-                        <TableContainer>
-                            <Table>
+                    <Paper sx={{ width: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, overflow: 'hidden', borderRadius: '16px' }}>
+                        <TableContainer sx={{ flexGrow: 1, overflow: 'auto' }}>
+                            <Table stickyHeader>
                                 <TableHead sx={{ backgroundColor: '#CC7A00' }}>
                                     <TableRow>
                                         <TableCell sx={{ color: '#fff' }}>Book ID</TableCell>
@@ -363,6 +363,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                             rowsPerPage={rowsPerPage}
                             onRowsPerPageChange={handleChangeRowsPerPage}
                             rowsPerPageOptions={[5, 10, 25, 50]}
+                            sx={{ flexShrink: 0, borderTop: '1px solid #e0e0e0' }}
                         />
                     </Paper>
                 </>
