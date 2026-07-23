@@ -197,7 +197,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
     };
 
     return (
-        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', minHeight: 0, overflow: 'hidden' }}>
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', minHeight: 0, overflow: 'auto' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2, flexShrink: 0 }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
@@ -297,9 +297,9 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                     </Box>
                     
                     <Paper sx={{ width: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, overflow: 'hidden', borderRadius: '16px' }}>
-                        <TableContainer sx={{ flexGrow: 1, overflow: 'auto' }}>
+                        <TableContainer sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'auto', maxHeight: 'calc(100vh - 240px)', minHeight: '300px' }}>
                             <Table stickyHeader>
-                                <TableHead sx={{ backgroundColor: '#CC7A00' }}>
+                                <TableHead sx={{ backgroundColor: '#CC7A00', '& .MuiTableCell-head': { backgroundColor: '#CC7A00', color: '#fff', fontWeight: 'bold' } }}>
                                     <TableRow>
                                         <TableCell sx={{ color: '#fff' }}>Book ID</TableCell>
                                         <TableCell sx={{ color: '#fff' }}>Title</TableCell>
@@ -310,7 +310,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {filteredBooks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(book => {
+                                    {filteredBooks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((book, index) => {
                                         let course = '';
                                         if (book.Status === 'Issued' && book.StudentId) {
                                             const studentDetails = getStudentDetails(book.StudentId);
@@ -318,7 +318,7 @@ function ListBook({ setView, defaultStatusFilter = '' }) {
                                         }
                                         
                                         return (
-                                            <TableRow key={book.Id} hover>
+                                            <TableRow key={book.BookId || book.Id || index} hover>
                                                 <TableCell>{book.BookId}</TableCell>
                                                 <TableCell>{book.Title}</TableCell>
                                                 <TableCell>{book.Author}</TableCell>
