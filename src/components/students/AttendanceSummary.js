@@ -22,9 +22,8 @@ import {
   parseISO,
 } from "date-fns";
 
-
 const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
-  console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
+  // console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
   const [summaryData, setSummaryData] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -307,7 +306,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
     if (EmpId && holidays.length > 0) {
       fetchAttendanceSummary();
     }
-    console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
+    // console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
   }, [EmpId, holidays.length, sem]);
 
   const totalWorkingDays = summaryData.reduce(
@@ -332,7 +331,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           border: "1px dashed #111",
           padding: "20px",
           textAlign: "center",
-          fontFamily: 'Inter, Roboto, Arial, sans-serif',
+          fontFamily: "Inter, Roboto, Arial, sans-serif",
           backgroundColor: "#fafafa",
         }}
       >
@@ -350,7 +349,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
         padding: "20px",
         marginBottom: "0px",
         backgroundColor: "#fafafa",
-        fontFamily: 'Inter, Roboto, Arial, sans-serif',
+        fontFamily: "Inter, Roboto, Arial, sans-serif",
         position: "relative",
       }}
     >
@@ -379,7 +378,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           severity="error"
           sx={{
             mb: 2,
-            fontFamily: 'Inter, Roboto, Arial, sans-serif',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
             border: "1px solid #f44336",
           }}
         >
@@ -392,7 +391,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           severity="warning"
           sx={{
             mb: 2,
-            fontFamily: 'Inter, Roboto, Arial, sans-serif',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
             border: "1px solid #ff9800",
           }}
         >
@@ -408,7 +407,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
             justifyContent: "center",
             alignItems: "center",
             py: 3,
-            fontFamily: 'Inter, Roboto, Arial, sans-serif',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
           }}
         >
           <CircularProgress size={24} sx={{ mr: 2 }} />
@@ -429,7 +428,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
               mt: 2,
               mb: 2,
               color: "#111",
-              fontFamily: 'Inter, Roboto, Arial, sans-serif',
+              fontFamily: "Inter, Roboto, Arial, sans-serif",
               letterSpacing: "0.5px",
               borderBottom: "2px solid #111",
               pb: 0.5,
@@ -450,14 +449,17 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                     padding: "6px 10px",
                     fontSize: "20px",
                     lineHeight: 1.3,
-                    fontFamily: 'Inter, Roboto, Arial, sans-serif',
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
                     color: "#000000",
                     border: "1px solid #111",
                   },
                 }}
               >
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
+                  <TableRow
+                    sx={{ backgroundColor: "#f0f0f0" }}
+                    className="pdf-block"
+                  >
                     <TableCell
                       sx={{
                         fontWeight: "bold",
@@ -594,7 +596,11 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                 </TableBody>
                 <TableRow sx={{}} className="pdf-block">
                   <TableCell
-                    sx={{ border: "1px solid #111", fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      border: "1px solid #111",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }}
                   >
                     Total Average
                   </TableCell>
@@ -654,10 +660,18 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
               mt: 2,
               pt: 1,
               borderTop: "1px dashed #111",
-              fontFamily: 'Inter, Roboto, Arial, sans-serif',
+              fontFamily: "Inter, Roboto, Arial, sans-serif",
             }}
           >
-            <Typography variant="caption" sx={{ display: "block", mb: 0.5, color: "#111", fontSize: "17px" }}>
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                mb: 0.5,
+                color: "#111",
+                fontSize: "17px",
+              }}
+            >
               <strong>Note:</strong> Working days exclude Sundays and declared
               institute holidays
             </Typography>
@@ -668,7 +682,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
           sx={{
             textAlign: "center",
             py: 3,
-            fontFamily: 'Inter, Roboto, Arial, sans-serif',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
           }}
         >
           <Typography

@@ -25,6 +25,7 @@ import PTMAttendance from "./PTMAttendance";
 
 function StudentDetail() {
   const { user } = useAuth();
+  console.log("User role:", user.role); // Log the user role for debugging
   const { studentId } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
@@ -223,7 +224,7 @@ function StudentDetail() {
       <StudentFeesTransaction />
 
       {/* Actions */}
-      {user.role == "HR" ||
+      {/* {user.role == "HR" ||
         (user.role == "Examination" && (
           <Box sx={{ mb: 2, textAlign: "right" }}>
             {!editMode ? (
@@ -244,7 +245,28 @@ function StudentDetail() {
               </Button>
             )}
           </Box>
-        ))}
+        ))} */}
+      {(user.role === "HR" || user.role === "Examination") && (
+        <Box sx={{ mb: 2, textAlign: "right" }}>
+          {!editMode ? (
+            <Button
+              variant="contained"
+              onClick={() => setEditMode(true)}
+              sx={{ backgroundColor: "#CC7A00" }}
+            >
+              Edit
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              sx={{ backgroundColor: "#2e7d32" }}
+            >
+              Save
+            </Button>
+          )}
+        </Box>
+      )}
 
       {/* Content */}
       <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
