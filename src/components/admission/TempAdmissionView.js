@@ -1,3 +1,481 @@
+// import React, { useEffect, useState } from "react";
+// import {
+//   Typography,
+//   Paper,
+//   Box,
+//   CircularProgress,
+//   Grid,
+//   Button,
+//   Divider,
+//   Avatar,
+//   Dialog,
+// } from "@mui/material";
+// import { useParams, useNavigate } from "react-router-dom";
+// import axios from "axios";
+// import logo from "../../assets/images (1).png";
+
+// function TempAdmissionView() {
+//   const { activityId } = useParams();
+//   const [details, setDetails] = useState([]);
+//   const [checkpoints, setCheckpoints] = useState({});
+//   const [checkpointTypeMap, setCheckpointTypeMap] = useState({});
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+//   const navigate = useNavigate();
+//   const [openDialog, setOpenDialog] = useState(false);
+//   const [selectedImage, setSelectedImage] = useState("");
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   // Checkpoint groups
+//   const sections = {
+//     "Address for Correspondence": [15, 62, 63, 64, 16, 65, 66, 67],
+//     "Academic Records of Qualifying Examination": [
+//       18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 55,
+//     ],
+//     "List of Attached Documents": [31, 33, 35, 37, 38, 39, 40],
+//     Prefrences: [28, 29, 53, 54],
+//   };
+
+//   const candidateDetailsIds = [3, 5, 6, 61, 7, 8, 9, 10, 11, 12, 13, 52, 60];
+//   const studentPhotoChkId = 4; // Assume 13 is the image URL
+
+//   useEffect(() => {
+//     const fetchDetails = async () => {
+//       try {
+//         const [detailsRes, checkpointsRes, typesRes] = await Promise.all([
+//           axios.get(
+//             `https://namami-infotech.com/LIT/src/menu/get_transaction_dtl.php?activityId=${encodeURIComponent(activityId)}`,
+//           ),
+//           axios.get(
+//             `https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`,
+//           ),
+//           axios.get(`https://namami-infotech.com/LIT/src/menu/get_types.php`),
+//         ]);
+
+//         if (detailsRes.data.success && checkpointsRes.data.success) {
+//           const typeIdToName = {};
+//           if (typesRes.data.success) {
+//             typesRes.data.data.forEach((t) => {
+//               typeIdToName[t.TypeId] = t.Type.trim();
+//             });
+//           }
+//           const checkpointMap = {};
+//           const cpTypeMap = {};
+//           checkpointsRes.data.data.forEach((cp) => {
+//             checkpointMap[cp.CheckpointId] = cp.Description;
+//             cpTypeMap[cp.CheckpointId] = typeIdToName[cp.TypeId] || "Unknown";
+//           });
+//           setCheckpoints(checkpointMap);
+//           setCheckpointTypeMap(cpTypeMap);
+//           setDetails(detailsRes.data.data);
+//         } else {
+//           setError("No details or checkpoints found.");
+//         }
+//       } catch (err) {
+//         setError("Failed to fetch admission details.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchDetails();
+//   }, [activityId]);
+
+//   const getValueByChkId = (chkId) => {
+//     const item = details.find((d) => parseInt(d.ChkId) === chkId);
+//     return item ? item.Value : "";
+//   };
+
+//   const handleNext = async () => {
+//     // Prevent double click
+//     if (isSubmitting) return;
+//     setIsSubmitting(true);
+//     const fieldMap = {
+//       3: "CandidateName",
+//       4: "Photo",
+//       5: "Course",
+//       6: "GuardianName",
+//       7: "StudentContactNo",
+//       8: "GuardianContactNo",
+//       9: "EmailId",
+//       10: "BloodGroup",
+//       11: "Gender",
+//       12: "DOB",
+//       13: "ReligionCategory",
+//       // permeent ke address new
+//       15: "PermanentAddress",
+//       62: "PostOffice",
+//       63: "District",
+//       64: "PinCode",
+//       // present ke address new
+//       16: "PresentAddress",
+//       65: "PostOffice_PA",
+//       66: "District_PA",
+//       67: "PinCode_PA",
+//       // end of this
+//       18: "Board10University",
+//       // 20: "RollNo10",
+//       // 21: "Stream10",
+//       19: "Year10Passing",
+//       22: "Percentage10",
+//       // 24: "Council12Name",
+//       23: "Board12University",
+//       // 24: "Year12PassingAlt",
+//       24: "Year12Passing",
+//       25: "RollNo12",
+//       26: "Stream12",
+//       27: "Percentage12",
+//       28: "InterestInHostel",
+//       29: "InterestInTransport",
+//       31: "CharacterCertificate",
+//       33: "MigrationCertificate",
+//       35: "CollegeLeavingCertificate",
+//       37: "MarksheetCopy",
+//       38: "AadharCardCopy",
+//       39: "CasteCertificate",
+//       40: "BloodGroupCopy",
+//       52: "AlternateGaurdiaNumber",
+//       53: "Disabled",
+//       54: "RefrenceBy",
+//       // ✅ ADD THESE NEW FIELDS
+//       55: "last_institute_name",
+//       60: "AnnualIncome",
+//       61: "mother_name",
+//     };
+
+//     const studentData = {
+//       StudentID: `STU-${activityId}`, // Or generate your logic
+//       TempID: activityId,
+//       SubmissionDate: new Date().toISOString().split("T")[0],
+//       Place: "Bhubaneswar", // Example value
+//       Remark: "", // Optional
+//     };
+
+//     details.forEach((item) => {
+//       const fieldName = fieldMap[item.ChkId];
+//       if (fieldName) {
+//         studentData[fieldName] = item.Value;
+//       }
+//     });
+
+//     console.log("Sending payload:", studentData);
+
+//     try {
+//       const response = await axios.post(
+//         "https://namami-infotech.com/LIT/src/students/add_student.php",
+//         studentData,
+//         {
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//         },
+//       );
+
+//       // console.log("Enroll clicked");
+
+//       // Wait 20 seconds (Testing)
+//       // await new Promise((resolve) => setTimeout(resolve, 20000));
+
+//       // console.log("20 seconds completed");
+
+//       // // Mock response
+//       // const response = {
+//       //   data: {
+//       //     success: true,
+//       //     data: {
+//       //       StudentID: "STU12345",
+//       //     },
+//       //   },
+//       // };
+
+//       if (response.data.success) {
+//         const studentId = response.data.data.StudentID;
+//         const course = studentData.Course;
+//         const hostel = studentData.Hostel;
+//         // Save to localStorage
+//         localStorage.setItem("student_id", studentId);
+//         localStorage.setItem("student_course", course);
+//         localStorage.setItem("student_hostel", hostel);
+//         alert("Student record saved successfully.");
+//         navigate("/admissions/finalize", {
+//           state: { studentId, course, hostel },
+//         });
+//       } else {
+//         alert("Error: " + response.data.message);
+//       }
+//     } catch (error) {
+//       console.error("Submission error:", error);
+//       alert("Failed to submit student data.");
+//     } finally {
+//       setIsSubmitting(false); // Stop loading regardless of success/failure
+//     }
+//   };
+
+//   const renderStudentDetails = () => {
+//     const fields = candidateDetailsIds.map((id) => ({
+//       label: checkpoints[id] || `Checkpoint #${id}`,
+//       value: getValueByChkId(id),
+//       isImage:
+//         id === studentPhotoChkId &&
+//         getValueByChkId(id).startsWith("https://namami-infotech.com/"),
+//     }));
+
+//     const imageItem = fields.find((f) => f.isImage);
+//     const otherFields = fields.filter((f) => !f.isImage);
+
+//     return (
+//       <Grid container spacing={2} sx={{ mb: 4 }}>
+//         <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
+//           <Box
+//             sx={{
+//               display: "flex",
+//               justifyContent: "center",
+//               alignItems: "center",
+//               mb: 2,
+//               width: "100%",
+//             }}
+//           >
+//             <Box
+//               component="img"
+//               src={getValueByChkId(studentPhotoChkId)}
+//               alt="Student"
+//               sx={{
+//                 width: "180px",
+//                 height: "180px",
+//                 objectFit: "fill",
+//                 borderRadius: 2,
+//                 border: "1px solid #ccc",
+//                 boxShadow: 2,
+//               }}
+//             />
+//           </Box>
+//         </Grid>
+//         <Grid item xs={12} sm={9}>
+//           <Grid container spacing={2}>
+//             {otherFields.map((f, idx) => (
+//               <Grid item xs={12} sm={4} key={idx}>
+//                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+//                   {f.label}
+//                 </Typography>
+//                 <Typography variant="body1" sx={{ mb: 1 }}>
+//                   {f.value || "—"}
+//                 </Typography>
+//               </Grid>
+//             ))}
+//           </Grid>
+//         </Grid>
+//       </Grid>
+//     );
+//   };
+
+//   const renderSection = (title, checkpointIds) => {
+//     const sectionData = details.filter((item) =>
+//       checkpointIds.includes(parseInt(item.ChkId)),
+//     );
+//     if (sectionData.length === 0) return null;
+
+//     return (
+//       <Box key={title} sx={{ mb: 5 }}>
+//         <Typography
+//           variant="h6"
+//           gutterBottom
+//           sx={{ color: "#CC7A00", fontWeight: 700 }}
+//         >
+//           {title}
+//         </Typography>
+//         <Divider sx={{ mb: 2 }} />
+//         <Grid container spacing={2}>
+//           {sectionData.map((item, index) => {
+//             const isImage =
+//               typeof item.Value === "string" &&
+//               item.Value.startsWith("https://namami-infotech.com/");
+//             return (
+//               <Grid item xs={12} sm={3} key={index}>
+//                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+//                   {checkpoints[item.ChkId] || `Checkpoint #${item.ChkId}`}
+//                 </Typography>
+//                 {isImage ? (
+//                   <Box
+//                     sx={{ mt: 1, cursor: "pointer" }}
+//                     onClick={() => {
+//                       setSelectedImage(item.Value);
+//                       setOpenDialog(true);
+//                     }}
+//                   >
+//                     <img
+//                       src={item.Value}
+//                       alt={`Checkpoint ${item.ChkId}`}
+//                       style={{
+//                         width: "50%",
+//                         height: "150px",
+//                         objectFit: "cover",
+//                         borderRadius: 8,
+//                         border: "1px solid #ccc",
+//                       }}
+//                     />
+//                   </Box>
+//                 ) : (
+//                   <Typography variant="body1" sx={{ mb: 1.5 }}>
+//                     {item.Value || "—"}
+//                   </Typography>
+//                 )}
+//               </Grid>
+//             );
+//           })}
+//         </Grid>
+
+//         {/* Dialog for Image Preview */}
+//         <Dialog
+//           open={openDialog}
+//           onClose={() => setOpenDialog(false)}
+//           maxWidth="md"
+//         >
+//           <Box sx={{ p: 2, textAlign: "center" }}>
+//             <img
+//               src={selectedImage}
+//               alt="Preview"
+//               style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
+//             />
+//             <Box sx={{ mt: 2 }}>
+//               <Button
+//                 variant="contained"
+//                 color="primary"
+//                 href={selectedImage}
+//                 download
+//               >
+//                 Download Image
+//               </Button>
+//             </Box>
+//           </Box>
+//         </Dialog>
+//       </Box>
+//     );
+//   };
+
+//   if (loading) return <CircularProgress sx={{ mt: 5 }} />;
+//   if (error)
+//     return (
+//       <Typography color="error" sx={{ mt: 3 }}>
+//         {error}
+//       </Typography>
+//     );
+
+//   return (
+//     <Box sx={{ p: 2, background: "#fff", pb: 10 }}>
+//       {/* Header with Back button */}
+//       <Box
+//         sx={{
+//           display: "flex",
+//           justifyContent: "space-between",
+//           alignItems: "center",
+//           mb: 3,
+//         }}
+//       >
+//         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+//           <Button
+//             variant="outlined"
+//             onClick={() => navigate(-1)}
+//             sx={{ color: "#CC7A00", borderColor: "#CC7A00" }}
+//           >
+//             Back
+//           </Button>
+//           <Box>
+//             <Typography variant="h5" sx={{ fontWeight: 700, color: "#CC7A00" }}>
+//               Lakshay Institute Of Technology
+//             </Typography>
+//             <Typography variant="subtitle1">Admission Form Details</Typography>
+//           </Box>
+//         </Box>
+//         <Avatar
+//           src={logo}
+//           alt="College Logo"
+//           sx={{ width: 80, height: 80 }}
+//           variant="rounded"
+//         />
+//       </Box>
+
+//       {/* Main Paper */}
+//       <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
+//         {/* Student Details */}
+//         {renderStudentDetails()}
+
+//         {/* Remaining Sections */}
+//         {Object.entries(sections).map(([sectionTitle, ids]) =>
+//           renderSection(sectionTitle, ids),
+//         )}
+
+//         {/* Any submitted checkpoints not covered by the sections above */}
+//         {(() => {
+//           const DATA_TYPES = [
+//             "Text",
+//             "Email",
+//             "Number",
+//             "Digit",
+//             "Long Text",
+//             "Date",
+//             "Dropdown",
+//             "Radio",
+//             "Checkbox",
+//             "Pic/Camera",
+//           ];
+//           const shownIds = [
+//             studentPhotoChkId,
+//             ...candidateDetailsIds,
+//             ...Object.values(sections).flat(),
+//           ];
+//           const remainingIds = details
+//             .map((d) => parseInt(d.ChkId))
+//             .filter(
+//               (id) =>
+//                 !shownIds.includes(id) &&
+//                 DATA_TYPES.includes(checkpointTypeMap[id]),
+//             );
+//           return remainingIds.length > 0
+//             ? renderSection("Other Details", remainingIds)
+//             : null;
+//         })()}
+//       </Paper>
+
+//       {/* Fixed Footer: ONLY Next Button */}
+//       <Box
+//         sx={{
+//           position: "fixed",
+//           bottom: 0,
+//           left: 0,
+//           right: 0,
+//           p: 2,
+//           display: "flex",
+//           justifyContent: "flex-end",
+//           gap: "100px",
+//           backgroundColor: "#fff",
+//           boxShadow: "0 -2px 8px rgba(0,0,0,0.05)",
+//           zIndex: 1000,
+//         }}
+//       >
+//         <Button
+//           variant="contained"
+//           // sx={{ backgroundColor: "#CC7A00" }}
+//           onClick={handleNext}
+//           disabled={isSubmitting}
+//           sx={{
+//             backgroundColor: "#CC7A00",
+//             pointerEvents: isSubmitting ? "none" : "auto",
+//           }}
+//         >
+//           {isSubmitting ? (
+//             <>
+//               <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+//               Please Wait...
+//             </>
+//           ) : (
+//             "Enroll"
+//           )}
+//         </Button>
+//       </Box>
+//     </Box>
+//   );
+// }
+
+// export default TempAdmissionView;
 import React, { useEffect, useState } from "react";
 import {
   Typography,
@@ -9,7 +487,12 @@ import {
   Divider,
   Avatar,
   Dialog,
+  IconButton,
+  TextField,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import CloseIcon from "@mui/icons-material/Close";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../../assets/images (1).png";
@@ -25,7 +508,11 @@ function TempAdmissionView() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Checkpoint groups
+
+  // Editing States
+  const [editingChkId, setEditingChkId] = useState(null);
+  const [editValue, setEditValue] = useState("");
+
   const sections = {
     "Address for Correspondence": [15, 62, 63, 64, 16, 65, 66, 67],
     "Academic Records of Qualifying Examination": [
@@ -36,47 +523,47 @@ function TempAdmissionView() {
   };
 
   const candidateDetailsIds = [3, 5, 6, 61, 7, 8, 9, 10, 11, 12, 13, 52, 60];
-  const studentPhotoChkId = 4; // Assume 13 is the image URL
+  const studentPhotoChkId = 4;
+
+  const fetchDetails = async () => {
+    try {
+      const [detailsRes, checkpointsRes, typesRes] = await Promise.all([
+        axios.get(
+          `https://namami-infotech.com/LIT/src/menu/get_transaction_dtl.php?activityId=${encodeURIComponent(activityId)}`,
+        ),
+        axios.get(
+          `https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`,
+        ),
+        axios.get(`https://namami-infotech.com/LIT/src/menu/get_types.php`),
+      ]);
+
+      if (detailsRes.data.success && checkpointsRes.data.success) {
+        const typeIdToName = {};
+        if (typesRes.data.success) {
+          typesRes.data.data.forEach((t) => {
+            typeIdToName[t.TypeId] = t.Type.trim();
+          });
+        }
+        const checkpointMap = {};
+        const cpTypeMap = {};
+        checkpointsRes.data.data.forEach((cp) => {
+          checkpointMap[cp.CheckpointId] = cp.Description;
+          cpTypeMap[cp.CheckpointId] = typeIdToName[cp.TypeId] || "Unknown";
+        });
+        setCheckpoints(checkpointMap);
+        setCheckpointTypeMap(cpTypeMap);
+        setDetails(detailsRes.data.data);
+      } else {
+        setError("No details or checkpoints found.");
+      }
+    } catch (err) {
+      setError("Failed to fetch admission details.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const [detailsRes, checkpointsRes, typesRes] = await Promise.all([
-          axios.get(
-            `https://namami-infotech.com/LIT/src/menu/get_transaction_dtl.php?activityId=${encodeURIComponent(activityId)}`,
-          ),
-          axios.get(
-            `https://namami-infotech.com/LIT/src/menu/get_checkpoints.php`,
-          ),
-          axios.get(`https://namami-infotech.com/LIT/src/menu/get_types.php`),
-        ]);
-
-        if (detailsRes.data.success && checkpointsRes.data.success) {
-          const typeIdToName = {};
-          if (typesRes.data.success) {
-            typesRes.data.data.forEach((t) => {
-              typeIdToName[t.TypeId] = t.Type.trim();
-            });
-          }
-          const checkpointMap = {};
-          const cpTypeMap = {};
-          checkpointsRes.data.data.forEach((cp) => {
-            checkpointMap[cp.CheckpointId] = cp.Description;
-            cpTypeMap[cp.CheckpointId] = typeIdToName[cp.TypeId] || "Unknown";
-          });
-          setCheckpoints(checkpointMap);
-          setCheckpointTypeMap(cpTypeMap);
-          setDetails(detailsRes.data.data);
-        } else {
-          setError("No details or checkpoints found.");
-        }
-      } catch (err) {
-        setError("Failed to fetch admission details.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDetails();
   }, [activityId]);
 
@@ -85,9 +572,35 @@ function TempAdmissionView() {
     return item ? item.Value : "";
   };
 
+  // Handle Edit Save API Call
+  const handleSaveEdit = async (chkId) => {
+    try {
+      const payload = {
+        ActivityId: activityId,
+        ChkId: chkId,
+        Value: editValue,
+      };
+
+      const res = await axios.post(
+        "https://namami-infotech.com/LIT/src/menu/update_transaction_dtl.php", // Apni API ka URL yahan check kar Lein
+        payload,
+      );
+
+      if (res.data.success) {
+        alert("Updated successfully!");
+        setEditingChkId(null);
+        fetchDetails(); // Refresh data
+      } else {
+        alert("Failed: " + res.data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating value.");
+    }
+  };
+
   const handleNext = async () => {
-    // Prevent double click
-  if (isSubmitting) return;
+    if (isSubmitting) return;
     setIsSubmitting(true);
     const fieldMap = {
       3: "CandidateName",
@@ -101,25 +614,18 @@ function TempAdmissionView() {
       11: "Gender",
       12: "DOB",
       13: "ReligionCategory",
-      // permeent ke address new
       15: "PermanentAddress",
       62: "PostOffice",
       63: "District",
       64: "PinCode",
-      // present ke address new
       16: "PresentAddress",
       65: "PostOffice_PA",
       66: "District_PA",
       67: "PinCode_PA",
-      // end of this
       18: "Board10University",
-      // 20: "RollNo10",
-      // 21: "Stream10",
       19: "Year10Passing",
       22: "Percentage10",
-      // 24: "Council12Name",
       23: "Board12University",
-      // 24: "Year12PassingAlt",
       24: "Year12Passing",
       25: "RollNo12",
       26: "Stream12",
@@ -136,18 +642,17 @@ function TempAdmissionView() {
       52: "AlternateGaurdiaNumber",
       53: "Disabled",
       54: "RefrenceBy",
-      // ✅ ADD THESE NEW FIELDS
       55: "last_institute_name",
       60: "AnnualIncome",
       61: "mother_name",
     };
 
     const studentData = {
-      StudentID: `STU-${activityId}`, // Or generate your logic
+      StudentID: `STU-${activityId}`,
       TempID: activityId,
       SubmissionDate: new Date().toISOString().split("T")[0],
-      Place: "Bhubaneswar", // Example value
-      Remark: "", // Optional
+      Place: "Bhubaneswar",
+      Remark: "",
     };
 
     details.forEach((item) => {
@@ -157,43 +662,17 @@ function TempAdmissionView() {
       }
     });
 
-    console.log("Sending payload:", studentData);
-
     try {
       const response = await axios.post(
         "https://namami-infotech.com/LIT/src/students/add_student.php",
         studentData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
+        { headers: { "Content-Type": "application/json" } },
       );
-
-        // console.log("Enroll clicked");
-
-  // Wait 20 seconds (Testing)
-  // await new Promise((resolve) => setTimeout(resolve, 20000));
-
-  // console.log("20 seconds completed");
-
-  // // Mock response
-  // const response = {
-  //   data: {
-  //     success: true,
-  //     data: {
-  //       StudentID: "STU12345",
-  //     },
-  //   },
-  // };
-
-      
 
       if (response.data.success) {
         const studentId = response.data.data.StudentID;
         const course = studentData.Course;
         const hostel = studentData.Hostel;
-        // Save to localStorage
         localStorage.setItem("student_id", studentId);
         localStorage.setItem("student_course", course);
         localStorage.setItem("student_hostel", hostel);
@@ -208,12 +687,86 @@ function TempAdmissionView() {
       console.error("Submission error:", error);
       alert("Failed to submit student data.");
     } finally {
-      setIsSubmitting(false); // Stop loading regardless of success/failure
+      setIsSubmitting(false);
     }
+  };
+
+  // Reusable Field Renderer with Edit capability
+  const renderFieldItem = (chkId, label, value, isImage = false) => {
+    const isEditing = editingChkId === chkId;
+
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {label}
+          </Typography>
+          {!isImage && !isEditing && (
+            <IconButton
+              size="small"
+              onClick={() => {
+                setEditingChkId(chkId);
+                setEditValue(value);
+              }}
+            >
+              <EditIcon fontSize="small" color="primary" />
+            </IconButton>
+          )}
+        </Box>
+
+        {isEditing ? (
+          <Box sx={{ display: "flex", gap: 1, mt: 1, alignItems: "center" }}>
+            <TextField
+              size="small"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              fullWidth
+            />
+            <IconButton color="success" onClick={() => handleSaveEdit(chkId)}>
+              <SaveIcon />
+            </IconButton>
+            <IconButton color="error" onClick={() => setEditingChkId(null)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        ) : isImage ? (
+          <Box
+            sx={{ mt: 1, cursor: "pointer" }}
+            onClick={() => {
+              setSelectedImage(value);
+              setOpenDialog(true);
+            }}
+          >
+            <img
+              src={value}
+              alt={label}
+              style={{
+                width: "120px",
+                height: "120px",
+                objectFit: "cover",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+              }}
+            />
+          </Box>
+        ) : (
+          <Typography variant="body1" sx={{ mt: 0.5 }}>
+            {value || "—"}
+          </Typography>
+        )}
+      </Box>
+    );
   };
 
   const renderStudentDetails = () => {
     const fields = candidateDetailsIds.map((id) => ({
+      id,
       label: checkpoints[id] || `Checkpoint #${id}`,
       value: getValueByChkId(id),
       isImage:
@@ -221,46 +774,23 @@ function TempAdmissionView() {
         getValueByChkId(id).startsWith("https://namami-infotech.com/"),
     }));
 
-    const imageItem = fields.find((f) => f.isImage);
     const otherFields = fields.filter((f) => !f.isImage);
 
     return (
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={3} sx={{ textAlign: "center" }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              mb: 2,
-              width: "100%",
-            }}
-          >
-            <Box
-              component="img"
-              src={getValueByChkId(studentPhotoChkId)}
-              alt="Student"
-              sx={{
-                width: "180px",
-                height: "180px",
-                objectFit: "fill",
-                borderRadius: 2,
-                border: "1px solid #ccc",
-                boxShadow: 2,
-              }}
-            />
-          </Box>
+          {renderFieldItem(
+            studentPhotoChkId,
+            checkpoints[studentPhotoChkId] || "Photo",
+            getValueByChkId(studentPhotoChkId),
+            true,
+          )}
         </Grid>
         <Grid item xs={12} sm={9}>
           <Grid container spacing={2}>
-            {otherFields.map((f, idx) => (
-              <Grid item xs={12} sm={4} key={idx}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  {f.label}
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  {f.value || "—"}
-                </Typography>
+            {otherFields.map((f) => (
+              <Grid item xs={12} sm={4} key={f.id}>
+                {renderFieldItem(f.id, f.label, f.value, false)}
               </Grid>
             ))}
           </Grid>
@@ -286,69 +816,20 @@ function TempAdmissionView() {
         </Typography>
         <Divider sx={{ mb: 2 }} />
         <Grid container spacing={2}>
-          {sectionData.map((item, index) => {
+          {sectionData.map((item) => {
+            const chkId = parseInt(item.ChkId);
+            const label = checkpoints[chkId] || `Checkpoint #${chkId}`;
             const isImage =
               typeof item.Value === "string" &&
               item.Value.startsWith("https://namami-infotech.com/");
+
             return (
-              <Grid item xs={12} sm={3} key={index}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  {checkpoints[item.ChkId] || `Checkpoint #${item.ChkId}`}
-                </Typography>
-                {isImage ? (
-                  <Box
-                    sx={{ mt: 1, cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedImage(item.Value);
-                      setOpenDialog(true);
-                    }}
-                  >
-                    <img
-                      src={item.Value}
-                      alt={`Checkpoint ${item.ChkId}`}
-                      style={{
-                        width: "50%",
-                        height: "150px",
-                        objectFit: "cover",
-                        borderRadius: 8,
-                        border: "1px solid #ccc",
-                      }}
-                    />
-                  </Box>
-                ) : (
-                  <Typography variant="body1" sx={{ mb: 1.5 }}>
-                    {item.Value || "—"}
-                  </Typography>
-                )}
+              <Grid item xs={12} sm={3} key={chkId}>
+                {renderFieldItem(chkId, label, item.Value, isImage)}
               </Grid>
             );
           })}
         </Grid>
-
-        {/* Dialog for Image Preview */}
-        <Dialog
-          open={openDialog}
-          onClose={() => setOpenDialog(false)}
-          maxWidth="md"
-        >
-          <Box sx={{ p: 2, textAlign: "center" }}>
-            <img
-              src={selectedImage}
-              alt="Preview"
-              style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
-            />
-            <Box sx={{ mt: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                href={selectedImage}
-                download
-              >
-                Download Image
-              </Button>
-            </Box>
-          </Box>
-        </Dialog>
       </Box>
     );
   };
@@ -363,7 +844,6 @@ function TempAdmissionView() {
 
   return (
     <Box sx={{ p: 2, background: "#fff", pb: 10 }}>
-      {/* Header with Back button */}
       <Box
         sx={{
           display: "flex",
@@ -395,49 +875,38 @@ function TempAdmissionView() {
         />
       </Box>
 
-      {/* Main Paper */}
       <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
-        {/* Student Details */}
         {renderStudentDetails()}
-
-        {/* Remaining Sections */}
         {Object.entries(sections).map(([sectionTitle, ids]) =>
           renderSection(sectionTitle, ids),
         )}
-
-        {/* Any submitted checkpoints not covered by the sections above */}
-        {(() => {
-          const DATA_TYPES = [
-            "Text",
-            "Email",
-            "Number",
-            "Digit",
-            "Long Text",
-            "Date",
-            "Dropdown",
-            "Radio",
-            "Checkbox",
-            "Pic/Camera",
-          ];
-          const shownIds = [
-            studentPhotoChkId,
-            ...candidateDetailsIds,
-            ...Object.values(sections).flat(),
-          ];
-          const remainingIds = details
-            .map((d) => parseInt(d.ChkId))
-            .filter(
-              (id) =>
-                !shownIds.includes(id) &&
-                DATA_TYPES.includes(checkpointTypeMap[id]),
-            );
-          return remainingIds.length > 0
-            ? renderSection("Other Details", remainingIds)
-            : null;
-        })()}
       </Paper>
 
-      {/* Fixed Footer: ONLY Next Button */}
+      {/* Dialog for Image Preview */}
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        maxWidth="md"
+      >
+        <Box sx={{ p: 2, textAlign: "center" }}>
+          <img
+            src={selectedImage}
+            alt="Preview"
+            style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
+          />
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              href={selectedImage}
+              download
+            >
+              Download Image
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
+
       <Box
         sx={{
           position: "fixed",
@@ -455,30 +924,27 @@ function TempAdmissionView() {
       >
         <Button
           variant="contained"
-          // sx={{ backgroundColor: "#CC7A00" }}
           onClick={handleNext}
           disabled={isSubmitting}
-            sx={{
-    backgroundColor: "#CC7A00",
-    pointerEvents: isSubmitting ? "none" : "auto",
-  }}
->
+          sx={{
+            backgroundColor: "#CC7A00",
+            pointerEvents: isSubmitting ? "none" : "auto",
+            "&:hover": { backgroundColor: "#b36b00" },
+          }}
+        >
           {isSubmitting ? (
-    <>
-      <CircularProgress
-        size={20}
-        color="inherit"
-        sx={{ mr: 1 }}
-      />
-      Please Wait...
-    </>
-  ) : (
-    "Enroll"
-  )}
+            <>
+              <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+              Please Wait...
+            </>
+          ) : (
+            "Enroll"
+          )}
         </Button>
       </Box>
     </Box>
   );
 }
 
+// TempAdmissionView;
 export default TempAdmissionView;
