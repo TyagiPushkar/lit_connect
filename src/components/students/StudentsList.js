@@ -362,8 +362,12 @@ const StudentsList = () => {
         Contact: student.StudentContactNo,
         "Guardian Name": student.GuardianName,
         "Guardian Contact": student.GuardianContactNo,
+        "Mother Name": student.mother_name,
         Email: student.EmailId,
         Address: student.PermanentAddress,
+        "Post Office": student.PostOffice,
+        District: student.District,
+        Pincode: student.PinCode,
         "Blood Group": student.BloodGroup,
         "10th Board": student.Board10University,
         "10th Passing Year": student.Year10Passing,
@@ -379,6 +383,8 @@ const StudentsList = () => {
         "Submission Date": student.SubmissionDate,
         "Reference By": student.RefrenceBy,
         Status: isActive ? "Active" : "Inactive",
+        "Last College": student.last_institute_name,
+        "Annual Income": student.AnnualIncome,
       };
     });
 
