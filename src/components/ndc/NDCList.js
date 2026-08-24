@@ -50,32 +50,32 @@ const NDCList = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState(
-    () => sessionStorage.getItem("ndc_searchQuery") || ""
+    () => sessionStorage.getItem("ndc_searchQuery") || "",
   );
-  const [page, setPage] = useState(
-    () => parseInt(sessionStorage.getItem("ndc_page") || "0", 10)
+  const [page, setPage] = useState(() =>
+    parseInt(sessionStorage.getItem("ndc_page") || "0", 10),
   );
-  const [rowsPerPage, setRowsPerPage] = useState(
-    () => parseInt(sessionStorage.getItem("ndc_rowsPerPage") || "10", 10)
+  const [rowsPerPage, setRowsPerPage] = useState(() =>
+    parseInt(sessionStorage.getItem("ndc_rowsPerPage") || "10", 10),
   );
   const [isExporting, setIsExporting] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Filter states
   const [courseFilter, setCourseFilter] = useState(
-    () => sessionStorage.getItem("ndc_courseFilter") || ""
+    () => sessionStorage.getItem("ndc_courseFilter") || "",
   );
   const [batchFilter, setBatchFilter] = useState(
-    () => sessionStorage.getItem("ndc_batchFilter") || ""
+    () => sessionStorage.getItem("ndc_batchFilter") || "",
   );
   const [semesterFilter, setSemesterFilter] = useState(
-    () => sessionStorage.getItem("ndc_semesterFilter") || ""
+    () => sessionStorage.getItem("ndc_semesterFilter") || "",
   );
   const [showFilters, setShowFilters] = useState(
-    () => sessionStorage.getItem("ndc_showFilters") === "true"
+    () => sessionStorage.getItem("ndc_showFilters") === "true",
   );
   const [statusFilter, setStatusFilter] = useState(
-    () => sessionStorage.getItem("ndc_statusFilter") || "all"
+    () => sessionStorage.getItem("ndc_statusFilter") || "all",
   );
 
   const isFirstFilter = useRef(true);
@@ -143,6 +143,7 @@ const NDCList = () => {
   const uniqueCourses = [
     ...new Set(students.map((student) => student.Course).filter(Boolean)),
   ].sort();
+  // console.log("Unique Courses:", uniqueCourses);
   const uniqueBatches = [
     ...new Set(students.map((student) => student.Session).filter(Boolean)),
   ].sort((a, b) => b.localeCompare(a));
@@ -177,10 +178,11 @@ const NDCList = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://namami-infotech.com/LIT/src/ndc/get_dues.php"
+        "https://namami-infotech.com/LIT/src/ndc/get_dues.php",
       );
       if (response.data.success) {
         setStudents(response.data.data);
+        // console.log("Fetched NDC dues data:", response.data.data);
         setFilteredStudents(response.data.data);
       } else {
         setSnackbarMessage(response.data.message || "Failed to fetch NDC dues");
@@ -205,7 +207,7 @@ const NDCList = () => {
           (student.StudentID &&
             student.StudentID.toLowerCase().includes(lower)) ||
           (student.CandidateName &&
-            student.CandidateName.toLowerCase().includes(lower))
+            student.CandidateName.toLowerCase().includes(lower)),
       );
     }
 
@@ -224,7 +226,7 @@ const NDCList = () => {
     if (statusFilter !== "all") {
       filtered = filtered.filter(
         (student) =>
-          student.ndc_status.toLowerCase() === statusFilter.toLowerCase()
+          student.ndc_status.toLowerCase() === statusFilter.toLowerCase(),
       );
     }
 
@@ -330,7 +332,7 @@ const NDCList = () => {
 
   const handleSubmitAdminApproval = async () => {
     const selectedTypes = Object.keys(approvalChecks).filter(
-      (type) => approvalChecks[type]
+      (type) => approvalChecks[type],
     );
 
     if (selectedTypes.length === 0) {
@@ -353,12 +355,12 @@ const NDCList = () => {
 
         const response = await axios.post(
           "https://namami-infotech.com/LIT/src/ndc/admin_approve.php",
-          payload
+          payload,
         );
 
         if (!response.data.success) {
           setSnackbarMessage(
-            response.data.message || `Failed to approve ${dueType}`
+            response.data.message || `Failed to approve ${dueType}`,
           );
           setOpenSnackbar(true);
           setApprovalLoading(false);
@@ -384,13 +386,13 @@ const NDCList = () => {
     setAdminApprovalLoading(true);
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/LIT/src/ndc/get_admin_approve.php?student_id=${student.StudentID}`
+        `https://namami-infotech.com/LIT/src/ndc/get_admin_approve.php?student_id=${student.StudentID}`,
       );
       if (response.data.success) {
         setAdminApprovalList(response.data.data);
       } else {
         setSnackbarMessage(
-          response.data.message || "Failed to fetch approvals"
+          response.data.message || "Failed to fetch approvals",
         );
         setOpenSnackbar(true);
       }
@@ -410,7 +412,7 @@ const NDCList = () => {
     setIssueFormLoading(true);
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/LIT/src/ndc/get_exam_form.php?student_id=${student.StudentID}`
+        `https://namami-infotech.com/LIT/src/ndc/get_exam_form.php?student_id=${student.StudentID}`,
       );
       if (response.data.success) {
         setExistingExamForms(response.data.data);
@@ -448,7 +450,7 @@ const NDCList = () => {
 
       const response = await axios.post(
         "https://namami-infotech.com/LIT/src/ndc/issue_exam_form.php",
-        payload
+        payload,
       );
 
       if (response.data.success) {
@@ -548,7 +550,7 @@ const NDCList = () => {
     return (
       <Chip
         label={statusValue}
-        color={isApproved ? "success" : "error"} 
+        color={isApproved ? "success" : "error"}
         size="small"
         icon={isApproved ? <CheckCircleIcon /> : <CancelIcon />}
         variant="outlined"
@@ -569,7 +571,7 @@ const NDCList = () => {
   };
 
   const clearCount = students.filter(
-    (student) => student.ndc_status.toLowerCase() === "clear"
+    (student) => student.ndc_status.toLowerCase() === "clear",
   ).length;
   const dueCount = students.length - clearCount;
 
@@ -583,11 +585,15 @@ const NDCList = () => {
           marginBottom: 16,
         }}
       >
-      
-          <Typography variant="h5" style={{color: "#CC7A00"}} gutterBottom fontWeight="bold">
-            NDC Dues List
-          </Typography>
-       
+        <Typography
+          variant="h5"
+          style={{ color: "#CC7A00" }}
+          gutterBottom
+          fontWeight="bold"
+        >
+          NDC Dues List
+        </Typography>
+
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Button
             variant="contained"
