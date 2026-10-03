@@ -32,6 +32,7 @@ const fetchStudent = async (url) => {
 
 const fetchReportArray = async (url) => {
   const json = await fetchJSON(url);
+  // console.log("fetchReportArray", json);
   return json?.success && json?.data ? json.data : [];
 };
 
@@ -40,6 +41,13 @@ const calculateGrade = (percentage) => {
   if (percentage >= 60) return "B";
   if (percentage >= 45) return "C";
   return "D";
+};
+
+const PASS_PERCENTAGE = 35;
+
+const getResultStatus = (percentage, hasValidMarks = true) => {
+  if (!hasValidMarks) return "-";
+  return percentage >= PASS_PERCENTAGE ? "PASS" : "FAIL";
 };
 
 export default function ReportCardPDF({ studentId, sem, year }) {
@@ -70,8 +78,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: assignment, isLoading: assignmentLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/assignment_report.php?StudId=${encodeURIComponent(
-          studCode,
-        )}&Course=${encodeURIComponent(course)}&Semester=${encodeURIComponent(semester)}`
+        studCode,
+      )}&Course=${encodeURIComponent(course)}&Semester=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -79,8 +87,17 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: internal, isLoading: internalLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/internal_exam_report.php?StudId=${encodeURIComponent(
-          studCode,
-        )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+        studCode,
+      )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+      : null,
+    fetchReportArray,
+  );
+
+  const { data: semesterExam, isLoading: semesterExamLoading } = useSWR(
+    studCode && course && semester
+      ? `https://namami-infotech.com/LIT/src/report/semester_exam_report.php?StudId=${encodeURIComponent(
+        studCode,
+      )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -88,8 +105,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: vst, isLoading: vstLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/vst_exam_report.php?StudId=${encodeURIComponent(
-          studCode,
-        )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+        studCode,
+      )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -318,7 +335,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     internalLoading ||
     vstLoading ||
     ctLoading ||
-    cbtLoading;
+    cbtLoading ||
+    semesterExamLoading;
   const hasError = !!studentError;
 
   return (
@@ -413,7 +431,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   }
                   alt="Institute Seal"
                   sx={{
-                    
+
                     width: {
                       xs: 120,
                       sm: 150,
@@ -723,7 +741,114 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               </Grid>
             </Box>
             <Box sx={{ mb: 2, pt: "15px" }} className="pdf-block">
-              <AttendanceSummary EmpId={studentId} sem={sem} year={year} />
+              <AttendanceSummary EmpId={studentId} sem={sem} year={year} course={course} />
+            </Box>
+
+            {/* Semester Examination Results */}
+            <Box sx={{ mb: 2 }} className="pdf-block">
+              <Typography
+                variant="h6"
+                sx={{
+                  backgroundColor: "#2c3e50",
+                  color: "white",
+                  padding: "8px 16px",
+                  display: "inline-block",
+                  marginBottom: "15px",
+                }}
+              >
+                SEMESTER EXAMINATION RESULTS
+              </Typography>
+              <TableContainer
+                size="small"
+                sx={{
+                  border: "1px solid #111",
+                  "& .MuiTableCell-root": {
+                    padding: "6px 10px",
+                    fontSize: "20px",
+                    lineHeight: 1.3,
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
+                  },
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
+                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Academic Year</TableCell>
+                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Branch</TableCell>
+                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Semester</TableCell>
+                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Percentage</TableCell>
+                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Remarks</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(() => {
+                      const totals = calcMarksTotals(internal);
+
+                      const hasValid = totals.totalMax > 0;
+
+                      const percentage = hasValid ? totals.pct : null;
+
+                      const result = getResultStatus(percentage, hasValid);
+
+                      return (
+                        <TableRow className="pdf-block">
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {year || "-"}
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {course || "-"}
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {sem || "-"}
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontSize: "20px",
+                              textAlign: "center",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {semesterExam?.[0]?.CGPA ?? "-"}
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontSize: "20px",
+                              textAlign: "center",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {semesterExam?.[0]?.Remark ?? "-"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })()}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Box>
             {/* Internal Examination Results */}
             <Box sx={{ mb: 2 }} className="pdf-block">
@@ -740,7 +865,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   textTransform: "uppercase",
                 }}
               >
-                Internal Examination Results
+                Mid Term Examination Results
               </Typography>
 
               {!internal || internal.length === 0 ? (
@@ -1029,7 +1154,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Class Test Performance (CT1-CT6)
+                Class Test Performance (CT1-CT4)
               </Typography>
               {!ctAll || ctAll.every((s) => !s.rows || s.rows.length === 0) ? (
                 <Typography
@@ -1226,234 +1351,6 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                           border: "1px solid #333",
                                           fontweight: "bold",
                                           fontSize: "19px",
-                                          color: absent
-                                            ? "#555"
-                                            : grade === "A"
-                                              ? "#2e7d32"
-                                              : grade === "B"
-                                                ? "#ed6c02"
-                                                : "#d32f2f",
-                                        }}
-                                      >
-                                        {absent ? "-" : grade}
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                })}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              )}
-            </Box>
-
-            {/* CBT Section */}
-            <Box sx={{ mb: 4 }} className="pdf-block">
-              <Typography
-                variant="h6"
-                sx={{
-                  backgroundColor: "#2c3e50",
-                  color: "white",
-                  padding: "8px 16px",
-                  display: "inline-block",
-                  marginBottom: "15px",
-                  fontFamily: '"Georgia", serif',
-                  fontWeight: "bold",
-                }}
-              >
-                Pre Placement Training
-              </Typography>
-
-              {!cbtAll ||
-              cbtAll.every((s) => !s.rows || s.rows.length === 0) ? (
-                <Typography
-                  sx={{
-                    fontStyle: "italic",
-                    color: "#111",
-                    fontFamily: "Inter, Roboto, Arial, sans-serif",
-                  }}
-                >
-                  No CBT data recorded.
-                </Typography>
-              ) : (
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "16px",
-                  }}
-                >
-                  {cbtAll.map((section) => {
-                    if (!section.rows || section.rows.length === 0) return null;
-                    return (
-                      <Box
-                        key={section.category}
-                        sx={{
-                          width: "calc(50% - 8px)",
-                          flexShrink: 0,
-                          flexGrow: 0,
-                          boxSizing: "border-box",
-                        }}
-                      >
-                        <Box
-                          className="pdf-block"
-                          sx={{
-                            background: "#fff",
-                            borderRadius: "4px",
-                            border: "1px solid #111",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {/* Title */}
-                          <Box
-                            sx={{
-                              background: "#f5f7fa",
-                              px: 2,
-                              py: 1,
-                              borderBottom: "1px solid #111",
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontWeight: 600,
-                                color: "#111",
-                                fontFamily: "Inter, Roboto, Arial, sans-serif",
-                                fontSize: "19px",
-                              }}
-                            >
-                              {section.category}
-                            </Typography>
-                          </Box>
-                          <TableContainer
-                            sx={{
-                              border: "1px solid #111",
-                              "& .MuiTableCell-root": {
-                                padding: "6px 10px",
-                                fontSize: "19px",
-                                lineHeight: 1.3,
-                                fontFamily: "Inter, Roboto, Arial, sans-serif",
-                                color: "#000000",
-                                border: "1px solid #111",
-                              },
-                            }}
-                          >
-                            <Table size="small" sx={{ width: "100%" }}>
-                              <TableHead>
-                                <TableRow
-                                  className="pdf-block"
-                                  sx={{
-                                    background: "#fafafa",
-                                  }}
-                                >
-                                  <TableCell
-                                    sx={{
-                                      fontWeight: "bold",
-                                      fontSize: "19px",
-                                    }}
-                                  >
-                                    Subject
-                                  </TableCell>
-                                  <TableCell
-                                    align="center"
-                                    sx={{
-                                      fontWeight: "bold",
-                                      fontSize: "19px",
-                                    }}
-                                  >
-                                    Max
-                                  </TableCell>
-                                  <TableCell
-                                    align="center"
-                                    sx={{
-                                      fontWeight: "bold",
-                                      fontSize: "19px",
-                                    }}
-                                  >
-                                    Obt
-                                  </TableCell>
-                                  <TableCell
-                                    align="center"
-                                    sx={{
-                                      fontWeight: "bold",
-                                      fontSize: "19px",
-                                    }}
-                                  >
-                                    %
-                                  </TableCell>
-                                  <TableCell
-                                    align="center"
-                                    sx={{
-                                      fontWeight: "bold",
-                                      fontSize: "19px",
-                                    }}
-                                  >
-                                    Grade
-                                  </TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {section.rows.map((row, index) => {
-                                  const absent = isAbsent(row);
-                                  const pct = absent
-                                    ? null
-                                    : (row.ObtainedMarks / row.MaxMarks) * 100;
-                                  const grade =
-                                    pct !== null ? calculateGrade(pct) : null;
-
-                                  return (
-                                    <TableRow
-                                      key={row.Id}
-                                      className="pdf-block"
-                                      sx={{
-                                        backgroundColor:
-                                          index % 2 === 0 ? "#fff" : "#fafafa",
-                                      }}
-                                    >
-                                      <TableCell
-                                        sx={{
-                                          border: "1px solid #333",
-                                        }}
-                                      >
-                                        {row.Subject}
-                                      </TableCell>
-
-                                      <TableCell
-                                        align="center"
-                                        sx={{
-                                          border: "1px solid #333",
-                                        }}
-                                      >
-                                        {row.MaxMarks}
-                                      </TableCell>
-
-                                      <TableCell
-                                        align="center"
-                                        sx={{
-                                          border: "1px solid #333",
-                                          color: absent ? "#f44336" : "inherit",
-                                        }}
-                                      >
-                                        {absent ? "AB" : row.ObtainedMarks}
-                                      </TableCell>
-
-                                      <TableCell
-                                        align="center"
-                                        sx={{
-                                          border: "1px solid #333",
-                                        }}
-                                      >
-                                        {absent ? "-" : `${pct.toFixed(1)}%`}
-                                      </TableCell>
-
-                                      <TableCell
-                                        align="center"
-                                        sx={{
-                                          border: "1px solid #333",
-                                          fontWeight: "bold",
                                           color: absent
                                             ? "#555"
                                             : grade === "A"
@@ -1689,6 +1586,238 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 </TableContainer>
               )}
             </Box>
+
+            {/* CBT Section  or pre Placement training*/}
+            <Box sx={{ mb: 4 }} className="pdf-block">
+              <Typography
+                variant="h6"
+                sx={{
+                  backgroundColor: "#2c3e50",
+                  color: "white",
+                  padding: "8px 16px",
+                  display: "inline-block",
+                  marginBottom: "15px",
+                  fontFamily: '"Georgia", serif',
+                  fontWeight: "bold",
+                }}
+              >
+                Pre Placement Training
+              </Typography>
+
+              {!cbtAll ||
+                cbtAll.every((s) => !s.rows || s.rows.length === 0) ? (
+                <Typography
+                  sx={{
+                    fontStyle: "italic",
+                    color: "#111",
+                    fontFamily: "Inter, Roboto, Arial, sans-serif",
+                  }}
+                >
+                  No CBT data recorded.
+                </Typography>
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "16px",
+                  }}
+                >
+                  {cbtAll.map((section) => {
+                    if (!section.rows || section.rows.length === 0) return null;
+                    return (
+                      <Box
+                        key={section.category}
+                        sx={{
+                          width: "calc(50% - 8px)",
+                          flexShrink: 0,
+                          flexGrow: 0,
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        <Box
+                          className="pdf-block"
+                          sx={{
+                            background: "#fff",
+                            borderRadius: "4px",
+                            border: "1px solid #111",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {/* Title */}
+                          <Box
+                            sx={{
+                              background: "#f5f7fa",
+                              px: 2,
+                              py: 1,
+                              borderBottom: "1px solid #111",
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontWeight: 600,
+                                color: "#111",
+                                fontFamily: "Inter, Roboto, Arial, sans-serif",
+                                fontSize: "19px",
+                              }}
+                            >
+                              {section.category}
+                            </Typography>
+                          </Box>
+                          <TableContainer
+                            sx={{
+                              border: "1px solid #111",
+                              "& .MuiTableCell-root": {
+                                padding: "6px 10px",
+                                fontSize: "19px",
+                                lineHeight: 1.3,
+                                fontFamily: "Inter, Roboto, Arial, sans-serif",
+                                color: "#000000",
+                                border: "1px solid #111",
+                              },
+                            }}
+                          >
+                            <Table size="small" sx={{ width: "100%" }}>
+                              <TableHead>
+                                <TableRow
+                                  className="pdf-block"
+                                  sx={{
+                                    background: "#fafafa",
+                                  }}
+                                >
+                                  <TableCell
+                                    sx={{
+                                      fontWeight: "bold",
+                                      fontSize: "19px",
+                                    }}
+                                  >
+                                    Subject
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      fontSize: "19px",
+                                    }}
+                                  >
+                                    Max
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      fontSize: "19px",
+                                    }}
+                                  >
+                                    Obt
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      fontSize: "19px",
+                                    }}
+                                  >
+                                    %
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      fontSize: "19px",
+                                    }}
+                                  >
+                                    Grade
+                                  </TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {section.rows.map((row, index) => {
+                                  const absent = isAbsent(row);
+                                  const pct = absent
+                                    ? null
+                                    : (row.ObtainedMarks / row.MaxMarks) * 100;
+                                  const grade =
+                                    pct !== null ? calculateGrade(pct) : null;
+
+                                  return (
+                                    <TableRow
+                                      key={row.Id}
+                                      className="pdf-block"
+                                      sx={{
+                                        backgroundColor:
+                                          index % 2 === 0 ? "#fff" : "#fafafa",
+                                      }}
+                                    >
+                                      <TableCell
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {row.Subject}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {row.MaxMarks}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                          color: absent ? "#f44336" : "inherit",
+                                        }}
+                                      >
+                                        {absent ? "AB" : row.ObtainedMarks}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                        }}
+                                      >
+                                        {absent ? "-" : `${pct.toFixed(1)}%`}
+                                      </TableCell>
+
+                                      <TableCell
+                                        align="center"
+                                        sx={{
+                                          border: "1px solid #333",
+                                          fontWeight: "bold",
+                                          color: absent
+                                            ? "#555"
+                                            : grade === "A"
+                                              ? "#2e7d32"
+                                              : grade === "B"
+                                                ? "#ed6c02"
+                                                : "#d32f2f",
+                                        }}
+                                      >
+                                        {absent ? "-" : grade}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
+            </Box>
+
+            {/* pre placement training section */}
+
+
             {/* Assignment section */}
             <Box sx={{ mt: 4 }} className="pdf-block">
               <Typography

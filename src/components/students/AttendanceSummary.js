@@ -22,8 +22,14 @@ import {
   parseISO,
 } from "date-fns";
 
-const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
-  // console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
+const AttendanceSummary = ({
+  EmpId,
+  tenentId = "1",
+  sem,
+  year,
+  course,
+}) => {
+  // console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year, course });
   const [summaryData, setSummaryData] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -124,23 +130,70 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
       start: startOfMonth(monthData.startDate),
       end: endOfMonth(monthData.startDate),
     });
-    const holidaySet = new Set(
-      holidays.map((h) => {
-        try {
-          return format(parseISO(h.date), "yyyy-MM-dd");
-        } catch {
-          return null;
-        }
-      }),
-    );
-    const workingDays = daysInMonth.filter((day) => {
-      if (isSunday(day)) return false;
 
-      const formatted = format(day, "yyyy-MM-dd");
-      if (holidaySet.has(formatted)) return false;
+    const normalizedCourse = String(course || "").trim().toLowerCase();
+    const normalizedSem = String(sem || "").trim();
+
+    const workingDays = daysInMonth.filter((day) => {
+      // Sunday = non-working day
+      if (isSunday(day)) {
+        return false;
+      }
+
+      const currentDate = format(day, "yyyy-MM-dd");
+
+      // Find holidays applicable to this student
+      const isHoliday = holidays.some((holiday) => {
+        if (!holiday.date) return false;
+
+        const holidayDate = String(holiday.date).trim();
+
+        // Date must match first
+        if (holidayDate !== currentDate) {
+          return false;
+        }
+
+        const holidayCourse = String(holiday.Course || "")
+          .trim()
+          .toLowerCase();
+
+        const holidaySem = String(holiday.Sem || "").trim();
+
+        /*
+          Holiday matching rules:
+  
+          1. All + All
+             => Everyone
+  
+          2. All + specific semester
+             => All courses of that semester
+  
+          3. Specific course + All
+             => All semesters of that course
+  
+          4. Specific course + specific semester
+             => Exact student course + semester
+        */
+
+        const courseMatches =
+          holidayCourse === "all" ||
+          holidayCourse === normalizedCourse;
+
+        const semMatches =
+          holidaySem.toLowerCase() === "all" ||
+          holidaySem === normalizedSem;
+
+        return courseMatches && semMatches;
+      });
+
+      // If applicable holiday found => not a working day
+      if (isHoliday) {
+        return false;
+      }
 
       return true;
     });
+
     return workingDays.length;
   };
 
@@ -306,8 +359,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
     if (EmpId && holidays.length > 0) {
       fetchAttendanceSummary();
     }
-    // console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year });
-  }, [EmpId, holidays.length, sem]);
+  }, [EmpId, holidays.length, sem, year, course]);
 
   const totalWorkingDays = summaryData.reduce(
     (sum, row) => sum + row.totalClasses,
@@ -319,9 +371,9 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
   const overallPercentage =
     summaryData.length > 0
       ? (
-          summaryData.reduce((sum, row) => sum + row.percentage, 0) /
-          summaryData.length
-        ).toFixed(1)
+        summaryData.reduce((sum, row) => sum + row.percentage, 0) /
+        summaryData.length
+      ).toFixed(1)
       : 0;
 
   if (!EmpId) {
@@ -466,7 +518,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         fontSize: "20px",
                       }}
                     >
-                      Academic Month
+                      Month
                     </TableCell>
                     <TableCell
                       sx={{
@@ -475,7 +527,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         fontSize: "20px",
                       }}
                     >
-                      Total Working Days
+                      Total Class
                     </TableCell>
                     <TableCell
                       sx={{
@@ -484,7 +536,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         fontSize: "20px",
                       }}
                     >
-                      Days Present
+                      Present
                     </TableCell>
                     <TableCell
                       sx={{
@@ -493,7 +545,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         fontSize: "20px",
                       }}
                     >
-                      Days Absent
+                      Absent
                     </TableCell>
                     <TableCell
                       sx={{
@@ -502,7 +554,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                         fontSize: "20px",
                       }}
                     >
-                      Attendance Percentage
+                      Attend %
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -672,8 +724,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year }) => {
                 fontSize: "17px",
               }}
             >
-              <strong>Note:</strong> Working days exclude Sundays and declared
-              institute holidays
+              <strong>Note:</strong> Total Class Days exclude Sundays and declared institute holidays
             </Typography>
           </Box>
         </>

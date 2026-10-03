@@ -13,10 +13,13 @@ import {
   Grid,
 } from "@mui/material";
 import InternalExam from "../components/report/InternalExam";
+import SemesterExam from "../components/report/SemesterExam";
 import AssignmentReport from "../components/report/AssignmentReport";
 import CBT from "../components/report/CBT";
+import PPT from "../components/report/PPT";
 import ClassTest from "../components/report/ClassTest";
 import VstExam from "../components/report/VstExam";
+import Skills from "../components/report/Skills";
 import PrincipalInternalExam from "../components/report/PrincipalInternalExam";
 import { useAuth } from "../components/auth/AuthContext";
 
@@ -34,14 +37,20 @@ function StudentReport() {
     switch (category) {
       case "Internal Exam":
         return <InternalExam />;
+      case "Semester Exam":
+        return <SemesterExam />;
       case "Vst Exam":
         return <VstExam />;
       case "CBT":
         return <CBT />;
+      case "PPT":
+        return <PPT />;
       case "Class Test":
         return <ClassTest />;
       case "Assignment":
         return <AssignmentReport />;
+      case "Skills":
+        return <Skills />;
       default:
         return null;
     }
@@ -101,10 +110,13 @@ function StudentReport() {
                         onChange={(e) => setCategory(e.target.value)}
                       >
                         <MenuItem value="Internal Exam">Internal Exam</MenuItem>
+                        <MenuItem value="Semester Exam">Semester Exam</MenuItem>
                         <MenuItem value="Vst Exam">Vst Exam</MenuItem>
                         <MenuItem value="CBT">CBT</MenuItem>
+                        <MenuItem value="PPT">PPT</MenuItem>
                         <MenuItem value="Class Test">Class Test</MenuItem>
                         <MenuItem value="Assignment">Assignment</MenuItem>
+                        <MenuItem value="Skills">Skills</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
