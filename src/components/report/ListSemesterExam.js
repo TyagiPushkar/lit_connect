@@ -18,10 +18,12 @@ import {
     Select,
     MenuItem,
     Grid,
+    IconButton,
 } from "@mui/material";
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit";
-import IconButton from "@mui/material/IconButton";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -38,12 +40,13 @@ function ListSemesterExam({ setView }) {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [course, setCourse] = useState("");
     const [sem, setSem] = useState("");
-    const [subject, setSubject] = useState("");
-    const [subjectsList, setSubjectsList] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [editId, setEditId] = useState(null);
-    const [editValue, setEditValue] = useState("");
     const [studentMap, setStudentMap] = useState({});
+
+    // Per-row edit state: { cgpa, remark }
+    const [editId, setEditId] = useState(null);
+    const [editCgpa, setEditCgpa] = useState("");
+    const [editRemark, setEditRemark] = useState("");
 
     // Fetch student name map for Principal view
     useEffect(() => {
@@ -67,32 +70,7 @@ function ListSemesterExam({ setView }) {
         fetchStudents();
     }, [isPrincipal]);
 
-    // Fetch subjects based on Course & Sem
-    // useEffect(() => {
-    //     const fetchSubjects = async () => {
-    //         if (!course || !sem) return;
-    //         try {
-    //             const res = await fetch(
-    //                 `https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`,
-    //             );
-    //             const result = await res.json();
-    //             if (result.success) {
-    //                 setSubjectsList(result.data || []);
-    //             } else {
-    //                 setSubjectsList([]);
-    //             }
-    //         } catch (err) {
-    //             console.error("Failed to fetch subjects", err);
-    //             setSubjectsList([]);
-    //         }
-    //     };
-    //     fetchSubjects();
-    // }, [course, sem]);
-
-    // Fetch exam records
-    // useEffect(() => {
-    //    if (course && sem && subject) fetchRecords();
-    // }, [course, sem, subject]);
+    // Fetch exam records when course + sem selected
     useEffect(() => {
         if (course && sem) fetchRecords();
     }, [course, sem]);
@@ -107,9 +85,7 @@ function ListSemesterExam({ setView }) {
         try {
             const { data } = await axios.get(
                 "https://namami-infotech.com/LIT/src/report/list_semester_exam.php",
-                {
-                    params: { Course: course, Sem: sem },
-                },
+                { params: { Course: course, Sem: sem } },
             );
             if (data.success) setRecords(data.data);
             else setRecords([]);
@@ -131,28 +107,38 @@ function ListSemesterExam({ setView }) {
         setPage(0);
     };
 
-    const handleSaveMarks = async (id) => {
+    const handleEditClick = (row) => {
+        setEditId(row.Id);
+        setEditCgpa(row.CGPA ?? "");
+        setEditRemark(row.Remark ?? "");
+    };
+
+    const handleCancelEdit = () => {
+        setEditId(null);
+        setEditCgpa("");
+        setEditRemark("");
+    };
+
+    const handleSave = async (id) => {
         try {
             const response = await axios.post(
-                "https://namami-infotech.com/LIT/src/report/edit_internal.php",
-                {
-                    Id: id,
-                    ObtainedMarks: editValue,
-                },
+                "https://namami-infotech.com/LIT/src/report/edit_semester_exam.php",
+                { Id: id, CGPA: editCgpa, Remark: editRemark },
             );
 
             if (response.data.success) {
-                const updated = records.map((record) =>
-                    record.Id === id ? { ...record, ObtainedMarks: editValue } : record,
+                setRecords((prev) =>
+                    prev.map((r) =>
+                        r.Id === id ? { ...r, CGPA: editCgpa, Remark: editRemark } : r,
+                    ),
                 );
-                setRecords(updated);
                 setEditId(null);
             } else {
-                alert(response.data.message || "Failed to update marks.");
+                alert(response.data.message || "Failed to update.");
             }
         } catch (error) {
-            console.error("Error updating marks:", error);
-            alert("Error updating marks.");
+            console.error("Error updating:", error);
+            alert("Error updating record.");
         }
     };
 
@@ -168,36 +154,25 @@ function ListSemesterExam({ setView }) {
 
         doc.setFontSize(14);
         doc.setTextColor("#CC7A00");
-        doc.text("Internal Exam Report", pageWidth / 2, 40, { align: "center" });
+        doc.text("Semester Exam Report", pageWidth / 2, 40, { align: "center" });
 
         doc.setFontSize(9);
         doc.setTextColor("#444444");
         doc.text(
-            `Course: ${course}   |   Semester: ${sem}   |   Subject: ${subject}`,
+            `Course: ${course}   |   Semester: ${sem}`,
             pageWidth / 2,
             56,
             { align: "center" },
         );
 
-        const head = [
-            [
-                "Student Name",
-                "Student ID",
-                "Course",
-                "Semester",
-                "Subject",
-                "Max Marks",
-                "Obtained Marks",
-            ],
-        ];
+        const head = [["Student Name", "Student ID", "Course", "Semester", "CGPA", "Remarks"]];
         const body = filteredRecords.map((row) => [
             studentMap[String(row.StudId)] || "-",
             row.StudId,
             row.Course,
             row.Sem,
-            row.Subject,
-            row.MaxMarks,
-            row.ObtainedMarks,
+            row.CGPA,
+            row.Remark,
         ]);
 
         autoTable(doc, {
@@ -206,16 +181,12 @@ function ListSemesterExam({ setView }) {
             startY: 68,
             theme: "striped",
             styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
-            headStyles: {
-                fillColor: [204, 122, 0],
-                textColor: 255,
-                fontStyle: "bold",
-            },
+            headStyles: { fillColor: [204, 122, 0], textColor: 255, fontStyle: "bold" },
             margin: { left: 30, right: 30 },
             tableWidth: "auto",
         });
 
-        doc.save(`InternalExam_${course}_Sem${sem}_${subject}.pdf`);
+        doc.save(`SemesterExam_${course}_Sem${sem}.pdf`);
     };
 
     return (
@@ -230,7 +201,7 @@ function ListSemesterExam({ setView }) {
                     }}
                 >
                     <Typography variant="h6" color="#CC7A00">
-                        semester Exam Report
+                        Semester Exam Report
                     </Typography>
                     {isPrincipal && filteredRecords.length > 0 && (
                         <Button
@@ -277,23 +248,6 @@ function ListSemesterExam({ setView }) {
                             </Select>
                         </FormControl>
                     </Grid>
-                    {/* <Grid item xs={12} sm={6} md={3}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Subject</InputLabel>
-                            <Select
-                                value={subject}
-                                onChange={(e) => setSubject(e.target.value)}
-                                label="Subject"
-                                disabled={subjectsList.length === 0}
-                            >
-                                {subjectsList.map((subj, index) => (
-                                    <MenuItem key={index} value={subj.Subject}>
-                                        {subj.Subject} ({subj.SubjectCode || "-"})
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Grid> */}
                     <Grid item xs={12} sm={6} md={3}>
                         <TextField
                             label="Search by Student ID"
@@ -308,12 +262,7 @@ function ListSemesterExam({ setView }) {
             </Box>
 
             {loading ? (
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    height="50vh"
-                >
+                <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
                     <CircularProgress />
                 </Box>
             ) : (
@@ -337,64 +286,75 @@ function ListSemesterExam({ setView }) {
                             <TableBody>
                                 {filteredRecords
                                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                    .map((row, idx) => (
-                                        <TableRow key={idx}>
-                                            {isPrincipal ? (
-                                                <TableCell>
-                                                    {studentMap[String(row.StudId)] || "—"}
-                                                </TableCell>
-                                            ) : (
-                                                <TableCell>
-                                                    <IconButton
-                                                        onClick={() => {
-                                                            setEditId(row.Id);
-                                                            setEditValue(row.ObtainedMarks);
-                                                        }}
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
-                                                </TableCell>
-                                            )}
-                                            <TableCell>{row.StudId}</TableCell>
-                                            <TableCell>{row.Course}</TableCell>
-                                            <TableCell>{row.Sem}</TableCell>
-                                            <TableCell>
-                                                {row.CGPA}
-                                            </TableCell>
-                                            <TableCell>{row.Remark}</TableCell>
-                                            {/* <TableCell>
-                                                {!isPrincipal && editId === row.Id ? (
-                                                    <TextField
-                                                        value={editValue}
-                                                        size="small"
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (
-                                                                val === "" ||
-                                                                val === "A" ||
-                                                                val === "a" ||
-                                                                /^\d+$/.test(val)
-                                                            )
-                                                                setEditValue(val.toUpperCase());
-                                                        }}
-                                                        onBlur={() => handleSaveMarks(row.Id)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter") handleSaveMarks(row.Id);
-                                                        }}
-                                                        inputProps={{ style: { width: 60 } }}
-                                                        placeholder="0 or A"
-                                                    />
-                                                ) : row.ObtainedMarks === null ? (
-                                                    <span style={{ color: "red", fontWeight: "bold" }}>
-                                                        A
-                                                    </span>
+                                    .map((row) => {
+                                        const isEditing = !isPrincipal && editId === row.Id;
+                                        return (
+                                            <TableRow key={row.Id}>
+                                                {isPrincipal ? (
+                                                    <TableCell>
+                                                        {studentMap[String(row.StudId)] || "—"}
+                                                    </TableCell>
                                                 ) : (
-                                                    row.ObtainedMarks
+                                                    <TableCell>
+                                                        {isEditing ? (
+                                                            <>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="success"
+                                                                    onClick={() => handleSave(row.Id)}
+                                                                >
+                                                                    <CheckIcon fontSize="small" />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={handleCancelEdit}
+                                                                >
+                                                                    <CloseIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </>
+                                                        ) : (
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => handleEditClick(row)}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                        )}
+                                                    </TableCell>
                                                 )}
-                                            </TableCell> */}
-                                        </TableRow>
-                                    ))}
+                                                <TableCell>{row.StudId}</TableCell>
+                                                <TableCell>{row.Course}</TableCell>
+                                                <TableCell>{row.Sem}</TableCell>
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <TextField
+                                                            value={editCgpa}
+                                                            size="small"
+                                                            onChange={(e) => setEditCgpa(e.target.value)}
+                                                            inputProps={{ style: { width: 70 } }}
+                                                            placeholder="CGPA"
+                                                        />
+                                                    ) : (
+                                                        row.CGPA
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <TextField
+                                                            value={editRemark}
+                                                            size="small"
+                                                            onChange={(e) => setEditRemark(e.target.value)}
+                                                            inputProps={{ style: { width: 90 } }}
+                                                            placeholder="Remark"
+                                                        />
+                                                    ) : (
+                                                        row.Remark
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
                             </TableBody>
                         </Table>
                     </TableContainer>

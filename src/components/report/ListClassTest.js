@@ -93,8 +93,8 @@ function ListCBTExam({ setView }) {
   const applyFilters = () => {
     const filtered = searchTerm.trim()
       ? records.filter((item) =>
-          item.StudId.toLowerCase().includes(searchTerm.toLowerCase()),
-        )
+        item.StudId.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
       : records;
     setFilteredRecords(filtered);
     setPage(0);
@@ -139,7 +139,7 @@ function ListCBTExam({ setView }) {
     <Box sx={{ p: 0 }}>
       <Box elevation={1} sx={{ p: 0, borderRadius: 2, mb: 1 }}>
         <Typography variant="h6" color="#CC7A00" gutterBottom>
-          CBT Exam Report
+          Class Test Exam Report
         </Typography>
 
         <Grid container spacing={2}>

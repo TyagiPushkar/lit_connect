@@ -755,103 +755,121 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
+                  fontWeight: "bold",
                   display: "inline-block",
                   marginBottom: "15px",
                 }}
               >
                 SEMESTER EXAMINATION RESULTS
               </Typography>
-              <TableContainer
-                size="small"
-                sx={{
-                  border: "1px solid #111",
-                  "& .MuiTableCell-root": {
-                    padding: "6px 10px",
-                    fontSize: "20px",
-                    lineHeight: 1.3,
-                    fontFamily: "Inter, Roboto, Arial, sans-serif",
-                  },
-                }}
-              >
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
-                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Academic Year</TableCell>
-                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Branch</TableCell>
-                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Semester</TableCell>
-                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Percentage</TableCell>
-                      <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Remarks</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(() => {
-                      const totals = calcMarksTotals(internal);
 
-                      const hasValid = totals.totalMax > 0;
-
-                      const percentage = hasValid ? totals.pct : null;
-
-                      const result = getResultStatus(percentage, hasValid);
-
-                      return (
-                        <TableRow className="pdf-block">
-                          <TableCell
-                            sx={{
-                              border: "1px solid #333",
-                              fontSize: "20px",
-                              textAlign: "center",
-                            }}
-                          >
-                            {year || "-"}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              border: "1px solid #333",
-                              fontSize: "20px",
-                              textAlign: "center",
-                            }}
-                          >
-                            {course || "-"}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              border: "1px solid #333",
-                              fontSize: "20px",
-                              textAlign: "center",
-                            }}
-                          >
-                            {sem || "-"}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              border: "1px solid #333",
-                              fontSize: "20px",
-                              textAlign: "center",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {semesterExam?.[0]?.CGPA ?? "-"}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              border: "1px solid #333",
-                              fontSize: "20px",
-                              textAlign: "center",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {semesterExam?.[0]?.Remark ?? "-"}
-                          </TableCell>
+              {!semesterExam || semesterExam.length === 0 ? (
+                <Box
+                  sx={{
+                    border: "1px dashed #999",
+                    padding: "20px",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                    color: "#333",
+                  }}
+                >
+                  No semester examination data available for this semester.
+                </Box>
+              ) : (
+                <>
+                  <TableContainer
+                    size="small"
+                    sx={{
+                      border: "1px solid #111",
+                      "& .MuiTableCell-root": {
+                        padding: "6px 10px",
+                        fontSize: "20px",
+                        lineHeight: 1.3,
+                        fontFamily: "Inter, Roboto, Arial, sans-serif",
+                      },
+                    }}
+                  >
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
+                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Academic Year</TableCell>
+                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Branch</TableCell>
+                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Semester</TableCell>
+                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Percentage</TableCell>
+                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Remarks</TableCell>
                         </TableRow>
-                      );
-                    })()}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                      </TableHead>
+                      <TableBody>
+                        {(() => {
+                          const totals = calcMarksTotals(internal);
+
+                          const hasValid = totals.totalMax > 0;
+
+                          const percentage = hasValid ? totals.pct : null;
+
+                          const result = getResultStatus(percentage, hasValid);
+
+                          return (
+                            <TableRow className="pdf-block">
+                              <TableCell
+                                sx={{
+                                  border: "1px solid #333",
+                                  fontSize: "20px",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {year || "-"}
+                              </TableCell>
+
+                              <TableCell
+                                sx={{
+                                  border: "1px solid #333",
+                                  fontSize: "20px",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {course || "-"}
+                              </TableCell>
+
+                              <TableCell
+                                sx={{
+                                  border: "1px solid #333",
+                                  fontSize: "20px",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {sem || "-"}
+                              </TableCell>
+
+                              <TableCell
+                                sx={{
+                                  border: "1px solid #333",
+                                  fontSize: "20px",
+                                  textAlign: "center",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {semesterExam?.[0]?.CGPA ?? "-"}
+                              </TableCell>
+
+                              <TableCell
+                                sx={{
+                                  border: "1px solid #333",
+                                  fontSize: "20px",
+                                  textAlign: "center",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {semesterExam?.[0]?.Remark ?? "-"}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
+              )}
             </Box>
             {/* Internal Examination Results */}
             <Box sx={{ mb: 2 }} className="pdf-block">
@@ -1157,7 +1175,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Class Test Performance (CT1-CT4)
+                CLASS TEST PERFORMANCE (CT1-CT4)
               </Typography>
               {!ctAll || ctAll.every((s) => !s.rows || s.rows.length === 0) ? (
                 <Typography
@@ -1393,7 +1411,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Very Similar Tests
+                VERY SIMILAR TESTS
               </Typography>
 
               {!vst || vst.length === 0 ? (
@@ -1850,7 +1868,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Assignments
+                ASSIGNMENT
               </Typography>
               {!assignment || assignment.length === 0 ? (
                 <Typography

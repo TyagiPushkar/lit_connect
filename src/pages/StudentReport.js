@@ -112,7 +112,7 @@ function StudentReport() {
                         <MenuItem value="Internal Exam">Internal Exam</MenuItem>
                         <MenuItem value="Semester Exam">Semester Exam</MenuItem>
                         <MenuItem value="Vst Exam">Vst Exam</MenuItem>
-                        <MenuItem value="CBT">CBT</MenuItem>
+                        {/* <MenuItem value="CBT">CBT</MenuItem> */}
                         <MenuItem value="PPT">PPT</MenuItem>
                         <MenuItem value="Class Test">Class Test</MenuItem>
                         <MenuItem value="Assignment">Assignment</MenuItem>
