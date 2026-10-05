@@ -18,6 +18,9 @@ import {
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import AttendanceSummary from "./AttendanceSummary";
+import PrePlacementTraining from "../report/PrePlacementTraining";
+import SkillsGrade from "../report/SkillsGrade";
+// import PTMAttendancePDF from "../report/PTMAttendancePDF";
 
 const fetchJSON = async (url) => {
   const res = await fetch(url, { cache: "no-store" });
@@ -1588,6 +1591,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
             </Box>
 
             {/* CBT Section  or pre Placement training*/}
+            {/* 
             <Box sx={{ mb: 4 }} className="pdf-block">
               <Typography
                 variant="h6"
@@ -1601,7 +1605,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   fontWeight: "bold",
                 }}
               >
-                Pre Placement Training
+                CBT
               </Typography>
 
               {!cbtAll ||
@@ -1644,7 +1648,6 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                             overflow: "hidden",
                           }}
                         >
-                          {/* Title */}
                           <Box
                             sx={{
                               background: "#f5f7fa",
@@ -1664,6 +1667,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                               {section.category}
                             </Typography>
                           </Box>
+
                           <TableContainer
                             sx={{
                               border: "1px solid #111",
@@ -1731,6 +1735,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                                   </TableCell>
                                 </TableRow>
                               </TableHead>
+
                               <TableBody>
                                 {section.rows.map((row, index) => {
                                   const absent = isAbsent(row);
@@ -1814,9 +1819,22 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 </Box>
               )}
             </Box>
+            */}
+
 
             {/* pre placement training section */}
+            <PrePlacementTraining
+              studentId={studCode}
+              course={course}
+              semester={semester}
+            />
 
+            {/* Skills */}
+            <SkillsGrade
+              studentId={studCode}
+              course={course}
+              semester={semester}
+            />
 
             {/* Assignment section */}
             <Box sx={{ mt: 4 }} className="pdf-block">
@@ -1971,6 +1989,11 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 </TableContainer>
               )}
             </Box>
+
+            {/* <PTMAttendancePDF
+              studentId={studCode || studentId}
+              semester={semester}
+            /> */}
 
             {/* Footer */}
             <Box
