@@ -23,9 +23,9 @@ function SemesterExam() {
     const handleDownloadSample = () => {
         const sampleData = [
             ['StudId', 'CGPA', 'REMARK'],
-            ['1001', '40', 'PASS'],
+            ['1001', '4.5', 'PASS'],
             ['1002', '50.5', 'PASS'],
-            ['1003', '30', 'FAIL'],
+            ['1003', '3.4', 'FAIL'],
         ];
         const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
         const workbook = XLSX.utils.book_new();

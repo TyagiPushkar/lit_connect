@@ -22,13 +22,25 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import CancelIcon from "@mui/icons-material/Cancel";
-import { useAuth } from "../auth/AuthContext";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+
+// All PPT mark fields
+const MARK_FIELDS = [
+  { key: "QA", label: "QA" },
+  { key: "LR", label: "LR" },
+  { key: "ENG", label: "Eng" },
+  { key: "Tech", label: "Tech" },
+  { key: "Commun", label: "Commun" },
+  { key: "BodyLanguage", label: "BodyLanguage" },
+  { key: "ClarityOfThoughts", label: "ClarityOfThoughts" },
+  { key: "PresentationSkill", label: "PresentationSkill" },
+  { key: "Confidence", label: "Confidence" },
+  { key: "TechSkill", label: "TechSkill" },
+  { key: "GD", label: "GD" },
+];
 
 function ListPPTExam({ setView }) {
-  // const { user } = useAuth();
-  // const isPrincipal = user?.role === "Principal";
   const [records, setRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,59 +48,38 @@ function ListPPTExam({ setView }) {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [course, setCourse] = useState("");
   const [sem, setSem] = useState("");
-  const [Category, setCategory] = useState("");
-  const [subject, setSubject] = useState("");
-  const [subjectsList, setSubjectsList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterDate, setFilterDate] = useState(""); // yyyy-mm-dd (from date picker)
+
+  // Convert yyyy-mm-dd → dd/mm/yyyy for comparing against backend DateOfExam
+  const toDisplayDate = (val) => {
+    if (!val) return '';
+    const [y, m, d] = val.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  // Per-row edit state: editRowId + a copy of all editable fields
   const [editRowId, setEditRowId] = useState(null);
-  const [editedMarks, setEditedMarks] = useState("");
+  const [editedValues, setEditedValues] = useState({});
 
-  // Fetch subjects
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      if (!course || !sem) return;
-      try {
-        const res = await fetch(
-          `https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`,
-        );
-        const result = await res.json();
-        setSubjectsList(result.success ? result.data || [] : []);
-      } catch (err) {
-        console.error("Failed to fetch subjects", err);
-        setSubjectsList([]);
-      }
-    };
-    fetchSubjects();
-  }, [course, sem]);
-
-  // Fetch exam records
-  // useEffect(() => {
-  //   if (course && sem && subject) fetchRecords();
-  // }, [course, sem, subject, Category]);
+  // Fetch records when course + sem selected
   useEffect(() => {
     if (course && sem) fetchRecords();
   }, [course, sem]);
 
+  // Apply search + date filter
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, records]);
+  }, [searchTerm, filterDate, records]);
 
   const fetchRecords = async () => {
     setLoading(true);
     try {
       const { data } = await axios.get(
         "https://namami-infotech.com/LIT/src/report/list_ppt_exam.php",
-        {
-          params: {
-            Course: course,
-            Sem: sem,
-            // Subject: subject,
-            // Category: Category,
-          },
-        },
+        { params: { Course: course, Sem: sem } },
       );
       setRecords(data.success ? data.data : []);
-      //   console.log("Fetched records", data);
     } catch (err) {
       console.error("Failed to fetch records", err);
     } finally {
@@ -97,41 +88,53 @@ function ListPPTExam({ setView }) {
   };
 
   const applyFilters = () => {
-    const filtered = searchTerm.trim()
-      ? records.filter((item) =>
+    let filtered = records;
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((item) =>
         item.StudId.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-      : records;
+      );
+    }
+    if (filterDate) {
+      const ddmmyyyy = toDisplayDate(filterDate);
+      filtered = filtered.filter((item) => (item.DateOfExam || "") === ddmmyyyy);
+    }
     setFilteredRecords(filtered);
     setPage(0);
   };
 
-  const handleEdit = (row) => {
+  const handleEditClick = (row) => {
     setEditRowId(row.Id);
-    setEditedMarks(row.ObtainedMarks);
+    // Copy all mark field values into editable state
+    const vals = {};
+    MARK_FIELDS.forEach(({ key }) => {
+      vals[key] = row[key] ?? "";
+    });
+    setEditedValues(vals);
   };
 
-  const handleCancel = () => {
+  const handleCancelEdit = () => {
     setEditRowId(null);
-    setEditedMarks("");
+    setEditedValues({});
+  };
+
+  const handleFieldChange = (key, value) => {
+    setEditedValues((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async (rowId) => {
     try {
       const { data } = await axios.post(
-        "https://namami-infotech.com/LIT/src/report/edit_cbt.php",
-        {
-          Id: rowId,
-          ObtainedMarks: editedMarks,
-        },
+        "https://namami-infotech.com/LIT/src/report/edit_ppt_marks.php",
+        { Id: rowId, ...editedValues },
       );
       if (data.success) {
-        const updated = records.map((row) =>
-          row.Id === rowId ? { ...row, ObtainedMarks: editedMarks } : row,
+        setRecords((prev) =>
+          prev.map((row) =>
+            row.Id === rowId ? { ...row, ...editedValues } : row,
+          ),
         );
-        setRecords(updated);
         setEditRowId(null);
-        setEditedMarks("");
+        setEditedValues({});
       } else {
         alert(data.message || "Update failed.");
       }
@@ -164,6 +167,7 @@ function ListPPTExam({ setView }) {
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={12} sm={4} md={2}>
             <FormControl fullWidth size="small">
               <InputLabel>Semester</InputLabel>
@@ -180,40 +184,20 @@ function ListPPTExam({ setView }) {
               </Select>
             </FormControl>
           </Grid>
-          {/* <Grid item xs={12} sm={4} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Subject</InputLabel>
-              <Select
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                label="Subject"
-                disabled={subjectsList.length === 0}
-              >
-                {subjectsList.map((subj, index) => (
-                  <MenuItem key={index} value={subj.Subject}>
-                    {subj.Subject} ({subj.SubjectCode || "-"})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+
           <Grid item xs={12} sm={4} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={Category}
-                onChange={(e) => setCategory(e.target.value)}
-                label="Category"
-              >
-                <MenuItem value="1">CBT 1</MenuItem>
-                <MenuItem value="2">CBT 2</MenuItem>
-                <MenuItem value="3">CBT 3</MenuItem>
-                <MenuItem value="4">CBT 4</MenuItem>
-                <MenuItem value="5">CBT 5</MenuItem>
-                <MenuItem value="6">CBT 6</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid> */}
+            <TextField
+              label="Filter by Date"
+              fullWidth
+              size="small"
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+
+
           <Grid item xs={12} sm={4} md={2}>
             <TextField
               label="Search by Student ID"
@@ -228,72 +212,90 @@ function ListPPTExam({ setView }) {
       </Box>
 
       {loading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="50vh"
-        >
+        <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
           <CircularProgress />
         </Box>
       ) : (
         <Paper elevation={2} sx={{ borderRadius: 2, p: 0 }}>
           <TableContainer>
-            <Table>
+            <Table size="small">
               <TableHead sx={{ backgroundColor: "#CC7A00" }}>
                 <TableRow>
-                  {/* {isPrincipal ? (
-                    <TableCell sx={{ color: "#fff" }}>Student Name</TableCell>
-                  ) : (
-                    <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
-                  )} */}
+                  <TableCell sx={{ color: "#fff" }}>Actions</TableCell>
                   <TableCell sx={{ color: "#fff" }}>Student ID</TableCell>
                   <TableCell sx={{ color: "#fff" }}>Course</TableCell>
                   <TableCell sx={{ color: "#fff" }}>Semester</TableCell>
-                  {/* <TableCell sx={{ color: "#fff" }}>Subject</TableCell> */}
-                  <TableCell sx={{ color: "#fff" }}>QA</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>LR</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Eng</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Commun</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>BodyLanguage</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>ClarityOfThoughts</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>PresentationSkill</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>Confidence</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>TechSkill</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>GD</TableCell>
-                  {/* <TableCell sx={{ color: "#fff" }}>Obtained Marks</TableCell> */}
-                  {/* <TableCell sx={{ color: "#fff" }}>Actions</TableCell> */}
+                  <TableCell sx={{ color: "#fff" }}>Date</TableCell>
+                  {MARK_FIELDS.map(({ key, label }) => (
+                    <TableCell key={key} sx={{ color: "#fff" }}>{label}</TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredRecords
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, idx) => (
-                    <TableRow key={row.Id}>
-                      <TableCell>{row.StudId}</TableCell>
-                      <TableCell>{row.Course}</TableCell>
-                      <TableCell>{row.Sem}</TableCell>
-                      <TableCell>{row.QA}</TableCell>
-                      <TableCell>{row.LR}</TableCell>
-                      <TableCell>{row.ENG}</TableCell>
-                      <TableCell>{row.Commun}</TableCell>
-                      <TableCell>{row.BodyLanguage}</TableCell>
-                      <TableCell>{row.ClarityOfThoughts}</TableCell>
-                      <TableCell>{row.PresentationSkill}</TableCell>
-                      <TableCell>{row.Confidence}</TableCell>
-                      <TableCell>{row.TechSkill}</TableCell>
-                      <TableCell>{row.GD}</TableCell>
-                      {/* action button on it */}
-                      {/* <TableCell>
-                        <IconButton onClick={() => handleEdit(row)}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton onClick={() => handleDelete(row.Id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell> */}
-                    </TableRow>
-                  ))}
+                  .map((row) => {
+                    const isEditing = editRowId === row.Id;
+                    return (
+                      <TableRow key={row.Id}>
+                        <TableCell>
+                          {isEditing ? (
+                            <>
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => handleSave(row.Id)}
+                              >
+                                <CheckIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={handleCancelEdit}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </>
+                          ) : (
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditClick(row)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                        </TableCell>
+                        <TableCell>{row.StudId}</TableCell>
+                        <TableCell>{row.Course}</TableCell>
+                        <TableCell>{row.Sem}</TableCell>
+                        <TableCell>
+                          {row.DateOfExam
+                            ? new Date(row.DateOfExam).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                            })
+                            : "—"}
+                        </TableCell>
+                        {/* <TableCell>{row.DateOfExam || "—"}</TableCell> */}
+
+                        {MARK_FIELDS.map(({ key }) => (
+                          <TableCell key={key}>
+                            {isEditing ? (
+                              <TextField
+                                value={editedValues[key] ?? ""}
+                                size="small"
+                                onChange={(e) => handleFieldChange(key, e.target.value)}
+                                inputProps={{ style: { width: 50 } }}
+                              />
+                            ) : (
+                              row[key]
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
               </TableBody>
             </Table>
           </TableContainer>

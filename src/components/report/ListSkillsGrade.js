@@ -18,10 +18,12 @@ import {
     Select,
     MenuItem,
     Grid,
+    IconButton,
 } from "@mui/material";
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit";
-import IconButton from "@mui/material/IconButton";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -41,9 +43,11 @@ function ListSkillsGrade({ setView }) {
     const [subject, setSubject] = useState("");
     const [subjectsList, setSubjectsList] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [editId, setEditId] = useState(null);
-    const [editValue, setEditValue] = useState("");
     const [studentMap, setStudentMap] = useState({});
+
+    // Per-row edit state
+    const [editId, setEditId] = useState(null);
+    const [editGrade, setEditGrade] = useState("");
 
     // Fetch student name map for Principal view
     useEffect(() => {
@@ -89,7 +93,7 @@ function ListSkillsGrade({ setView }) {
         fetchSubjects();
     }, [course, sem]);
 
-    // Fetch exam records
+    // Fetch records when course, sem, subject are selected
     useEffect(() => {
         if (course && sem && subject) fetchRecords();
     }, [course, sem, subject]);
@@ -104,9 +108,7 @@ function ListSkillsGrade({ setView }) {
         try {
             const { data } = await axios.get(
                 "https://namami-infotech.com/LIT/src/report/list_skills_grade.php",
-                {
-                    params: { Course: course, Sem: sem, Subject: subject },
-                },
+                { params: { Course: course, Sem: sem, Subject: subject } },
             );
             if (data.success) setRecords(data.data);
             else setRecords([]);
@@ -128,28 +130,34 @@ function ListSkillsGrade({ setView }) {
         setPage(0);
     };
 
-    const handleSaveMarks = async (id) => {
+    const handleEditClick = (row) => {
+        setEditId(row.Id);
+        setEditGrade(row.Grade ?? "");
+    };
+
+    const handleCancelEdit = () => {
+        setEditId(null);
+        setEditGrade("");
+    };
+
+    const handleSave = async (id) => {
         try {
             const response = await axios.post(
-                "https://namami-infotech.com/LIT/src/report/edit_internal.php",
-                {
-                    Id: id,
-                    Grade: editValue,
-                },
+                "https://namami-infotech.com/LIT/src/report/edit_skills_grade.php",
+                { Id: id, Grade: editGrade },
             );
 
             if (response.data.success) {
-                const updated = records.map((record) =>
-                    record.Id === id ? { ...record, ObtainedMarks: editValue } : record,
+                setRecords((prev) =>
+                    prev.map((r) => (r.Id === id ? { ...r, Grade: editGrade } : r)),
                 );
-                setRecords(updated);
                 setEditId(null);
             } else {
-                alert(response.data.message || "Failed to update marks.");
+                alert(response.data.message || "Failed to update grade.");
             }
         } catch (error) {
-            console.error("Error updating marks:", error);
-            alert("Error updating marks.");
+            console.error("Error updating grade:", error);
+            alert("Error updating grade.");
         }
     };
 
@@ -176,16 +184,7 @@ function ListSkillsGrade({ setView }) {
             { align: "center" },
         );
 
-        const head = [
-            [
-                "Student Name",
-                "Student ID",
-                "Course",
-                "Semester",
-                "Subject",
-                "Grade",
-            ],
-        ];
+        const head = [["Student Name", "Student ID", "Course", "Semester", "Subject", "Grade"]];
         const body = filteredRecords.map((row) => [
             studentMap[String(row.StudId)] || "-",
             row.StudId,
@@ -201,16 +200,12 @@ function ListSkillsGrade({ setView }) {
             startY: 68,
             theme: "striped",
             styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
-            headStyles: {
-                fillColor: [204, 122, 0],
-                textColor: 255,
-                fontStyle: "bold",
-            },
+            headStyles: { fillColor: [204, 122, 0], textColor: 255, fontStyle: "bold" },
             margin: { left: 30, right: 30 },
             tableWidth: "auto",
         });
 
-        doc.save(`InternalExam_${course}_Sem${sem}_${subject}.pdf`);
+        doc.save(`SkillsGrade_${course}_Sem${sem}_${subject}.pdf`);
     };
 
     return (
@@ -303,12 +298,7 @@ function ListSkillsGrade({ setView }) {
             </Box>
 
             {loading ? (
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    height="50vh"
-                >
+                <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
                     <CircularProgress />
                 </Box>
             ) : (
@@ -332,33 +322,67 @@ function ListSkillsGrade({ setView }) {
                             <TableBody>
                                 {filteredRecords
                                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                    .map((row, idx) => (
-                                        <TableRow key={idx}>
-                                            {isPrincipal ? (
+                                    .map((row) => {
+                                        const isEditing = !isPrincipal && editId === row.Id;
+                                        return (
+                                            <TableRow key={row.Id}>
+                                                {isPrincipal ? (
+                                                    <TableCell>
+                                                        {studentMap[String(row.StudId)] || "—"}
+                                                    </TableCell>
+                                                ) : (
+                                                    <TableCell>
+                                                        {isEditing ? (
+                                                            <>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="success"
+                                                                    onClick={() => handleSave(row.Id)}
+                                                                >
+                                                                    <CheckIcon fontSize="small" />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={handleCancelEdit}
+                                                                >
+                                                                    <CloseIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </>
+                                                        ) : (
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => handleEditClick(row)}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                        )}
+                                                    </TableCell>
+                                                )}
+                                                <TableCell>{row.StudId}</TableCell>
+                                                <TableCell>{row.Course}</TableCell>
+                                                <TableCell>{row.Sem}</TableCell>
                                                 <TableCell>
-                                                    {studentMap[String(row.StudId)] || "—"}
+                                                    {row.Subject} ({row.SubjectCode || "-"})
                                                 </TableCell>
-                                            ) : (
                                                 <TableCell>
-                                                    <IconButton
-                                                        onClick={() => {
-                                                            setEditId(row.Id);
-                                                            setEditValue(row.Grade);
-                                                        }}
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
+                                                    {isEditing ? (
+                                                        <TextField
+                                                            value={editGrade}
+                                                            size="small"
+                                                            onChange={(e) =>
+                                                                setEditGrade(e.target.value.toUpperCase())
+                                                            }
+                                                            inputProps={{ style: { width: 60 } }}
+                                                            placeholder="Grade"
+                                                        />
+                                                    ) : (
+                                                        row.Grade
+                                                    )}
                                                 </TableCell>
-                                            )}
-                                            <TableCell>{row.StudId}</TableCell>
-                                            <TableCell>{row.Course}</TableCell>
-                                            <TableCell>{row.Sem}</TableCell>
-                                            <TableCell>
-                                                {row.Subject} ({row.SubjectCode || "-"})
-                                            </TableCell>
-                                            <TableCell>{row.Grade}</TableCell>
-                                        </TableRow>
-                                    ))}
+                                            </TableRow>
+                                        );
+                                    })}
                             </TableBody>
                         </Table>
                     </TableContainer>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Button,
@@ -8,6 +8,7 @@ import {
     FormControl,
     Typography,
     Grid,
+    TextField,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -17,74 +18,35 @@ import ListPPTExam from './ListPPTExam';
 
 function PPT() {
     const [course, setCourse] = useState('');
-    const [Category, setCategory] = useState('');
     const [sem, setSem] = useState('');
-    const [subject, setSubject] = useState('');
+    const [date, setDate] = useState(''); // yyyy-mm-dd from date picker
     const [file, setFile] = useState(null);
-    const [subjectsList, setSubjectsList] = useState([]);
 
-    // useEffect(() => {
-    //     const fetchSubjects = async () => {
-    //         if (!course || !sem) return;
+    // Convert yyyy-mm-dd → dd/mm/yyyy for backend
+    const toBackendDate = (val) => {
+        if (!val) return '';
+        const [y, m, d] = val.split('-');
+        return `${d}/${m}/${y}`;
+    };
 
-    //         try {
-    //             const res = await fetch(`https://namami-infotech.com/LIT/src/menu/subjects.php?Course=${course}&Sem=${sem}`);
-    //             const result = await res.json();
-    //             if (result.success) {
-    //                 setSubjectsList(result.data || []);
-    //             } else {
-    //                 setSubjectsList([]);
-    //                 Swal.fire({
-    //                     icon: 'info',
-    //                     title: result.message || 'No subjects found.',
-    //                 });
-    //             }
-    //         } catch (error) {
-    //             console.error(error);
-    //             Swal.fire({
-    //                 icon: 'error',
-    //                 title: 'Failed to fetch subjects.',
-    //             });
-    //         }
-    //     };
-
-    //     fetchSubjects();
-    // }, [course, sem]);
-
-    const handleDownloadSamplePPTWrittern = () => {
-        // const sampleData = [
-        //     ['StudId', 'Commun(5)', 'BodyLanguage(5)', 'ClarityofThoughts(5)', 'PresentationSkill(5)', 'Confidence(5)', 'TechSkill(5)', 'GD(10)'],
-        //     ['1001', '2', '2', '2', '2', '2', '2', '2'],
-        //     ['1002', '2', '2', '2', '2', '2', '2', '2']
-        // ];
+    const handleDownloadSamplePPT = () => {
         const sampleData = [
-            ['studId', 'qa', 'lr', 'eng', 'commun', 'bodyLanguage', 'clarityOfThoughts', 'presentationSkill', 'confidence', 'techSkill', 'gd'],
-            ['1001', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2'],
-            ['1002', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2']
+            ['studId', 'qa', 'lr', 'eng', 'tech', 'commun', 'bodyLanguage', 'clarityOfThoughts', 'presentationSkill', 'confidence', 'techSkill', 'gd'],
+            ['1001', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2'],
+            ['1002', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2']
         ];
         const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Sample');
-        XLSX.writeFile(workbook, 'PPTPI&TECHSample.xlsx');
+        XLSX.writeFile(workbook, 'PPTSample.xlsx');
     };
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
     };
-    const handleDownloadSamplePPTTECH = () => {
-        const sampleData = [
-            ['StudId', 'QA(20)', 'LR(15)', 'English(15)'],
-            ['1001', '12', '10', '09'],
-            ['1002', '14', '10', '09']
-        ];
-        const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sample');
-        XLSX.writeFile(workbook, 'PPTPI&TECHSample.xlsx');
-    };
 
     const handleUpload = async () => {
-        if (!course || !sem || !file) {
+        if (!course || !sem || !date || !file) {
             Swal.fire({
                 icon: 'warning',
                 title: 'All fields are required!',
@@ -96,8 +58,8 @@ function PPT() {
         const formData = new FormData();
         formData.append('Course', course);
         formData.append('Sem', sem);
-        //  formData.append('Category', Category);
-        // formData.append('Subject', subject);
+        // formData.append('DateOfExam', toBackendDate(date)); // sends dd/mm/yyyy
+        formData.append('DateOfExam', date); // sends dd/mm/yyyy
         formData.append('file', file);
 
         try {
@@ -114,10 +76,8 @@ function PPT() {
                 });
                 setCourse('');
                 setSem('');
-                setSubject('');
-                setCategory('');
+                setDate('');
                 setFile(null);
-                setSubjectsList([]);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -136,7 +96,7 @@ function PPT() {
 
     return (
         <Box sx={{ p: 0 }}>
-            <Grid container spacing={5} alignItems="center">
+            <Grid container spacing={2} alignItems="center">
                 <Grid item>
                     <FormControl size="small" sx={{ minWidth: 180 }}>
                         <InputLabel>Course</InputLabel>
@@ -168,66 +128,28 @@ function PPT() {
                     </FormControl>
                 </Grid>
 
-                {/* <Grid item>
-                    <FormControl size="small" sx={{ minWidth: 200 }}>
-                        <InputLabel>Subject</InputLabel>
-                        <Select
-                            value={subject}
-                            label="Subject"
-                            onChange={(e) => setSubject(e.target.value)}
-                            disabled={subjectsList.length === 0}
-                        >
-                            {subjectsList.map((subj, index) => (
-                                <MenuItem key={index} value={subj.Subject}>
-                                    {subj.Subject} ({subj.SubjectCode || '-'})
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Grid> */}
-
-                {/* <Grid item>
-                    <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel>Category</InputLabel>
-                        <Select
-                            value={Category}
-                            label="Category"
-                            onChange={(e) => setCategory(e.target.value)}
-                        >
-                            <MenuItem value="1">Written Test</MenuItem>
-                            <MenuItem value="2">PI/TECH</MenuItem> */}
-                {/* <MenuItem value="3">CBT 3</MenuItem>
-                            <MenuItem value="4">CBT 4</MenuItem>
-                            <MenuItem value="5">CBT 5</MenuItem>
-                            <MenuItem value="6">CBT 6</MenuItem> */}
-                {/* </Select>
-                    </FormControl>
-                </Grid> */}
+                <Grid item>
+                    <TextField
+                        label="Exam Date"
+                        type="date"
+                        size="small"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ minWidth: 160 }}
+                    />
+                </Grid>
 
                 <Grid item>
                     <Button
                         size="small"
                         variant="outlined"
                         startIcon={<DownloadIcon />}
-                        onClick={handleDownloadSamplePPTWrittern}
+                        onClick={handleDownloadSamplePPT}
                     >
-                        {/* Download Sample PPT(Written) */}
                         Download Sample PPT
                     </Button>
-
                 </Grid>
-
-                {/* <Grid item>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleDownloadSamplePPTTECH}
-                    >
-                        Download Sample PPT(PI/TECH)
-                    </Button>
-                </Grid> */}
-
 
                 <Grid item>
                     <Button
@@ -251,7 +173,7 @@ function PPT() {
                     <Button
                         size="small"
                         variant="contained"
-                        disabled={!file || !course || !sem}
+                        disabled={!file || !course || !sem || !date}
                         onClick={handleUpload}
                         sx={{ backgroundColor: "#CC7A00", '&:hover': { backgroundColor: "#b36600" } }}
                     >
