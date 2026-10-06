@@ -81,8 +81,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: assignment, isLoading: assignmentLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/assignment_report.php?StudId=${encodeURIComponent(
-        studCode,
-      )}&Course=${encodeURIComponent(course)}&Semester=${encodeURIComponent(semester)}`
+          studCode,
+        )}&Course=${encodeURIComponent(course)}&Semester=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -90,8 +90,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: internal, isLoading: internalLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/internal_exam_report.php?StudId=${encodeURIComponent(
-        studCode,
-      )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+          studCode,
+        )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -99,8 +99,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: semesterExam, isLoading: semesterExamLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/semester_exam_report.php?StudId=${encodeURIComponent(
-        studCode,
-      )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+          studCode,
+        )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -108,8 +108,8 @@ export default function ReportCardPDF({ studentId, sem, year }) {
   const { data: vst, isLoading: vstLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/vst_exam_report.php?StudId=${encodeURIComponent(
-        studCode,
-      )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
+          studCode,
+        )}&Course=${encodeURIComponent(course)}&Sem=${encodeURIComponent(semester)}`
       : null,
     fetchReportArray,
   );
@@ -434,7 +434,6 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   }
                   alt="Institute Seal"
                   sx={{
-
                     width: {
                       xs: 120,
                       sm: 150,
@@ -744,7 +743,12 @@ export default function ReportCardPDF({ studentId, sem, year }) {
               </Grid>
             </Box>
             <Box sx={{ mb: 2, pt: "15px" }} className="pdf-block">
-              <AttendanceSummary EmpId={studentId} sem={sem} year={year} course={course} />
+              <AttendanceSummary
+                EmpId={studentId}
+                sem={sem}
+                year={year}
+                course={course}
+              />
             </Box>
 
             {/* Semester Examination Results */}
@@ -791,78 +795,255 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   >
                     <Table>
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
-                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Academic Year</TableCell>
-                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Branch</TableCell>
-                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Semester</TableCell>
-                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Percentage</TableCell>
-                          <TableCell sx={{ border: "1px solid #333", fontWeight: "bold", fontSize: "20px", textAlign: "center" }}>Remarks</TableCell>
+                        <TableRow
+                          sx={{ backgroundColor: "#f0f0f0" }}
+                          className="pdf-block"
+                        >
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            Academic Year
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            Branch
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            Semester
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            SGPA
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              border: "1px solid #333",
+                              fontWeight: "bold",
+                              fontSize: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            Remarks
+                          </TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {(() => {
-                          const totals = calcMarksTotals(internal);
+                          const examList = Array.isArray(semesterExam)
+                            ? [...semesterExam].sort(
+                                (a, b) =>
+                                  (parseInt(a?.Sem, 10) || 0) -
+                                  (parseInt(b?.Sem, 10) || 0),
+                              )
+                            : semesterExam && typeof semesterExam === "object"
+                              ? [semesterExam]
+                              : [];
 
-                          const hasValid = totals.totalMax > 0;
+                          const validCgpas = examList
+                            .map((item) => parseFloat(item?.CGPA))
+                            .filter((val) => !isNaN(val) && val >= 0);
 
-                          const percentage = hasValid ? totals.pct : null;
+                          const avgCGPA =
+                            validCgpas.length > 0
+                              ? (
+                                  validCgpas.reduce(
+                                    (acc, curr) => acc + curr,
+                                    0,
+                                  ) / validCgpas.length
+                                ).toFixed(2)
+                              : "-";
 
-                          const result = getResultStatus(percentage, hasValid);
+                          const hasFail = examList.some(
+                            (item) =>
+                              item?.Remark &&
+                              item.Remark.toString().trim().toUpperCase() ===
+                                "FAIL",
+                          );
+                          const allPass =
+                            examList.length > 0 &&
+                            examList.every(
+                              (item) =>
+                                item?.Remark &&
+                                item.Remark.toString().trim().toUpperCase() ===
+                                  "PASS",
+                            );
+
+                          let overallRemark = "-";
+                          if (hasFail) {
+                            overallRemark = "FAIL";
+                          } else if (allPass) {
+                            overallRemark = "PASS";
+                          } else if (validCgpas.length > 0) {
+                            overallRemark =
+                              parseFloat(avgCGPA) >= 4.0 ? "PASS" : "FAIL";
+                          }
 
                           return (
-                            <TableRow className="pdf-block">
-                              <TableCell
-                                sx={{
-                                  border: "1px solid #333",
-                                  fontSize: "20px",
-                                  textAlign: "center",
-                                }}
-                              >
-                                {year || "-"}
-                              </TableCell>
+                            <>
+                              {examList.map((item, index) => {
+                                const itemCgpa = parseFloat(item?.CGPA);
+                                const formattedCgpa = !isNaN(itemCgpa)
+                                  ? itemCgpa.toFixed(2)
+                                  : (item?.CGPA ?? "-");
 
-                              <TableCell
-                                sx={{
-                                  border: "1px solid #333",
-                                  fontSize: "20px",
-                                  textAlign: "center",
-                                }}
-                              >
-                                {course || "-"}
-                              </TableCell>
+                                const remark = item?.Remark
+                                  ? item.Remark.toString().trim()
+                                  : "-";
+                                const isPass = remark.toUpperCase() === "PASS";
+                                const isFail = remark.toUpperCase() === "FAIL";
 
-                              <TableCell
-                                sx={{
-                                  border: "1px solid #333",
-                                  fontSize: "20px",
-                                  textAlign: "center",
-                                }}
-                              >
-                                {sem || "-"}
-                              </TableCell>
+                                return (
+                                  <TableRow
+                                    key={item?.Id || index}
+                                    className="pdf-block"
+                                  >
+                                    <TableCell
+                                      sx={{
+                                        border: "1px solid #333",
+                                        fontSize: "20px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {item?.Year ||
+                                        item?.AcademicYear ||
+                                        year ||
+                                        "-"}
+                                    </TableCell>
 
-                              <TableCell
-                                sx={{
-                                  border: "1px solid #333",
-                                  fontSize: "20px",
-                                  textAlign: "center",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {semesterExam?.[0]?.CGPA ?? "-"}
-                              </TableCell>
+                                    <TableCell
+                                      sx={{
+                                        border: "1px solid #333",
+                                        fontSize: "20px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {item?.Course || course || "-"}
+                                    </TableCell>
 
-                              <TableCell
+                                    <TableCell
+                                      sx={{
+                                        border: "1px solid #333",
+                                        fontSize: "20px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {item?.Sem
+                                        ? String(item.Sem)
+                                            .toLowerCase()
+                                            .includes("sem")
+                                          ? item.Sem
+                                          : `${item.Sem}`
+                                        : sem
+                                          ? `${sem}`
+                                          : "-"}
+                                    </TableCell>
+
+                                    <TableCell
+                                      sx={{
+                                        border: "1px solid #333",
+                                        fontSize: "20px",
+                                        textAlign: "center",
+                                        fontWeight: "bold",
+                                      }}
+                                    >
+                                      {formattedCgpa}
+                                    </TableCell>
+
+                                    <TableCell
+                                      sx={{
+                                        border: "1px solid #333",
+                                        fontSize: "20px",
+                                        textAlign: "center",
+                                        fontWeight: "bold",
+                                        color: isFail
+                                          ? "#d32f2f"
+                                          : isPass
+                                            ? "#2e7d32"
+                                            : "inherit",
+                                      }}
+                                    >
+                                      {remark}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+
+                              {/* Total / Average Row */}
+                              <TableRow
+                                className="pdf-block"
                                 sx={{
-                                  border: "1px solid #333",
-                                  fontSize: "20px",
-                                  textAlign: "center",
-                                  fontWeight: "bold",
+                                  backgroundColor: "#f0f0f0",
                                 }}
                               >
-                                {semesterExam?.[0]?.Remark ?? "-"}
-                              </TableCell>
-                            </TableRow>
+                                <TableCell
+                                  colSpan={3}
+                                  sx={{
+                                    border: "1px solid #333",
+                                    fontSize: "20px",
+                                    textAlign: "center",
+                                    fontWeight: "bold",
+                                    backgroundColor: "#f0f0f0",
+                                    letterSpacing: "0.5px",
+                                  }}
+                                >
+                                  Total CGPA
+                                </TableCell>
+
+                                <TableCell
+                                  sx={{
+                                    border: "1px solid #333",
+                                    fontSize: "20px",
+                                    textAlign: "center",
+                                    fontWeight: "bold",
+                                    backgroundColor: "#f0f0f0",
+                                  }}
+                                >
+                                  {avgCGPA}
+                                </TableCell>
+
+                                <TableCell
+                                  sx={{
+                                    border: "1px solid #333",
+                                    fontSize: "20px",
+                                    textAlign: "center",
+                                    fontWeight: "bold",
+                                    backgroundColor: "#f0f0f0",
+                                    color:
+                                      overallRemark === "FAIL"
+                                        ? "#d32f2f"
+                                        : overallRemark === "PASS"
+                                          ? "#2e7d32"
+                                          : "inherit",
+                                  }}
+                                >
+                                  {overallRemark}
+                                </TableCell>
+                              </TableRow>
+                            </>
                           );
                         })()}
                       </TableBody>
@@ -879,14 +1060,12 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
+                  fontWeight: "bold",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Georgia", serif',
-                  fontWeight: "bold",
-                  textTransform: "uppercase",
                 }}
               >
-                Mid Term Examination Results
+                MID TERM EXAMINATION RESULTS
               </Typography>
 
               {!internal || internal.length === 0 ? (
@@ -919,7 +1098,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   >
                     <Table>
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
+                        <TableRow
+                          sx={{ backgroundColor: "#f0f0f0" }}
+                          className="pdf-block"
+                        >
                           <TableCell
                             sx={{
                               border: "1px solid #333",
@@ -1169,10 +1351,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
+                  fontWeight: "bold",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Georgia", serif',
-                  fontWeight: "bold",
                 }}
               >
                 CLASS TEST PERFORMANCE (CT1-CT4)
@@ -1405,10 +1586,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
+                  fontWeight: "bold",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Georgia", serif',
-                  fontWeight: "bold",
                 }}
               >
                 VERY SIMILAR TESTS
@@ -1441,7 +1621,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 >
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
+                      <TableRow
+                        sx={{ backgroundColor: "#f0f0f0" }}
+                        className="pdf-block"
+                      >
                         <TableCell
                           sx={{
                             fontWeight: "bold",
@@ -1839,7 +2022,6 @@ export default function ReportCardPDF({ studentId, sem, year }) {
             </Box>
             */}
 
-
             {/* pre placement training section */}
             <PrePlacementTraining
               studentId={studCode}
@@ -1862,10 +2044,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                   backgroundColor: "#2c3e50",
                   color: "white",
                   padding: "8px 16px",
+                  fontWeight: "bold",
                   display: "inline-block",
                   marginBottom: "15px",
-                  fontFamily: '"Georgia", serif',
-                  fontWeight: "bold",
                 }}
               >
                 ASSIGNMENT
@@ -1896,7 +2077,10 @@ export default function ReportCardPDF({ studentId, sem, year }) {
                 >
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: "#f0f0f0" }} className="pdf-block">
+                      <TableRow
+                        sx={{ backgroundColor: "#f0f0f0" }}
+                        className="pdf-block"
+                      >
                         <TableCell
                           sx={{
                             fontWeight: "bold",
