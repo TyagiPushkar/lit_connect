@@ -193,17 +193,15 @@ export default function PrePlacementTraining({
         >
             <Typography
                 variant="h6"
-                sx={{
-                    backgroundColor: "#2c3e50",
-                    color: "white",
-                    padding: "8px 16px",
-                    display: "inline-block",
-                    marginBottom: "15px",
-                    fontFamily: '"Georgia", serif',
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
+               sx={{
+                  backgroundColor: "#2c3e50",
+                  color: "white",
+                  padding: "8px 16px",
+                  fontWeight: "bold",
+                  display: "inline-block",
+                  marginBottom: "15px",
                 }}
-            >
+              >
                 PRE PLACEMENT TRAINING
             </Typography>
 
