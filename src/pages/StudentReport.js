@@ -64,7 +64,11 @@ function StudentReport() {
       </Box>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, overflowY: "auto" }}>
+      <Box
+        component="main"
+        className="scrollable-y"
+        sx={{ flexGrow: 1, height: "100vh", overflowY: "auto", minWidth: 0 }}
+      >
         <Navbar />
 
         <Box sx={{ px: 3, py: 2 }}>
