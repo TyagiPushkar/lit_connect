@@ -265,13 +265,18 @@ function ListCBTExam({ setView }) {
                             value={editedMarks}
                             onChange={(e) => {
                               const val = e.target.value;
-                              if (
-                                val === "" ||
-                                val === "A" ||
-                                val === "a" ||
-                                /^\d+$/.test(val)
-                              )
+                              if (val === "" || val === "A" || val === "a") {
                                 setEditedMarks(val.toUpperCase());
+                              } else if (/^\d*\.?\d*$/.test(val)) {
+                                const max = parseFloat(row.MaxMarks);
+                                if (
+                                  isNaN(max) ||
+                                  val === "." ||
+                                  parseFloat(val) <= max
+                                ) {
+                                  setEditedMarks(val);
+                                }
+                              }
                             }}
                             sx={{ width: 80 }}
                             placeholder="0 or A"
