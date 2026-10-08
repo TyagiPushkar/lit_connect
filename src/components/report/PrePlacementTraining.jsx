@@ -160,18 +160,22 @@ export default function PrePlacementTraining({
         (a, b) => Number(a?.Id || 0) - Number(b?.Id || 0)
     );
 
-    const writtenRecords = records.filter(
-        (row) =>
+    const writtenRecords = records.filter((row) => {
+        const cat = (row?.Category || "").trim().toUpperCase();
+        if (cat && cat !== "WRITTEN") return false;
+        return (
             hasValue(row?.QA) ||
             hasValue(row?.LR) ||
             hasValue(row?.ENG) ||
-            hasValue(row?.Tech) ||
-            hasValue(row?.DateOfExam)
-    );
+            hasValue(row?.Tech)
+        );
+    });
 
-    const piRecords = records.filter((row) =>
-        PI_FIELDS.some((field) => hasValue(row?.[field.key]))
-    );
+    const piRecords = records.filter((row) => {
+        const cat = (row?.Category || "").trim().toUpperCase();
+        if (cat === "WRITTEN") return false;
+        return PI_FIELDS.some((field) => hasValue(row?.[field.key]));
+    });
 
     if (isLoading) {
         return null;
