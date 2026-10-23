@@ -12,14 +12,23 @@ function VisitReport() {
     const drawerWidth = isMobile ? 0 : 100;
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh' }}>
+        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
             {/* Sidebar with fixed width */}
             <Box sx={{ width: drawerWidth, flexShrink: 0 }}>
                 <Sidebar />
             </Box>
-            <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    p: 0,
+                    height: '100vh',
+                    overflowY: 'auto',
+                    minWidth: 0,
+                }}
+            >
                 <Navbar />
-                <Box sx={{ mt: 1 }}>
+                <Box sx={{ mt: 1, p: { xs: 1, sm: 2 }, pb: 4 }}>
                    <VisitList />
                 </Box>
             </Box>
