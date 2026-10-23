@@ -22,13 +22,7 @@ import {
   parseISO,
 } from "date-fns";
 
-const AttendanceSummary = ({
-  EmpId,
-  tenentId = "1",
-  sem,
-  year,
-  course,
-}) => {
+const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
   // console.log("AttendanceSummary Props:", { EmpId, tenentId, sem, year, course });
   const [summaryData, setSummaryData] = useState([]);
   const [holidays, setHolidays] = useState([]);
@@ -131,7 +125,9 @@ const AttendanceSummary = ({
       end: endOfMonth(monthData.startDate),
     });
 
-    const normalizedCourse = String(course || "").trim().toLowerCase();
+    const normalizedCourse = String(course || "")
+      .trim()
+      .toLowerCase();
     const normalizedSem = String(sem || "").trim();
 
     const workingDays = daysInMonth.filter((day) => {
@@ -176,12 +172,10 @@ const AttendanceSummary = ({
         */
 
         const courseMatches =
-          holidayCourse === "all" ||
-          holidayCourse === normalizedCourse;
+          holidayCourse === "all" || holidayCourse === normalizedCourse;
 
         const semMatches =
-          holidaySem.toLowerCase() === "all" ||
-          holidaySem === normalizedSem;
+          holidaySem.toLowerCase() === "all" || holidaySem === normalizedSem;
 
         return courseMatches && semMatches;
       });
@@ -302,7 +296,13 @@ const AttendanceSummary = ({
         return;
       }
       const allAttendance = response.data.data;
+      const today = new Date();
+      const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
       const results = months.map((month) => {
+        const monthYear = `${month.year}-${String(month.month + 1).padStart(2, "0")}`;
+        const isFuture = monthYear > currentMonthKey;
+
         const monthAttendance = allAttendance.filter((activity) => {
           if (!activity.date) return false;
           try {
@@ -323,18 +323,19 @@ const AttendanceSummary = ({
         //  REMOVE DUPLICATE DATES
         const uniqueDates = new Set(monthAttendance.map((a) => a.date));
         const present = uniqueDates.size;
-        const totalWorkingDays = calculateWorkingDays(month);
-        const absent = Math.max(0, totalWorkingDays - present);
+        const totalWorkingDays = isFuture ? 0 : calculateWorkingDays(month);
+        const absent = isFuture ? 0 : Math.max(0, totalWorkingDays - present);
         const percentage =
-          totalWorkingDays > 0
+          !isFuture && totalWorkingDays > 0
             ? ((present / totalWorkingDays) * 100).toFixed(1)
             : 0;
         return {
           monthName: `${month.name} ${month.year}`,
-          monthYear: `${month.year}-${String(month.month + 1).padStart(2, "0")}`,
-          totalClasses: totalWorkingDays,
-          present,
-          absent,
+          monthYear,
+          isFuture,
+          totalClasses: isFuture ? 0 : totalWorkingDays,
+          present: isFuture ? 0 : present,
+          absent: isFuture ? 0 : absent,
           percentage: Number(percentage),
           sortKey: new Date(month.year, month.month).getTime(),
         };
@@ -361,20 +362,43 @@ const AttendanceSummary = ({
     }
   }, [EmpId, holidays.length, sem, year, course]);
 
-  const totalWorkingDays = summaryData.reduce(
+  // const totalWorkingDays = summaryData.reduce(
+  //   (sum, row) => sum + row.totalClasses,
+  //   0,
+  // );
+
+  // const totalPresent = summaryData.reduce((sum, row) => sum + row.present, 0);
+  // const totalAbsent = summaryData.reduce((sum, row) => sum + row.absent, 0);
+  // const overallPercentage =
+  //   summaryData.length > 0
+  //     ? (
+  //       summaryData.reduce((sum, row) => sum + row.percentage, 0) /
+  //       summaryData.length
+  //     ).toFixed(1)
+  //     : 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
+  const eligibleRows = summaryData.filter(
+    (row) => !row.isFuture && row.monthYear <= currentMonthKey,
+  );
+
+  const totalWorkingDays = eligibleRows.reduce(
     (sum, row) => sum + row.totalClasses,
     0,
   );
 
-  const totalPresent = summaryData.reduce((sum, row) => sum + row.present, 0);
-  const totalAbsent = summaryData.reduce((sum, row) => sum + row.absent, 0);
+  const totalPresent = eligibleRows.reduce((sum, row) => sum + row.present, 0);
+
+  const totalAbsent = Math.max(0, totalWorkingDays - totalPresent);
+
   const overallPercentage =
-    summaryData.length > 0
-      ? (
-        summaryData.reduce((sum, row) => sum + row.percentage, 0) /
-        summaryData.length
-      ).toFixed(1)
-      : 0;
+    totalWorkingDays > 0
+      ? ((totalPresent / totalWorkingDays) * 100).toFixed(1)
+      : "0.0";
 
   if (!EmpId) {
     return (
@@ -559,92 +583,99 @@ const AttendanceSummary = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {summaryData.slice(0, 6).map((row) => (
-                    <TableRow
-                      key={row.monthYear}
-                      className="pdf-block"
-                      sx={{
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
-                        },
-                      }}
-                    >
-                      <TableCell
+                  {summaryData.slice(0, 6).map((row) => {
+                    const isFuture = row.isFuture ?? (row.monthYear > currentMonthKey);
+                    return (
+                      <TableRow
+                        key={row.monthYear}
+                        className="pdf-block"
                         sx={{
-                          border: "1px solid #111",
-                          fontWeight: "500",
-                          fontSize: "20px",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          },
                         }}
                       >
-                        {row.monthName}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          border: "1px solid #111",
-                          textAlign: "center",
-                          fontWeight: "500",
-                          fontSize: "20px",
-                        }}
-                      >
-                        {row.totalClasses}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          border: "1px solid #111",
-                          fontSize: "20px",
-                          textAlign: "center",
-                          color: "#2e7d32",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {row.present}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          border: "1px solid #111",
-                          fontSize: "20px",
-                          fontWeight: "bold",
-                          textAlign: "center",
-                          color: "#d32f2f",
-                        }}
-                      >
-                        {row.absent}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          border: "1px solid #111",
-                          fontSize: "20px",
-                          textAlign: "center",
-                        }}
-                      >
-                        <Box
+                        <TableCell
                           sx={{
-                            display: "inline-block",
-                            padding: "2px 12px",
+                            border: "1px solid #111",
+                            fontWeight: "500",
                             fontSize: "20px",
-                            backgroundColor:
-                              row.percentage >= 75
-                                ? "#e8f5e8"
-                                : row.percentage >= 60
-                                  ? "#fff8e1"
-                                  : "#ffebee",
-                            border: "1px solid",
-                            borderColor:
-                              row.percentage >= 75
-                                ? "#4caf50"
-                                : row.percentage >= 60
-                                  ? "#ff9800"
-                                  : "#f44336",
-                            borderRadius: "2px",
-                            fontWeight: "bold",
-                            minWidth: "60px",
                           }}
                         >
-                          {row.percentage}%
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          {row.monthName}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #111",
+                            textAlign: "center",
+                            fontWeight: "500",
+                            fontSize: "20px",
+                          }}
+                        >
+                          {isFuture ? "-" : row.totalClasses}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #111",
+                            fontSize: "20px",
+                            textAlign: "center",
+                            color: isFuture ? "#000000" : "#2e7d32",
+                            fontWeight: isFuture ? "500" : "bold",
+                          }}
+                        >
+                          {isFuture ? "-" : row.present}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #111",
+                            fontSize: "20px",
+                            fontWeight: isFuture ? "500" : "bold",
+                            textAlign: "center",
+                            color: isFuture ? "#000000" : "#d32f2f",
+                          }}
+                        >
+                          {isFuture ? "-" : row.absent}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid #111",
+                            fontSize: "20px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {isFuture ? (
+                            "-"
+                          ) : (
+                            <Box
+                              sx={{
+                                display: "inline-block",
+                                padding: "2px 12px",
+                                fontSize: "20px",
+                                backgroundColor:
+                                  row.percentage >= 75
+                                    ? "#e8f5e8"
+                                    : row.percentage >= 60
+                                      ? "#fff8e1"
+                                      : "#ffebee",
+                                border: "1px solid",
+                                borderColor:
+                                  row.percentage >= 75
+                                    ? "#4caf50"
+                                    : row.percentage >= 60
+                                      ? "#ff9800"
+                                      : "#f44336",
+                                borderRadius: "2px",
+                                fontWeight: "bold",
+                                minWidth: "60px",
+                              }}
+                            >
+                              {row.percentage}%
+                            </Box>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
                 <TableRow sx={{}} className="pdf-block">
                   <TableCell
@@ -665,7 +696,7 @@ const AttendanceSummary = ({
                       fontSize: "20px",
                     }}
                   >
-                    {totalWorkingDays}
+                    {eligibleRows.length > 0 ? totalWorkingDays : "-"}
                   </TableCell>
 
                   <TableCell
@@ -676,7 +707,7 @@ const AttendanceSummary = ({
                       fontSize: "20px",
                     }}
                   >
-                    {totalPresent}
+                    {eligibleRows.length > 0 ? totalPresent : "-"}
                   </TableCell>
 
                   <TableCell
@@ -687,7 +718,7 @@ const AttendanceSummary = ({
                       fontSize: "20px",
                     }}
                   >
-                    {totalAbsent}
+                    {eligibleRows.length > 0 ? totalAbsent : "-"}
                   </TableCell>
 
                   <TableCell
@@ -698,7 +729,7 @@ const AttendanceSummary = ({
                       fontSize: "20px",
                     }}
                   >
-                    {overallPercentage}%
+                    {eligibleRows.length > 0 ? `${overallPercentage}%` : "-"}
                   </TableCell>
                 </TableRow>
               </Table>
@@ -724,7 +755,8 @@ const AttendanceSummary = ({
                 fontSize: "17px",
               }}
             >
-              <strong>Note:</strong> Total Class Days exclude Sundays and declared institute holidays
+              <strong>Note:</strong> Total Class Days exclude Sundays and
+              declared institute holidays
             </Typography>
           </Box>
         </>
