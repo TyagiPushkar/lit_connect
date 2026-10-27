@@ -156,6 +156,7 @@ function Sidebar() {
         name: "Variable Fees Structure",
         icon: <PlaylistAddCheckIcon />,
       },
+       { path: "/variable", name: "Variable Fees", icon: <PriceChangeIcon /> },
       { path: "/ndc", name: "NDC", icon: <CheckCircleOutlineIcon /> },
     );
   }
@@ -167,7 +168,7 @@ function Sidebar() {
         icon: <CardMembershipIcon />,
       },
       { path: "/transactions", name: "Transactions", icon: <ReceiptLongIcon /> },
-
+ { path: "/variable", name: "Variable Fees", icon: <PriceChangeIcon /> },
       { path: "/other-fees", name: "Other Fees", icon: <AddCardIcon /> },
       { path: "/ndc", name: "NDC", icon: <CheckCircleOutlineIcon /> },
     );
