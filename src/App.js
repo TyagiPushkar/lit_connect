@@ -298,7 +298,11 @@ function App() {
               />
               <Route
                 path="/variable"
-                element={<PrivateRoute element={Variable} requiredRole="HR" />}
+                element={<PrivateRoute element={Variable}  requiredRoles={[
+                      "HR",
+                      "Front Desk",
+                      "Accounts"
+                    ]} />}
               />
               <Route
                 path="/hr-report"
