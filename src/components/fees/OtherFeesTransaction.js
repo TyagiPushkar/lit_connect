@@ -38,6 +38,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useAuth } from "../auth/AuthContext";
 import * as XLSX from 'xlsx';
+import FeeReceiptDialog from "./FeeReceiptDialog";
 
 const OtherFeesTransaction = () => {
   const { user } = useAuth();
@@ -48,6 +49,8 @@ const OtherFeesTransaction = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
 
@@ -93,6 +96,7 @@ const [remarkFilter, setRemarkFilter] = useState("");
 
   useEffect(() => {
     fetchOtherFeesTransactions();
+    fetchStudents();
   }, []);
 
   useEffect(() => {
@@ -151,6 +155,16 @@ const [remarkFilter, setRemarkFilter] = useState("");
       Remark: "",
       Added_By: user?.emp_id || ""
     });
+  };
+
+  const handleOpenReceipt = (row) => {
+    setSelectedReceipt(row);
+    setReceiptDialogOpen(true);
+  };
+
+  const handleCloseReceipt = () => {
+    setReceiptDialogOpen(false);
+    setSelectedReceipt(null);
   };
 
   const handleSubmit = async () => {
@@ -554,6 +568,7 @@ const [remarkFilter, setRemarkFilter] = useState("");
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Payment Date</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Session</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Deposit By</TableCell>
+                <TableCell style={{ color: "white", fontWeight: 'bold' }}>Download Recipt</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -570,6 +585,31 @@ const [remarkFilter, setRemarkFilter] = useState("");
                   <TableCell>{formatDate(row.payment_date)}</TableCell>
                   <TableCell>{row.Session}</TableCell>
                   <TableCell>{row.Added_By}</TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<DownloadIcon />}
+                      onClick={() => handleOpenReceipt(row)}
+                      sx={{
+                        color: '#CC7A00',
+                        borderColor: '#CC7A00',
+                        textTransform: 'none',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem',
+                        py: 0.5,
+                        px: 1.5,
+                        whiteSpace: 'nowrap',
+                        '&:hover': {
+                          borderColor: '#b56700',
+                          backgroundColor: 'rgba(204, 122, 0, 0.08)',
+                          color: '#b56700'
+                        }
+                      }}
+                    >
+                      Receipt
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -763,6 +803,17 @@ const [remarkFilter, setRemarkFilter] = useState("");
             </Button>
           </DialogActions>
         </Dialog>
+
+        <FeeReceiptDialog
+          open={receiptDialogOpen}
+          onClose={handleCloseReceipt}
+          transactionData={selectedReceipt}
+          student={students.find(
+            (s) =>
+              s.StudentID === selectedReceipt?.Student_id ||
+              s.StudentID === selectedReceipt?.stu_id
+          )}
+        />
 
         <Snackbar
           open={openSnackbar}
