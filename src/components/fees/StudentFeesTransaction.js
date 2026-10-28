@@ -352,7 +352,7 @@ const handleOpenVariableFeesDialog = () => {
       {/* Fee Installments */}
       <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
         <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
-          Fee Installments
+          Fee Installments 
         </Typography>
         <Grid container spacing={2}>
           {sortedFees.map((fee) => {

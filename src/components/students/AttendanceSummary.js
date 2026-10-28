@@ -395,10 +395,25 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
 
   const totalAbsent = Math.max(0, totalWorkingDays - totalPresent);
 
-  const overallPercentage =
-    totalWorkingDays > 0
-      ? ((totalPresent / totalWorkingDays) * 100).toFixed(1)
-      : "0.0";
+  // const overallPercentage =
+  //   totalWorkingDays > 0
+  //     ? ((totalPresent / totalWorkingDays) * 100).toFixed(1)
+  //     : "0.0";
+
+  const overallPercentage = (() => {
+    const validMonths = summaryData.filter(
+      (m) => !m.isFuture && m.totalClasses > 0,
+    );
+
+    if (validMonths.length === 0) return "0.00";
+
+    const sumOfPercentages = validMonths.reduce(
+      (sum, m) => sum + Number(m.percentage),
+      0,
+    );
+
+    return (sumOfPercentages / validMonths.length).toFixed(2);
+  })();
 
   if (!EmpId) {
     return (
@@ -584,7 +599,8 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
                 </TableHead>
                 <TableBody>
                   {summaryData.slice(0, 6).map((row) => {
-                    const isFuture = row.isFuture ?? (row.monthYear > currentMonthKey);
+                    const isFuture =
+                      row.isFuture ?? row.monthYear > currentMonthKey;
                     return (
                       <TableRow
                         key={row.monthYear}
@@ -729,6 +745,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
                       fontSize: "20px",
                     }}
                   >
+                    {/* {eligibleRows.length > 0 ? `${overallPercentage}%` : "-"} */}
                     {eligibleRows.length > 0 ? `${overallPercentage}%` : "-"}
                   </TableCell>
                 </TableRow>
