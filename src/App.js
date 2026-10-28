@@ -238,7 +238,7 @@ function App() {
                 element={
                   <PrivateRoute
                     element={OtherFees}
-                    requiredRoles={["Accounts", "Front Desk", "Admin"]}
+                    requiredRoles={["Accounts","HR", "Front Desk", "Admin"]}
                   />
                 }
               />

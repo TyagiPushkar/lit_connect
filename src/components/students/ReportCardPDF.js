@@ -87,6 +87,9 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     fetchReportArray,
   );
 
+
+
+
   const { data: internal, isLoading: internalLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/internal_exam_report.php?StudId=${encodeURIComponent(

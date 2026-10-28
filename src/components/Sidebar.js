@@ -141,6 +141,7 @@ function Sidebar() {
       { path: "/hr-report", name: "Reports", icon: <AssessmentIcon /> },
       { path: "/notices", name: "Notices", icon: <CampaignIcon /> },
       { path: "/news", name: "News", icon: <NewspaperIcon /> },
+      { path: "/other-fees", name: "Other Fees", icon: <AddCardIcon /> },
       { path: "/ndc", name: "NDC", icon: <CheckCircleOutlineIcon /> },
     );
   }
