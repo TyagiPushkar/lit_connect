@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    Button, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, Snackbar, TablePagination,
-    TableFooter, TextField, Tooltip, IconButton, Box,
-    Chip, Stack, Switch, FormControlLabel
+  Button, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Snackbar, TablePagination,
+  TableFooter, TextField, Tooltip, IconButton, Box,
+  Chip, Stack, Switch, FormControlLabel, Typography, InputAdornment
 } from '@mui/material';
 import {
-    Dialog, DialogTitle, DialogContent, DialogActions,
-    InputLabel, MenuItem, Select, FormControl
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  InputLabel, MenuItem, Select, FormControl
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -174,14 +175,58 @@ const StudentsList = () => {
   const applyFilters = (shouldResetPage = true) => {
     let filtered = transactions;
 
-    // Apply text search filter
+    // Apply text search filter across:
+    // 1. Student ID
+    // 2. Student Name
+    // 3. Guardian Name
+    // 4. Father Name
+    // 5. Mother Name
+    // 6. All mobile numbers
     if (searchQuery) {
-      const lower = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (tx) =>
-          (tx.StudentID && tx.StudentID.toLowerCase().includes(lower)) ||
-          (tx.CandidateName && tx.CandidateName.toLowerCase().includes(lower)),
-      );
+      const lower = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((tx) => {
+        // 1. Students ID
+        const studentIdMatch =
+          (tx.StudentID && String(tx.StudentID).toLowerCase().includes(lower)) ||
+          (tx.TempID && String(tx.TempID).toLowerCase().includes(lower));
+
+        // 2. Students Name
+        const studentNameMatch =
+          tx.CandidateName && String(tx.CandidateName).toLowerCase().includes(lower);
+
+        // 3. Guardian Name (if any)
+        const guardianNameMatch =
+          tx.GuardianName && String(tx.GuardianName).toLowerCase().includes(lower);
+
+        // 4. Father Name
+        const fatherNameMatch =
+          (tx.FatherName && String(tx.FatherName).toLowerCase().includes(lower)) ||
+          (tx.father_name && String(tx.father_name).toLowerCase().includes(lower));
+
+        // 5. Mother Name
+        const motherNameMatch =
+          (tx.mother_name && String(tx.mother_name).toLowerCase().includes(lower)) ||
+          (tx.MotherName && String(tx.MotherName).toLowerCase().includes(lower));
+
+        // 6. All Mobile Numbers
+        const mobileMatch =
+          (tx.StudentContactNo && String(tx.StudentContactNo).toLowerCase().includes(lower)) ||
+          (tx.GuardianContactNo && String(tx.GuardianContactNo).toLowerCase().includes(lower)) ||
+          (tx.AlternateGaurdiaNumber && String(tx.AlternateGaurdiaNumber).toLowerCase().includes(lower)) ||
+          (tx.AlternateGuardianNumber && String(tx.AlternateGuardianNumber).toLowerCase().includes(lower)) ||
+          (tx.Mobile && String(tx.Mobile).toLowerCase().includes(lower)) ||
+          (tx.mobile && String(tx.mobile).toLowerCase().includes(lower)) ||
+          (tx.ContactNo && String(tx.ContactNo).toLowerCase().includes(lower));
+
+        return (
+          studentIdMatch ||
+          studentNameMatch ||
+          guardianNameMatch ||
+          fatherNameMatch ||
+          motherNameMatch ||
+          mobileMatch
+        );
+      });
     }
 
     // Apply course filter
@@ -418,6 +463,8 @@ const StudentsList = () => {
           body: JSON.stringify({ employee_id: StudentID }),
         },
       );
+
+      console.log(response, "responseresponseresponseresponse")
       const data = await response.json();
 
       console.log(data);
@@ -449,7 +496,7 @@ const StudentsList = () => {
           marginBottom: 16,
         }}
       >
-        <h2 style={{color: "#CC7A00"}}>Students List</h2>
+        <h2 style={{ color: "#CC7A00" }}>Students List</h2>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Tooltip title="Export to Excel">
             <IconButton
@@ -489,12 +536,33 @@ const StudentsList = () => {
           </Tooltip>
 
           <TextField
-            label="Search by Student ID or Name"
+            placeholder="Search ID, Name, Guardian, Mother's Name , Mobile..."
+            label="Search Student"
             variant="outlined"
             size="small"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            sx={{ width: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => handleSearch("")}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            }}
+            sx={{
+              width: { xs: 320, sm: 420, md: 480 },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 1.5,
+                backgroundColor: "#fff",
+              },
+            }}
           />
         </div>
       </div>
@@ -633,13 +701,16 @@ const StudentsList = () => {
         <Table>
           <TableHead style={{ backgroundColor: "#CC7A00" }}>
             <TableRow>
-              <TableCell style={{ color: "white" }}>Student ID</TableCell>
-              <TableCell style={{ color: "white" }}>Student Name</TableCell>
-              <TableCell style={{ color: "white" }}>Course</TableCell>
-              <TableCell style={{ color: "white" }}>Batch</TableCell>
-              <TableCell style={{ color: "white" }}>Semester</TableCell>
-              <TableCell style={{ color: "white" }}>Status</TableCell>
-              <TableCell style={{ color: "white" }}>View</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Student ID</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Student Name</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Course</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Batch</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Semester</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Mobile</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Guardian Name</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Mother Name</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>Status</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>View</TableCell>
               {user && user.role === "HR" && (
                 <>
                   <TableCell style={{ color: "white" }}>
@@ -666,11 +737,25 @@ const StudentsList = () => {
                         opacity: !isActive ? 0.7 : 1,
                       }}
                     >
-                      <TableCell>{tx.StudentID}</TableCell>
-                      <TableCell>{tx.CandidateName}</TableCell>
-                      <TableCell>{tx.Course}</TableCell>
-                      <TableCell>{tx.Session}</TableCell>
-                      <TableCell>{tx.Sem}</TableCell>
+                      <TableCell>{tx.StudentID || "-"}</TableCell>
+                      <TableCell>{tx.CandidateName || "-"}</TableCell>
+                      <TableCell>{tx.Course || "-"}</TableCell>
+                      <TableCell>{tx.Session || "-"}</TableCell>
+                      <TableCell>{tx.Sem ? `Sem ${tx.Sem}` : (tx.Sem === 0 ? "0" : "-")}</TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
+                            {tx.StudentContactNo || tx.GuardianContactNo || tx.AlternateGaurdiaNumber || "-"}
+                          </Typography>
+                          {tx.StudentContactNo && tx.GuardianContactNo && tx.StudentContactNo !== tx.GuardianContactNo && (
+                            <Typography variant="caption" sx={{ color: "text.secondary", display: "block", fontSize: "0.75rem" }}>
+                              G: {tx.GuardianContactNo}
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>{tx.GuardianName || tx.FatherName || tx.father_name || "-"}</TableCell>
+                      <TableCell>{tx.mother_name || tx.MotherName || "-"}</TableCell>
                       <TableCell>
                         <Chip
                           label={isActive ? "Active" : "Inactive"}
@@ -733,7 +818,7 @@ const StudentsList = () => {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={user && user.role === "HR" ? 9 : 7}
+                  colSpan={user && user.role === "HR" ? 12 : 10}
                   align="center"
                 >
                   No students found

@@ -77,6 +77,10 @@ const NDCList = () => {
   const [statusFilter, setStatusFilter] = useState(
     () => sessionStorage.getItem("ndc_statusFilter") || "all",
   );
+  const [isActiveFilter, setIsActiveFilter] = useState(
+    () => sessionStorage.getItem("ndc_isActiveFilter") || "all",
+  ); // 'all', 'active', 'inactive'
+  const [employeeStatus, setEmployeeStatus] = useState({});
 
   const isFirstFilter = useRef(true);
 
@@ -88,6 +92,7 @@ const NDCList = () => {
     sessionStorage.setItem("ndc_semesterFilter", semesterFilter);
     sessionStorage.setItem("ndc_showFilters", showFilters.toString());
     sessionStorage.setItem("ndc_statusFilter", statusFilter);
+    sessionStorage.setItem("ndc_isActiveFilter", isActiveFilter);
     sessionStorage.setItem("ndc_page", page.toString());
     sessionStorage.setItem("ndc_rowsPerPage", rowsPerPage.toString());
   }, [
@@ -97,6 +102,7 @@ const NDCList = () => {
     semesterFilter,
     showFilters,
     statusFilter,
+    isActiveFilter,
     page,
     rowsPerPage,
   ]);
@@ -153,7 +159,35 @@ const NDCList = () => {
 
   useEffect(() => {
     fetchNDCDues();
+    fetchEmployeeStatus();
   }, []);
+
+  const fetchEmployeeStatus = async () => {
+    try {
+      const response = await axios.get(
+        "https://namami-infotech.com/LIT/src/employee/list_students.php?Tenent_Id=1",
+      );
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        const statusMap = {};
+        response.data.data.forEach((emp) => {
+          statusMap[emp.EmpId] = emp.IsActive === 1;
+        });
+        setEmployeeStatus(statusMap);
+      }
+    } catch (error) {
+      console.error("Error fetching employee status:", error);
+    }
+  };
+
+  const getStudentIsActive = (student) => {
+    if (student.IsActive !== undefined && student.IsActive !== null) {
+      return Number(student.IsActive) === 1;
+    }
+    if (employeeStatus[student.StudentID] !== undefined) {
+      return employeeStatus[student.StudentID];
+    }
+    return true; // Default to active
+  };
 
   useEffect(() => {
     if (students.length === 0) return;
@@ -172,6 +206,8 @@ const NDCList = () => {
     batchFilter,
     semesterFilter,
     statusFilter,
+    isActiveFilter,
+    employeeStatus,
   ]);
 
   const fetchNDCDues = async () => {
@@ -230,6 +266,13 @@ const NDCList = () => {
       );
     }
 
+    if (isActiveFilter !== "all") {
+      const targetActive = isActiveFilter === "active";
+      filtered = filtered.filter((student) => {
+        return getStudentIsActive(student) === targetActive;
+      });
+    }
+
     setFilteredStudents(filtered);
     if (shouldResetPage) {
       setPage(0);
@@ -251,6 +294,7 @@ const NDCList = () => {
     setBatchFilter("");
     setSemesterFilter("");
     setStatusFilter("all");
+    setIsActiveFilter("all");
   };
 
   const hasActiveFilters = () => {
@@ -259,7 +303,8 @@ const NDCList = () => {
       courseFilter ||
       batchFilter ||
       semesterFilter ||
-      statusFilter !== "all"
+      statusFilter !== "all" ||
+      isActiveFilter !== "all"
     );
   };
 
@@ -270,6 +315,7 @@ const NDCList = () => {
     if (batchFilter) count++;
     if (semesterFilter) count++;
     if (statusFilter !== "all") count++;
+    if (isActiveFilter !== "all") count++;
     return count;
   };
 
@@ -476,6 +522,7 @@ const NDCList = () => {
     const dataForExport = filteredStudents.map((student) => ({
       "Student ID": student.StudentID,
       Name: student.CandidateName,
+      Status: getStudentIsActive(student) ? "Active" : "Inactive",
       Course: student.Course,
       Semester: student.Sem,
       Session: student.Session,
@@ -574,6 +621,8 @@ const NDCList = () => {
     (student) => student.ndc_status.toLowerCase() === "clear",
   ).length;
   const dueCount = students.length - clearCount;
+  const activeCount = students.filter((student) => getStudentIsActive(student)).length;
+  const inactiveCount = students.length - activeCount;
 
   return (
     <div>
@@ -585,14 +634,45 @@ const NDCList = () => {
           marginBottom: 16,
         }}
       >
-        <Typography
-          variant="h5"
-          style={{ color: "#CC7A00" }}
-          gutterBottom
-          fontWeight="bold"
-        >
-          NDC Dues List
-        </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Typography
+            variant="h5"
+            style={{ color: "#CC7A00" }}
+            gutterBottom
+            fontWeight="bold"
+          >
+            NDC Dues List
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+            <Chip
+              label={`Total: ${students.length}`}
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`Active: ${activeCount}`}
+              color="success"
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`Inactive: ${inactiveCount}`}
+              color="error"
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`Clear: ${clearCount}`}
+              color="success"
+              size="small"
+            />
+            <Chip
+              label={`Due: ${dueCount}`}
+              color="error"
+              size="small"
+            />
+          </Box>
+        </Box>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Button
@@ -746,9 +826,25 @@ const NDCList = () => {
                 native: true,
               }}
             >
-              <option value="all">All Status</option>
+              <option value="all">All NDC Status</option>
               <option value="clear">Clear Only</option>
               <option value="due">Due Only</option>
+            </TextField>
+
+            <TextField
+              select
+              size="small"
+              label="Student Status"
+              value={isActiveFilter}
+              onChange={(e) => setIsActiveFilter(e.target.value)}
+              sx={{ minWidth: 150 }}
+              SelectProps={{
+                native: true,
+              }}
+            >
+              <option value="all">All</option>
+              <option value="active">Active </option>
+              <option value="inactive">Inactive</option>
             </TextField>
           </Stack>
 
@@ -786,11 +882,22 @@ const NDCList = () => {
                 )}
                 {statusFilter !== "all" && (
                   <Chip
-                    label={`Status: ${
+                    label={`NDC: ${
                       statusFilter === "clear" ? "Clear" : "Due"
                     }`}
                     onDelete={() => setStatusFilter("all")}
                     size="small"
+                  />
+                )}
+                {isActiveFilter !== "all" && (
+                  <Chip
+                    label={`Status: ${
+                      isActiveFilter === "active" ? "Active" : "Inactive"
+                    }`}
+                    onDelete={() => setIsActiveFilter("all")}
+                    size="small"
+                    color={isActiveFilter === "active" ? "success" : "error"}
+                    variant="outlined"
                   />
                 )}
               </Stack>
@@ -808,6 +915,9 @@ const NDCList = () => {
               </TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>
                 Student Name
+              </TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold" }}>
+                Status
               </TableCell>
               <TableCell style={{ color: "white", fontWeight: "bold" }}>
                 Course
@@ -844,18 +954,34 @@ const NDCList = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={13} align="center" sx={{ py: 3 }}>
                   <Typography>Loading NDC dues data...</Typography>
                 </TableCell>
               </TableRow>
             ) : filteredStudents.length > 0 ? (
               filteredStudents
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((student) => (
-                  <TableRow key={student.StudentID}>
-                    <TableCell>{student.StudentID}</TableCell>
-                    <TableCell>{student.CandidateName}</TableCell>
-                    <TableCell>{student.Course}</TableCell>
+                .map((student) => {
+                  const isActive = getStudentIsActive(student);
+                  return (
+                    <TableRow
+                      key={student.StudentID}
+                      sx={{
+                        backgroundColor: !isActive ? "#fafafa" : "inherit",
+                        opacity: !isActive ? 0.75 : 1,
+                      }}
+                    >
+                      <TableCell>{student.StudentID}</TableCell>
+                      <TableCell>{student.CandidateName}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={isActive ? "Active" : "Inactive"}
+                          color={isActive ? "success" : "error"}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>{student.Course}</TableCell>
                     <TableCell>{student.Session}</TableCell>
                     <TableCell>{student.Sem}</TableCell>
                     <TableCell>
@@ -928,11 +1054,12 @@ const NDCList = () => {
                         )}
                       </Menu>
                     </TableCell>
-                  </TableRow>
-                ))
+                    </TableRow>
+                  );
+                })
             ) : (
               <TableRow>
-                <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={13} align="center" sx={{ py: 3 }}>
                   <Typography>No NDC dues data found</Typography>
                   {hasActiveFilters() && (
                     <Button

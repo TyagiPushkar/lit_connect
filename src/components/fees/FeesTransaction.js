@@ -27,6 +27,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import DownloadIcon from '@mui/icons-material/Download';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import TransactionDialog from './TransactionDialog';
 import axios from "axios";
 // Assuming AddFeeStructureDialog is a separate component you have
 // import AddFeeStructureDialog from "./AddFeeStructureDialog";
@@ -60,6 +62,13 @@ const FeesTransaction = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+
+  const handleOpenReceipt = (transaction) => {
+    setSelectedTransaction(transaction);
+    setReceiptDialogOpen(true);
+  };
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const navigate = useNavigate(); // Keep if used elsewhere, otherwise can be removed
 
@@ -462,12 +471,12 @@ const FeesTransaction = () => {
           }}
         >
           <Table stickyHeader>
-            <TableHead sx={{ 
-              '& th': { 
-                backgroundColor: '#CC7A00 !important', 
-                color: 'white', 
-                fontWeight: 'bold' 
-              } 
+            <TableHead sx={{
+              '& th': {
+                backgroundColor: '#CC7A00 !important',
+                color: 'white',
+                fontWeight: 'bold'
+              }
             }}>
               <TableRow>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student ID</TableCell>
@@ -486,6 +495,7 @@ const FeesTransaction = () => {
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Payment Date</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Remark</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Deposit By</TableCell>
+                <TableCell align="center" style={{ color: "white", fontWeight: 'bold' }}>Daownlod Receipt</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -509,13 +519,28 @@ const FeesTransaction = () => {
                     <TableCell>{formatDate(row.payment_date)}</TableCell>
                     <TableCell>{row.Remark}</TableCell>
                     <TableCell>{row.added_by}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="View & Download Receipt">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenReceipt(row)}
+                          sx={{
+                            color: '#CC7A00',
+                            backgroundColor: '#fff4e5',
+                            '&:hover': { backgroundColor: '#ffe8cc' }
+                          }}
+                        >
+                          <ReceiptLongIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
-            <TableFooter sx={{ 
-              position: 'sticky', 
-              bottom: 0, 
-              backgroundColor: '#ffffff', 
+            <TableFooter sx={{
+              position: 'sticky',
+              bottom: 0,
+              backgroundColor: '#ffffff',
               zIndex: 1,
               '& td': { backgroundColor: '#ffffff' }
             }}>
@@ -532,6 +557,18 @@ const FeesTransaction = () => {
             </TableFooter>
           </Table>
         </TableContainer>
+        {/* Fee Payment Receipt Dialog */}
+        {selectedTransaction && (
+          <TransactionDialog
+            open={receiptDialogOpen}
+            transactionData={selectedTransaction}
+            onClose={() => {
+              setReceiptDialogOpen(false);
+              setSelectedTransaction(null);
+            }}
+          />
+        )}
+
         <Snackbar
           open={openSnackbar}
           autoHideDuration={6000}
