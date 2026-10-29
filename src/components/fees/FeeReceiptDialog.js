@@ -96,7 +96,7 @@ const FeeReceiptDialog = ({
     }
 
     // Exam fee aur Other fee dono 'Other Fee Receipt' me jayenge
-    return "Other Fee Receipt";
+    return "Variable Fee Receipt";
   };
 
   const getDetailsHeader = () => {
@@ -166,31 +166,31 @@ const FeeReceiptDialog = ({
 
   const particularText = transactionData.category &&
     !transactionData.particular?.includes(transactionData.category)
-      ? `${transactionData.particular} -- ${transactionData.category}`
-      : transactionData.particular || "-";
+    ? `${transactionData.particular} -- ${transactionData.category}`
+    : transactionData.particular || "-";
 
   const totalAmountRaw =
     transactionData.total_amount !== undefined &&
-    transactionData.total_amount !== null &&
-    transactionData.total_amount !== ""
+      transactionData.total_amount !== null &&
+      transactionData.total_amount !== ""
       ? transactionData.total_amount
       : transactionData.Amount;
 
   const paidAmountRaw =
     transactionData.deposit_amount !== undefined &&
-    transactionData.deposit_amount !== null &&
-    transactionData.deposit_amount !== ""
+      transactionData.deposit_amount !== null &&
+      transactionData.deposit_amount !== ""
       ? transactionData.deposit_amount
       : (transactionData.Paid !== undefined &&
-         transactionData.Paid !== null &&
-         transactionData.Paid !== ""
-          ? transactionData.Paid
-          : transactionData.Amount);
+        transactionData.Paid !== null &&
+        transactionData.Paid !== ""
+        ? transactionData.Paid
+        : transactionData.Amount);
 
   const outstandingRaw =
     transactionData.balance_amount !== undefined &&
-    transactionData.balance_amount !== null &&
-    transactionData.balance_amount !== ""
+      transactionData.balance_amount !== null &&
+      transactionData.balance_amount !== ""
       ? transactionData.balance_amount
       : Math.max(0, Number(totalAmountRaw || 0) - Number(paidAmountRaw || 0));
 
