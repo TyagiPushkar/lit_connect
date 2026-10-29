@@ -108,6 +108,7 @@ export default function ReportCardPDF({ studentId, sem, year }) {
     fetchReportArray,
   );
 
+  console.log(semesterExam,"semesterExamsemesterExamsemesterExam")
   const { data: vst, isLoading: vstLoading } = useSWR(
     studCode && course && semester
       ? `https://namami-infotech.com/LIT/src/report/vst_exam_report.php?StudId=${encodeURIComponent(

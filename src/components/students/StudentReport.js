@@ -866,6 +866,8 @@ function StudentReports() {
         const res = await fetch(
           `https://namami-infotech.com/LIT/src/students/get_student_id.php?StudentId=${studentId}`,
         );
+
+   console.log(res,"resresresresresresresresresres")     
         const json = await res.json();
 
         if (json.success && json.data) {
