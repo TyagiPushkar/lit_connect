@@ -536,16 +536,14 @@ const StudentsList = () => {
           </Tooltip>
 
           <TextField
-            placeholder="Search ID, Name, Guardian, Mother's Name , Mobile..."
-            label="Search Student"
+            placeholder="Search ID, Name, Parent, Mobile..."
             variant="outlined"
-            size="small"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                  <SearchIcon sx={{ color: "text.secondary", fontSize: 24, ml: 0.5, mr: 0.5 }} />
                 </InputAdornment>
               ),
               endAdornment: searchQuery ? (
@@ -557,10 +555,30 @@ const StudentsList = () => {
               ) : null,
             }}
             sx={{
-              width: { xs: 320, sm: 420, md: 480 },
+              width: { xs: 340, sm: 460, md: 540, lg: 620 },
               "& .MuiOutlinedInput-root": {
-                borderRadius: 1.5,
+                borderRadius: 2,
                 backgroundColor: "#fff",
+                height: 48,
+                fontSize: "1.05rem",
+                "& fieldset": {
+                  borderColor: "rgba(0, 0, 0, 0.23)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#CC7A00",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#CC7A00",
+                  borderWidth: 2,
+                },
+              },
+              "& .MuiInputBase-input": {
+                padding: "12px 14px 12px 4px",
+                fontSize: "1rem",
+                "&::placeholder": {
+                  fontSize: "0.95rem",
+                  opacity: 0.7,
+                },
               },
             }}
           />

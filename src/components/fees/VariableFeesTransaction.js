@@ -28,6 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import DownloadIcon from '@mui/icons-material/Download';
 import axios from "axios";
+import TransactionDialog from "./TransactionDialog";
 // Assuming AddFeeStructureDialog is a separate component you have
 // import AddFeeStructureDialog from "./AddFeeStructureDialog";
 // Assuming useNavigate is used for routing, keep it if needed elsewhere
@@ -60,6 +61,13 @@ const VariableFeesTransaction = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+
+  const handleOpenReceipt = (row) => {
+    setSelectedTransaction(row);
+    setReceiptDialogOpen(true);
+  };
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const navigate = useNavigate(); // Keep if used elsewhere, otherwise can be removed
 
@@ -430,12 +438,12 @@ const VariableFeesTransaction = () => {
           }}
         >
           <Table stickyHeader>
-            <TableHead sx={{ 
-              '& th': { 
-                backgroundColor: '#CC7A00 !important', 
-                color: 'white', 
-                fontWeight: 'bold' 
-              } 
+            <TableHead sx={{
+              '& th': {
+                backgroundColor: '#CC7A00 !important',
+                color: 'white',
+                fontWeight: 'bold'
+              }
             }}>
               <TableRow>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Student ID</TableCell>
@@ -451,6 +459,7 @@ const VariableFeesTransaction = () => {
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Payment Date</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Remark</TableCell>
                 <TableCell style={{ color: "white", fontWeight: 'bold' }}>Deposit By</TableCell>
+                <TableCell align="center" style={{ color: "white", fontWeight: 'bold' }}>Download Receipt</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -471,13 +480,38 @@ const VariableFeesTransaction = () => {
                     <TableCell>{formatDate(row.payment_date)}</TableCell>
                     <TableCell>{row.Remark}</TableCell>
                     <TableCell>{row.added_by}</TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<DownloadIcon />}
+                        onClick={() => handleOpenReceipt(row)}
+                        sx={{
+                          color: '#CC7A00',
+                          borderColor: '#CC7A00',
+                          textTransform: 'none',
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem',
+                          py: 0.5,
+                          px: 1.5,
+                          whiteSpace: 'nowrap',
+                          '&:hover': {
+                            borderColor: '#b56700',
+                            backgroundColor: 'rgba(204, 122, 0, 0.08)',
+                            color: '#b56700'
+                          }
+                        }}
+                      >
+                        Receipt
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
-            <TableFooter sx={{ 
-              position: 'sticky', 
-              bottom: 0, 
-              backgroundColor: '#ffffff', 
+            <TableFooter sx={{
+              position: 'sticky',
+              bottom: 0,
+              backgroundColor: '#ffffff',
               zIndex: 1,
               '& td': { backgroundColor: '#ffffff' }
             }}>
@@ -494,6 +528,20 @@ const VariableFeesTransaction = () => {
             </TableFooter>
           </Table>
         </TableContainer>
+        {/* Fee Payment Receipt Dialog */}
+        {selectedTransaction && (
+          <TransactionDialog
+            open={receiptDialogOpen}
+            transactionData={selectedTransaction}
+            isVariableFee={true}
+            feeType="Variable Fee"
+            onClose={() => {
+              setReceiptDialogOpen(false);
+              setSelectedTransaction(null);
+            }}
+          />
+        )}
+
         <Snackbar
           open={openSnackbar}
           autoHideDuration={6000}

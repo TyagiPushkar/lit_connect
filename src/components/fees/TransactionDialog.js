@@ -129,7 +129,7 @@ const formatReceiptDate = (dateVal) => {
   return `${day} ${month} ${year}`;
 };
 
-const TransactionDialog = ({ open, transactionData, onClose, student }) => {
+const TransactionDialog = ({ open, transactionData, onClose, student, isVariableFee = false, feeType }) => {
   const contentRef = useRef();
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -183,6 +183,16 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
     transactionData.course ||
     studentDetails?.Course ||
     "N/A";
+  const isVariable =
+    Boolean(isVariableFee) ||
+    feeType === "Variable Fee" ||
+    Boolean(transactionData.particular) ||
+    transactionData.installment === undefined ||
+    transactionData.installment === null ||
+    transactionData.installment === "" ||
+    transactionData.installment === "-";
+
+  const particular = transactionData.particular || transactionData.Particular || "";
   const installment = transactionData.installment ?? "-";
   const paymentMode = transactionData.mode || transactionData.Mode || "-";
   const modeId = transactionData.mode_id || transactionData.Mode_id || "-";
@@ -194,48 +204,55 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
 
   // Fee Details rows calculation
   const feeDetailsList = [];
-  if (Number(transactionData.tuition_fees) > 0) {
+  if (isVariable) {
     feeDetailsList.push({
-      label: "Tuition Fees",
-      amount: Number(transactionData.tuition_fees),
+      label: particular || "Variable Fees",
+      amount: depositAmount > 0 ? depositAmount : totalAmount,
     });
-  }
-  if (Number(transactionData.variable_fees) > 0) {
-    feeDetailsList.push({
-      label: "Variable Fees",
-      amount: Number(transactionData.variable_fees),
-    });
-  }
-  if (Number(transactionData.exam_fees) > 0) {
-    feeDetailsList.push({
-      label: "Exam Fees",
-      amount: Number(transactionData.exam_fees),
-    });
-  }
-  if (Number(transactionData.hostel_fees) > 0) {
-    feeDetailsList.push({
-      label: "Hostel Fees",
-      amount: Number(transactionData.hostel_fees),
-    });
-  }
-  if (Number(transactionData.admission_fees) > 0) {
-    feeDetailsList.push({
-      label: "Admission Fees",
-      amount: Number(transactionData.admission_fees),
-    });
-  }
-  if (Number(transactionData.prospectus_fees) > 0) {
-    feeDetailsList.push({
-      label: "Prospectus Fees",
-      amount: Number(transactionData.prospectus_fees),
-    });
-  }
-  // Fallback if none are explicitly set
-  if (feeDetailsList.length === 0) {
-    feeDetailsList.push({
-      label: "Tuition Fees",
-      amount: totalAmount > 0 ? totalAmount : depositAmount,
-    });
+  } else {
+    if (Number(transactionData.tuition_fees) > 0) {
+      feeDetailsList.push({
+        label: "Tuition Fees",
+        amount: Number(transactionData.tuition_fees),
+      });
+    }
+    if (Number(transactionData.variable_fees) > 0) {
+      feeDetailsList.push({
+        label: "Variable Fees",
+        amount: Number(transactionData.variable_fees),
+      });
+    }
+    if (Number(transactionData.exam_fees) > 0) {
+      feeDetailsList.push({
+        label: "Exam Fees",
+        amount: Number(transactionData.exam_fees),
+      });
+    }
+    if (Number(transactionData.hostel_fees) > 0) {
+      feeDetailsList.push({
+        label: "Hostel Fees",
+        amount: Number(transactionData.hostel_fees),
+      });
+    }
+    if (Number(transactionData.admission_fees) > 0) {
+      feeDetailsList.push({
+        label: "Admission Fees",
+        amount: Number(transactionData.admission_fees),
+      });
+    }
+    if (Number(transactionData.prospectus_fees) > 0) {
+      feeDetailsList.push({
+        label: "Prospectus Fees",
+        amount: Number(transactionData.prospectus_fees),
+      });
+    }
+    // Fallback if none are explicitly set
+    if (feeDetailsList.length === 0) {
+      feeDetailsList.push({
+        label: "Tuition Fees",
+        amount: totalAmount > 0 ? totalAmount : depositAmount,
+      });
+    }
   }
 
   // Download PDF matching the receipt view
@@ -323,8 +340,8 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
-          title: "Fee Payment Receipt",
-          text: `Fee Payment Receipt for ${studentName} (${studentId})`,
+          title: isVariable ? "Variable Fee Receipt" : "Fee Payment Receipt",
+          text: `${isVariable ? "Variable Fee Receipt" : "Fee Payment Receipt"} for ${studentName} (${studentId})`,
           files: [file],
         });
       } else {
@@ -469,7 +486,7 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                 lineHeight: 1.3,
               }}
             >
-              Fee Payment Receipt
+              {isVariable ? "Variable Fee Receipt" : "Fee Payment Receipt"}
             </Typography>
             <Typography
               sx={{
@@ -479,7 +496,9 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                 mt: 0.5,
               }}
             >
-              Receipt - Installment {installment}
+              {isVariable
+                ? (particular ? `Receipt - ${particular}` : "Receipt - Variable Fee")
+                : `Receipt - Installment ${installment}`}
             </Typography>
             <Typography
               sx={{
@@ -644,32 +663,92 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                     {course}
                   </Typography>
                 </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    mb: 1,
-                  }}
-                >
-                  <Typography
+                {isVariable ? (
+                  <>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "13.5px",
+                          color: "#111827",
+                        }}
+                      >
+                        Fee Type:
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "13.5px",
+                          color: "#111827",
+                          textAlign: "right",
+                        }}
+                      >
+                        Variable Fee
+                      </Typography>
+                    </Box>
+                    {particular && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Particular:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                            maxWidth: "65%",
+                          }}
+                        >
+                          {particular}
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
+                ) : (
+                  <Box
                     sx={{
-                      fontWeight: 700,
-                      fontSize: "13.5px",
-                      color: "#111827",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1,
                     }}
                   >
-                    Installment:
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "13.5px",
-                      color: "#111827",
-                      textAlign: "right",
-                    }}
-                  >
-                    {installment}
-                  </Typography>
-                </Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "13.5px",
+                        color: "#111827",
+                      }}
+                    >
+                      Installment:
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "13.5px",
+                        color: "#111827",
+                        textAlign: "right",
+                      }}
+                    >
+                      {installment}
+                    </Typography>
+                  </Box>
+                )}
                 <Box
                   sx={{
                     display: "flex",
@@ -752,145 +831,207 @@ const TransactionDialog = ({ open, transactionData, onClose, student }) => {
                 >
                   Current Payment:
                 </Typography>
-                {Number(transactionData.tuition_fees) > 0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography
+                {feeDetailsList.length > 0 && !Number(transactionData.tuition_fees) && !Number(transactionData.exam_fees) && !Number(transactionData.hostel_fees) && !Number(transactionData.admission_fees) && !Number(transactionData.prospectus_fees) ? (
+                  feeDetailsList.map((item, idx) => (
+                    <Box
+                      key={idx}
                       sx={{
-                        fontWeight: 700,
-                        fontSize: "13.5px",
-                        color: "#111827",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1,
                       }}
                     >
-                      Tuition Fees:
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "13.5px",
-                        color: "#111827",
-                        textAlign: "right",
-                      }}
-                    >
-                      {formatAmount(transactionData.tuition_fees)}
-                    </Typography>
-                  </Box>
-                )}
-                {Number(transactionData.exam_fees) > 0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "13.5px",
-                        color: "#111827",
-                      }}
-                    >
-                      Exam Fees:
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "13.5px",
-                        color: "#111827",
-                        textAlign: "right",
-                      }}
-                    >
-                      {formatAmount(transactionData.exam_fees)}
-                    </Typography>
-                  </Box>
-                )}
-                {Number(transactionData.hostel_fees) > 0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "13.5px",
-                        color: "#111827",
-                      }}
-                    >
-                      Hostel Fees:
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "13.5px",
-                        color: "#111827",
-                        textAlign: "right",
-                      }}
-                    >
-                      {formatAmount(transactionData.hostel_fees)}
-                    </Typography>
-                  </Box>
-                )}
-                {Number(transactionData.admission_fees) > 0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "13.5px",
-                        color: "#111827",
-                      }}
-                    >
-                      Admission Fees:
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "13.5px",
-                        color: "#111827",
-                        textAlign: "right",
-                      }}
-                    >
-                      {formatAmount(transactionData.admission_fees)}
-                    </Typography>
-                  </Box>
-                )}
-                {Number(transactionData.prospectus_fees) > 0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "13.5px",
-                        color: "#111827",
-                      }}
-                    >
-                      Prospectus Fees:
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "13.5px",
-                        color: "#111827",
-                        textAlign: "right",
-                      }}
-                    >
-                      {formatAmount(transactionData.prospectus_fees)}
-                    </Typography>
-                  </Box>
+                      <Typography
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "13.5px",
+                          color: "#111827",
+                        }}
+                      >
+                        {item.label}:
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "13.5px",
+                          color: "#111827",
+                          textAlign: "right",
+                        }}
+                      >
+                        {formatAmount(item.amount)}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <>
+                    {Number(transactionData.tuition_fees) > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Tuition Fees:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                          }}
+                        >
+                          {formatAmount(transactionData.tuition_fees)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {Number(transactionData.variable_fees) > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Variable Fees:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                          }}
+                        >
+                          {formatAmount(transactionData.variable_fees)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {Number(transactionData.exam_fees) > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Exam Fees:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                          }}
+                        >
+                          {formatAmount(transactionData.exam_fees)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {Number(transactionData.hostel_fees) > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Hostel Fees:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                          }}
+                        >
+                          {formatAmount(transactionData.hostel_fees)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {Number(transactionData.admission_fees) > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Admission Fees:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                          }}
+                        >
+                          {formatAmount(transactionData.admission_fees)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {Number(transactionData.prospectus_fees) > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13.5px",
+                            color: "#111827",
+                          }}
+                        >
+                          Prospectus Fees:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "13.5px",
+                            color: "#111827",
+                            textAlign: "right",
+                          }}
+                        >
+                          {formatAmount(transactionData.prospectus_fees)}
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
                 )}
                 <Box
                   sx={{

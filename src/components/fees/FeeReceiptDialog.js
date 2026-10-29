@@ -96,7 +96,7 @@ const FeeReceiptDialog = ({
     }
 
     // Exam fee aur Other fee dono 'Other Fee Receipt' me jayenge
-    return "Variable Fee Receipt";
+    return "Other Fee Detailst";
   };
 
   const getDetailsHeader = () => {
