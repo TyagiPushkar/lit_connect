@@ -195,6 +195,7 @@ const VariableFeesTransaction = () => {
       "Student Name": item.CandidateName,
       "Course": item.course,
       "Session": item.Session,
+      "Particular": item.particular || item.Particular || "",
       "Payment Mode": item.mode,
       "Mode ID": item.mode_id,
       "Total Amount": item.total_amount,
