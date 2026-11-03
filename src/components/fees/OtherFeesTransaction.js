@@ -77,7 +77,8 @@ const OtherFeesTransaction = () => {
   const [modeFilter, setModeFilter] = useState("");
 const [remarkFilter, setRemarkFilter] = useState("");
   // Static options
-  const particularOptions = ["Exam Fees", "Other"];
+  // const particularOptions = ["Exam Fees", "Other"];
+  const particularOptions = [ "Other"];
   const examFeeCategories = [
     "Semester 1",
     "Semester 2",

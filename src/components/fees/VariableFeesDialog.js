@@ -33,6 +33,9 @@ import CloseIcon from "@mui/icons-material/Close"
 import { useAuth } from "../auth/AuthContext"
 
 const VariableFeesDialog = ({ open, onClose, student, variableFees }) => {
+
+  
+
   const { user } = useAuth()
   const [mode, setMode] = useState("Cash")
   const [modeId, setModeId] = useState("")
