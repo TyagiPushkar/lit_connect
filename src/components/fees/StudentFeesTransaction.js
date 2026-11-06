@@ -43,8 +43,8 @@ const StudentFeesTransaction = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editFormData, setEditFormData] = useState(null)
   const [expandedCard, setExpandedCard] = useState(null)
-const [variableFeesDialogOpen, setVariableFeesDialogOpen] = useState(false) 
-const [paidVariableFees, setPaidVariableFees] = useState([])
+  const [variableFeesDialogOpen, setVariableFeesDialogOpen] = useState(false)
+  const [paidVariableFees, setPaidVariableFees] = useState([])
   const [paidVariableDialogOpen, setPaidVariableDialogOpen] = useState(false)
   const formatDate = (datetime) => {
     if (!datetime) return "-"
@@ -56,7 +56,11 @@ const [paidVariableFees, setPaidVariableFees] = useState([])
   }
 
   // Find first unpaid installment for variable fees
-  const firstDueInstallment = feesData.find((fee) => !fee.Paid || fee.Paid === "0" || fee.Paid === "")
+  const firstDueInstallment = feesData.find((fee) => {
+    const feeStatus = transactionStatus[fee.id]
+    if (feeStatus?.status === "fully_paid") return false
+    return true
+  })
 
   // Get next payable installment (sequential payment logic)
   const getNextPayableInstallment = () => {
@@ -75,15 +79,13 @@ const [paidVariableFees, setPaidVariableFees] = useState([])
 
     // Find first unpaid or partially paid installment
     for (const fee of sortedFees) {
-      const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== ""
       const feeStatus = transactionStatus[fee.id]
-
-      // Check if installment has variable fees and is partially paid
+      const isFullyPaid = feeStatus?.status === "fully_paid"
+      const isPartiallyPaid = feeStatus?.status === "partially_paid"
       const hasVariableFees = firstDueInstallment && fee.id === firstDueInstallment.id && variableFees.length > 0
-      const isPartiallyPaid = feeStatus && feeStatus.status === "partially_paid"
 
-      // If installment is not paid, or partially paid, or has variable fees, it can be paid
-      if (!isPaid || isPartiallyPaid || hasVariableFees) {
+      // If installment is not fully paid, or partially paid, or has variable fees, it can be paid
+      if (!isFullyPaid || isPartiallyPaid || hasVariableFees) {
         return fee
       }
     }
@@ -110,20 +112,51 @@ const [paidVariableFees, setPaidVariableFees] = useState([])
         const fees = feesRes.data.data
         setFeesData(fees)
         const statusMap = {}
+        console.log(fees, "feesfeesfeesfeesfeesfeesfeesfees")
 
+        // 1. Fetch transactions directly from fees_transaction via get_transaction_by_stuid.php
+        let studentTransactions = []
+        try {
+          const transRes = await axios.get(
+            `https://namami-infotech.com/LIT/src/fees/get_transaction_by_stuid.php?stu_id=${studentId}`,
+          )
+          if (transRes.data.success && Array.isArray(transRes.data.data)) {
+            studentTransactions = transRes.data.data
+          }
+        } catch (err) {
+          console.error("Error fetching student transactions:", err)
+        }
+
+        // Map transactions by installment
+        fees.forEach((fee) => {
+          const matched = studentTransactions.filter(
+            (t) => Number(t.installment) === Number(fee.installment),
+          )
+          if (matched.length > 0) {
+            statusMap[fee.id] = {
+              transactions: matched,
+              status: "fully_paid",
+            }
+          }
+        })
+
+        // 2. Also check fee.Paid for any transaction IDs not yet included (fallback/backward compatibility)
         const transactionPromises = fees
           .filter((fee) => fee.Paid && fee.Paid !== "0" && fee.Paid !== "")
           .flatMap((fee) => {
             const transactionIds = fee.Paid.split(",").map((id) => id.trim())
             return transactionIds.map(async (transactionId) => {
+              if (
+                statusMap[fee.id]?.transactions?.some(
+                  (t) => String(t.id) === String(transactionId),
+                )
+              ) {
+                return
+              }
               try {
                 const res = await axios.get(
                   `https://namami-infotech.com/LIT/src/fees/get_fee_transaction.php?id=${transactionId}`,
                 )
-
-                console.log(res,"resresresresresresresresres")
-
-
                 if (res.data.success && res.data.data) {
                   if (!statusMap[fee.id]) {
                     statusMap[fee.id] = {
@@ -135,26 +168,47 @@ const [paidVariableFees, setPaidVariableFees] = useState([])
                 }
               } catch (err) {
                 console.error("Error fetching transaction:", err)
-                if (!statusMap[fee.id]) {
-                  statusMap[fee.id] = {
-                    transactions: [],
-                    status: "fully_paid",
-                  }
-                }
               }
             })
           })
 
         await Promise.all(transactionPromises)
-await fetchPaidVariableFees()
-        // Sort transactions by id ascending and determine final status from the last transaction
-        Object.keys(statusMap).forEach((feeId) => {
-          if (statusMap[feeId].transactions.length > 0) {
-            statusMap[feeId].transactions.sort((a, b) => Number(a.id) - Number(b.id))
-            const latestTransaction = statusMap[feeId].transactions[statusMap[feeId].transactions.length - 1]
-            console.log(latestTransaction, "latestTransaction")
-            statusMap[feeId].status = latestTransaction.balance_amount > 0 ? "partially_paid" : "fully_paid"
-            statusMap[feeId].currentBalance = latestTransaction.balance_amount
+        await fetchPaidVariableFees()
+
+        // Sort transactions and determine status and balance
+        fees.forEach((fee) => {
+          if (statusMap[fee.id]?.transactions?.length > 0) {
+            statusMap[fee.id].transactions.sort((a, b) => Number(a.id) - Number(b.id))
+            const latestTransaction =
+              statusMap[fee.id].transactions[statusMap[fee.id].transactions.length - 1]
+
+            const feeBaseTotal =
+              Number(fee.tution_fees || 0) +
+              Number(fee.exam_fees || 0) +
+              Number(fee.hostel_fees || 0) +
+              Number(fee.admission_fees || 0) +
+              Number(fee.prospectus_fees || 0) -
+              Number(fee.Scholarship || 0)
+
+            const totalPaid = statusMap[fee.id].transactions.reduce(
+              (sum, t) => sum + Number(t.deposit_amount || 0),
+              0,
+            )
+
+            const remaining = Math.max(0, feeBaseTotal - totalPaid)
+            const isPartiallyPaid = remaining > 0 && totalPaid > 0
+
+            statusMap[fee.id].status = isPartiallyPaid
+              ? "partially_paid"
+              : remaining === 0 && totalPaid > 0
+                ? "fully_paid"
+                : Number(latestTransaction.balance_amount) > 0
+                  ? "partially_paid"
+                  : "fully_paid"
+
+            statusMap[fee.id].currentBalance = isPartiallyPaid
+              ? remaining
+              : Number(latestTransaction.balance_amount || 0)
           }
         })
 
@@ -178,17 +232,17 @@ await fetchPaidVariableFees()
   }
 
   const fetchPaidVariableFees = async () => {
-  try {
-    const res = await axios.get(
-      `https://namami-infotech.com/LIT/src/fees/get_variable_by_student_id.php?student_id=${studentId}`
-    )
-    if (res.data.success && res.data.data) {
-      setPaidVariableFees(res.data.data)
+    try {
+      const res = await axios.get(
+        `https://namami-infotech.com/LIT/src/fees/get_variable_by_student_id.php?student_id=${studentId}`
+      )
+      if (res.data.success && res.data.data) {
+        setPaidVariableFees(res.data.data)
+      }
+    } catch (err) {
+      console.error("Error fetching paid variable fees:", err)
     }
-  } catch (err) {
-    console.error("Error fetching paid variable fees:", err)
   }
-}
 
   useEffect(() => {
     fetchStudentAndFees()
@@ -269,7 +323,7 @@ await fetchPaidVariableFees()
       )
     })
     .sort((a, b) => Number(a.installment) - Number(b.installment))
-const handleOpenVariableFeesDialog = () => {
+  const handleOpenVariableFeesDialog = () => {
     setVariableFeesDialogOpen(true)
   }
   return (
@@ -318,41 +372,41 @@ const handleOpenVariableFeesDialog = () => {
             <strong>Session:</strong> {studentData.Session}
           </Typography>
         </Box>
-       
+
         {variableFees.length > 0 && (
           <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-            
-    <Button
-      variant="contained"
-      color="secondary"
-      onClick={handleOpenVariableFeesDialog}
-      sx={{ backgroundColor: "#6a1b9a", color: "white" }}
-    >
-      Pay Variable 
-    </Button>
-    
-  </Box>
+
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleOpenVariableFeesDialog}
+              sx={{ backgroundColor: "#6a1b9a", color: "white" }}
+            >
+              Pay Variable
+            </Button>
+
+          </Box>
         )}
-        <Box sx={{ mb: 3, ml:2, display: 'flex', gap: 2 }}>
- <Button
-      variant="outlined"
-      color="secondary"
-      onClick={() => {
-        fetchPaidVariableFees()
-        setPaidVariableDialogOpen(true)
-      }}
-      sx={{ borderColor: "#6a1b9a", color: "#6a1b9a" }}
-    >
-      Paid Variable
-    </Button>
+        <Box sx={{ mb: 3, ml: 2, display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => {
+              fetchPaidVariableFees()
+              setPaidVariableDialogOpen(true)
+            }}
+            sx={{ borderColor: "#6a1b9a", color: "#6a1b9a" }}
+          >
+            Paid Variable
+          </Button>
         </Box>
-       
+
       </Paper>
 
       {/* Fee Installments */}
       <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: 4 }}>
         <Typography variant="h5" fontWeight={700} color="#CC7A00" gutterBottom>
-          Fee Installments 
+          Fee Installments
         </Typography>
         <Grid container spacing={2}>
           {sortedFees.map((fee) => {
@@ -371,13 +425,14 @@ const handleOpenVariableFeesDialog = () => {
                 : 0
 
             const total = baseTotal
-            const isPaid = fee.Paid && fee.Paid !== "0" && fee.Paid !== ""
+            const feeStatus = transactionStatus[fee.id]
+            const hasTransactions = feeStatus?.transactions?.length > 0
+            const isPaid = hasTransactions || (fee.Paid && fee.Paid !== "0" && fee.Paid !== "")
 
             let paymentStatus = "unpaid"
             let currentBalance = 0
 
-            if (isPaid && transactionStatus[fee.id]) {
-              const feeStatus = transactionStatus[fee.id]
+            if (feeStatus && (hasTransactions || isPaid)) {
               paymentStatus = feeStatus.status
               currentBalance = feeStatus.currentBalance || 0
             }
@@ -398,15 +453,14 @@ const handleOpenVariableFeesDialog = () => {
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    border: `2px solid ${
-                      paymentStatus === "fully_paid"
+                    border: `2px solid ${paymentStatus === "fully_paid"
                         ? "green"
                         : paymentStatus === "partially_paid"
                           ? "orange"
                           : canPay
                             ? "#F69320"
                             : "#e0e0e0"
-                    }`,
+                      }`,
                     borderRadius: 2,
                     opacity: canPay || paymentStatus !== "unpaid" ? 1 : 0.6,
                   }}
@@ -478,7 +532,7 @@ const handleOpenVariableFeesDialog = () => {
                         )}
 
                         {/* Variable Fees */}
-                        
+
                         <Box display="flex" alignItems="center" gap={1} mt={1}>
                           <ScheduleIcon fontSize="small" color="action" />
                           <Typography variant="body2">
@@ -594,7 +648,7 @@ const handleOpenVariableFeesDialog = () => {
         <PaymentDialog
           open={dialogOpen}
           feeData={selectedFee}
-         
+
           firstDueInstallment={firstDueInstallment}
           onClose={(shouldRefresh) => {
             setDialogOpen(false)
@@ -604,7 +658,7 @@ const handleOpenVariableFeesDialog = () => {
           student={studentData}
         />
       )}
-<VariableFeesDialog
+      <VariableFeesDialog
         open={variableFeesDialogOpen}
         onClose={(shouldRefresh) => {
           setVariableFeesDialogOpen(false)
@@ -613,59 +667,59 @@ const handleOpenVariableFeesDialog = () => {
         student={studentData}
         variableFees={variableFees}
       />
-      <Dialog 
-  open={paidVariableDialogOpen} 
-  onClose={() => setPaidVariableDialogOpen(false)}
-  maxWidth="md"
-  fullWidth
->
-  <Box sx={{ p: 3 }}>
-    <Typography variant="h5" gutterBottom>
-      Paid Variable Fees
-    </Typography>
-    
-    {paidVariableFees.length === 0 ? (
-      <Typography variant="body1" sx={{ textAlign: 'center', my: 3 }}>
-        No paid variable fees found.
-      </Typography>
-    ) : (
-      <Box>
-        {paidVariableFees.map((fee, index) => (
-          <Paper key={index} sx={{ p: 2, mb: 2, borderLeft: '4px solid #6a1b9a' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography><strong>Amount:</strong> ₹{fee.total_amount}</Typography>
-                <Typography><strong>Payment Date:</strong> {formatDate(fee.payment_date)}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography><strong>Payment Mode:</strong> {fee.mode}</Typography>
-                {fee.mode_id && <Typography><strong>Transaction ID:</strong> {fee.mode_id}</Typography>}
-              </Grid>
-              <Grid item xs={12}>
-                <Typography><strong>Particulars:</strong> {fee.particulars}</Typography>
-              </Grid>
-              {fee.Remark && (
-                <Grid item xs={12}>
-                  <Typography><strong>Remark:</strong> {fee.Remark}</Typography>
-                </Grid>
-              )}
-            </Grid>
-          </Paper>
-        ))}
-      </Box>
-    )}
-    
-    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-      <Button 
-        onClick={() => setPaidVariableDialogOpen(false)}
-        variant="contained"
-        color="primary"
+      <Dialog
+        open={paidVariableDialogOpen}
+        onClose={() => setPaidVariableDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
       >
-        Close
-      </Button>
-    </Box>
-  </Box>
-</Dialog>
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            Paid Variable Fees
+          </Typography>
+
+          {paidVariableFees.length === 0 ? (
+            <Typography variant="body1" sx={{ textAlign: 'center', my: 3 }}>
+              No paid variable fees found.
+            </Typography>
+          ) : (
+            <Box>
+              {paidVariableFees.map((fee, index) => (
+                <Paper key={index} sx={{ p: 2, mb: 2, borderLeft: '4px solid #6a1b9a' }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography><strong>Amount:</strong> ₹{fee.total_amount}</Typography>
+                      <Typography><strong>Payment Date:</strong> {formatDate(fee.payment_date)}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography><strong>Payment Mode:</strong> {fee.mode}</Typography>
+                      {fee.mode_id && <Typography><strong>Transaction ID:</strong> {fee.mode_id}</Typography>}
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography><strong>Particulars:</strong> {fee.particulars}</Typography>
+                    </Grid>
+                    {fee.Remark && (
+                      <Grid item xs={12}>
+                        <Typography><strong>Remark:</strong> {fee.Remark}</Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Paper>
+              ))}
+            </Box>
+          )}
+
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              onClick={() => setPaidVariableDialogOpen(false)}
+              variant="contained"
+              color="primary"
+            >
+              Close
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
       {/* Edit Dialog */}
       {editDialogOpen && (
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -749,7 +803,7 @@ const handleOpenVariableFeesDialog = () => {
             </Box>
           </Box>
         </Dialog>
-        
+
       )}
     </Box>
   )
