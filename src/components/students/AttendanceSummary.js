@@ -118,77 +118,76 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
   //   return workingDays.length;
   // };
 
-  //change by shahanshah
+  // Helper function to check if a specific date is a valid working day (not Sunday, not holiday)
+  const isWorkingDay = (day) => {
+    // Sunday = non-working day
+    if (isSunday(day)) {
+      return false;
+    }
+
+    const currentDate = format(day, "yyyy-MM-dd");
+    const normalizedCourse = String(course || "")
+      .trim()
+      .toLowerCase();
+    const normalizedSem = String(sem || "").trim();
+
+    // Find holidays applicable to this student
+    const isHoliday = holidays.some((holiday) => {
+      if (!holiday.date) return false;
+
+      const holidayDate = String(holiday.date).trim().split(" ")[0].split("T")[0];
+
+      // Date must match first
+      if (holidayDate !== currentDate) {
+        return false;
+      }
+
+      const holidayCourse = String(holiday.Course || "")
+        .trim()
+        .toLowerCase();
+
+      const holidaySem = String(holiday.Sem || "").trim();
+
+      /*
+        Holiday matching rules:
+
+        1. All + All
+           => Everyone
+
+        2. All + specific semester
+           => All courses of that semester
+
+        3. Specific course + All
+           => All semesters of that course
+
+        4. Specific course + specific semester
+           => Exact student course + semester
+      */
+
+      const courseMatches =
+        holidayCourse === "all" || holidayCourse === normalizedCourse;
+
+      const semMatches =
+        holidaySem.toLowerCase() === "all" || holidaySem === normalizedSem;
+
+      return courseMatches && semMatches;
+    });
+
+    // If applicable holiday found => not a working day
+    if (isHoliday) {
+      return false;
+    }
+
+    return true;
+  };
+
   const calculateWorkingDays = (monthData) => {
     const daysInMonth = eachDayOfInterval({
       start: startOfMonth(monthData.startDate),
       end: endOfMonth(monthData.startDate),
     });
 
-    const normalizedCourse = String(course || "")
-      .trim()
-      .toLowerCase();
-    const normalizedSem = String(sem || "").trim();
-
-    const workingDays = daysInMonth.filter((day) => {
-      // Sunday = non-working day
-      if (isSunday(day)) {
-        return false;
-      }
-
-      const currentDate = format(day, "yyyy-MM-dd");
-
-      // Find holidays applicable to this student
-      const isHoliday = holidays.some((holiday) => {
-        if (!holiday.date) return false;
-
-        const holidayDate = String(holiday.date).trim();
-
-        // Date must match first
-        if (holidayDate !== currentDate) {
-          return false;
-        }
-
-        const holidayCourse = String(holiday.Course || "")
-          .trim()
-          .toLowerCase();
-
-        const holidaySem = String(holiday.Sem || "").trim();
-
-        /*
-          Holiday matching rules:
-  
-          1. All + All
-             => Everyone
-  
-          2. All + specific semester
-             => All courses of that semester
-  
-          3. Specific course + All
-             => All semesters of that course
-  
-          4. Specific course + specific semester
-             => Exact student course + semester
-        */
-
-        const courseMatches =
-          holidayCourse === "all" || holidayCourse === normalizedCourse;
-
-        const semMatches =
-          holidaySem.toLowerCase() === "all" || holidaySem === normalizedSem;
-
-        return courseMatches && semMatches;
-      });
-
-      // If applicable holiday found => not a working day
-      if (isHoliday) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return workingDays.length;
+    return daysInMonth.filter(isWorkingDay).length;
   };
 
   // const fetchAttendanceSummary = async () => {
@@ -306,16 +305,31 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
         const monthAttendance = allAttendance.filter((activity) => {
           if (!activity.date) return false;
           try {
-            const [day, monthStr, year] = activity.date.split("/");
-            const activityDate = new Date(
-              parseInt(year),
-              parseInt(monthStr) - 1,
-              parseInt(day),
-            );
-            return (
-              activityDate.getMonth() === month.month &&
-              activityDate.getFullYear() === month.year
-            );
+            let activityDate;
+            if (activity.date.includes("/")) {
+              const [day, monthStr, year] = activity.date.split("/");
+              activityDate = new Date(
+                parseInt(year),
+                parseInt(monthStr) - 1,
+                parseInt(day),
+              );
+            } else if (activity.date.includes("-")) {
+              activityDate = parseISO(activity.date);
+            } else {
+              activityDate = new Date(activity.date);
+            }
+
+            if (isNaN(activityDate.getTime())) return false;
+
+            if (
+              activityDate.getMonth() !== month.month ||
+              activityDate.getFullYear() !== month.year
+            ) {
+              return false;
+            }
+
+            // Exclude attendance punches recorded on Sundays or Holidays (Option 3)
+            return isWorkingDay(activityDate);
           } catch {
             return false;
           }
@@ -327,7 +341,7 @@ const AttendanceSummary = ({ EmpId, tenentId = "1", sem, year, course }) => {
         const absent = isFuture ? 0 : Math.max(0, totalWorkingDays - present);
         const percentage =
           !isFuture && totalWorkingDays > 0
-            ? ((present / totalWorkingDays) * 100).toFixed(1)
+            ? Math.min(100, (present / totalWorkingDays) * 100).toFixed(1)
             : 0;
         return {
           monthName: `${month.name} ${month.year}`,
