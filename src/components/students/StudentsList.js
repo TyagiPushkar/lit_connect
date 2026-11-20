@@ -3,7 +3,8 @@ import {
   Button, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Snackbar, TablePagination,
   TableFooter, TextField, Tooltip, IconButton, Box,
-  Chip, Stack, Switch, FormControlLabel, Typography, InputAdornment
+  Chip, Stack, Switch, FormControlLabel, Typography, InputAdornment,
+  CircularProgress
 } from '@mui/material';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -14,6 +15,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +23,29 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { format, eachDayOfInterval, isSunday } from 'date-fns';
+
+// Helper to normalize any date string to 'YYYY-MM-DD'
+const normalizeDateKey = (val) => {
+  if (!val) return "";
+  const s = String(val).trim();
+  const ymdMatch = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymdMatch) {
+    return `${ymdMatch[1]}-${ymdMatch[2].padStart(2, "0")}-${ymdMatch[3].padStart(2, "0")}`;
+  }
+  const dmyMatch = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyMatch) {
+    return `${dmyMatch[3]}-${dmyMatch[2].padStart(2, "0")}-${dmyMatch[1].padStart(2, "0")}`;
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  return "";
+};
 
 const StudentsList = () => {
   const { user } = useAuth();
@@ -56,12 +81,26 @@ const StudentsList = () => {
   const [semesterFilter, setSemesterFilter] = useState(
     () => sessionStorage.getItem("students_semesterFilter") || ""
   );
+  const [startMonth, setStartMonth] = useState(
+    () => sessionStorage.getItem("students_startMonth") || ""
+  );
+  const [endMonth, setEndMonth] = useState(
+    () => sessionStorage.getItem("students_endMonth") || ""
+  );
   const [showFilters, setShowFilters] = useState(
     () => sessionStorage.getItem("students_showFilters") === "true"
   );
   const [isActiveFilter, setIsActiveFilter] = useState(
     () => sessionStorage.getItem("students_isActiveFilter") || "all"
   ); // 'all', 'active', 'inactive'
+
+  // Attendance export dialog states
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [dialogSemester, setDialogSemester] = useState("");
+  const [dialogStartMonth, setDialogStartMonth] = useState("");
+  const [dialogEndMonth, setDialogEndMonth] = useState("");
+  const [attendanceExportLoading, setAttendanceExportLoading] = useState(false);
+  const [exportProgressText, setExportProgressText] = useState("");
 
   const isFirstFilter = useRef(true);
 
@@ -71,6 +110,8 @@ const StudentsList = () => {
     sessionStorage.setItem("students_courseFilter", courseFilter);
     sessionStorage.setItem("students_batchFilter", batchFilter);
     sessionStorage.setItem("students_semesterFilter", semesterFilter);
+    sessionStorage.setItem("students_startMonth", startMonth);
+    sessionStorage.setItem("students_endMonth", endMonth);
     sessionStorage.setItem("students_showFilters", showFilters.toString());
     sessionStorage.setItem("students_isActiveFilter", isActiveFilter);
     sessionStorage.setItem("students_page", page.toString());
@@ -80,6 +121,8 @@ const StudentsList = () => {
     courseFilter,
     batchFilter,
     semesterFilter,
+    startMonth,
+    endMonth,
     showFilters,
     isActiveFilter,
     page,
@@ -273,15 +316,19 @@ const StudentsList = () => {
     setCourseFilter("");
     setBatchFilter("");
     setSemesterFilter("");
+    setStartMonth("");
+    setEndMonth("");
     setIsActiveFilter("all");
   };
 
   const hasActiveFilters = () => {
     return (
-      searchQuery ||
-      courseFilter ||
-      batchFilter ||
-      semesterFilter ||
+      Boolean(searchQuery) ||
+      Boolean(courseFilter) ||
+      Boolean(batchFilter) ||
+      Boolean(semesterFilter) ||
+      Boolean(startMonth) ||
+      Boolean(endMonth) ||
       isActiveFilter !== "all"
     );
   };
@@ -292,6 +339,8 @@ const StudentsList = () => {
     if (courseFilter) count++;
     if (batchFilter) count++;
     if (semesterFilter) count++;
+    if (startMonth) count++;
+    if (endMonth) count++;
     if (isActiveFilter !== "all") count++;
     return count;
   };
@@ -480,6 +529,364 @@ const StudentsList = () => {
     }
   };
 
+  const handleOpenAttendanceDialog = () => {
+    const curYear = new Date().getFullYear();
+    const curMonth = new Date().getMonth() + 1;
+    const defStartMonth =
+      startMonth || (curMonth >= 7 ? `${curYear}-07` : `${curYear}-01`);
+    const defEndMonth =
+      endMonth || `${curYear}-${String(curMonth).padStart(2, "0")}`;
+
+    setDialogSemester(semesterFilter || "");
+    setDialogStartMonth(defStartMonth);
+    setDialogEndMonth(defEndMonth);
+    setAttendanceDialogOpen(true);
+  };
+
+  const handleExportAttendanceAverage = async (customParams = null) => {
+    const targetSem = customParams
+      ? customParams.semester
+      : dialogSemester !== undefined && attendanceDialogOpen
+      ? dialogSemester
+      : semesterFilter;
+
+    const targetStartMonth = customParams
+      ? customParams.startMonth
+      : attendanceDialogOpen
+      ? dialogStartMonth
+      : startMonth;
+
+    const targetEndMonth = customParams
+      ? customParams.endMonth
+      : attendanceDialogOpen
+      ? dialogEndMonth
+      : endMonth;
+
+    if (!targetStartMonth || !targetEndMonth) {
+      setSnackbarMessage("Please select both Start Month and End Month.");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (targetStartMonth > targetEndMonth) {
+      setSnackbarMessage("Start Month cannot be after End Month.");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    setAttendanceExportLoading(true);
+    setExportProgressText("Preparing student records...");
+
+    try {
+      // Filter students to include in the attendance report
+      let targetStudents = transactions;
+      if (courseFilter) {
+        targetStudents = targetStudents.filter(
+          (s) => s.Course === courseFilter
+        );
+      }
+      if (batchFilter) {
+        targetStudents = targetStudents.filter(
+          (s) => s.Session === batchFilter
+        );
+      }
+      if (targetSem) {
+        targetStudents = targetStudents.filter(
+          (s) => String(s.Sem || "").trim() === String(targetSem).trim()
+        );
+      }
+      if (isActiveFilter !== "all") {
+        const isActive = isActiveFilter === "active";
+        targetStudents = targetStudents.filter(
+          (s) => getStudentStatus(s.StudentID) === isActive
+        );
+      }
+      if (searchQuery) {
+        const lower = searchQuery.toLowerCase().trim();
+        targetStudents = targetStudents.filter((tx) => {
+          const studentIdMatch =
+            (tx.StudentID &&
+              String(tx.StudentID).toLowerCase().includes(lower)) ||
+            (tx.TempID && String(tx.TempID).toLowerCase().includes(lower));
+          const studentNameMatch =
+            tx.CandidateName &&
+            String(tx.CandidateName).toLowerCase().includes(lower);
+          return studentIdMatch || studentNameMatch;
+        });
+      }
+
+      if (targetStudents.length === 0) {
+        setSnackbarMessage("No students found matching the selected criteria.");
+        setOpenSnackbar(true);
+        setAttendanceExportLoading(false);
+        return;
+      }
+
+      setExportProgressText("Fetching holidays & calendar...");
+      let holidaysList = [];
+      try {
+        const holidayRes = await axios.get(
+          `https://namami-infotech.com/LIT/src/holiday/view_holiday.php?Tenent_Id=${user?.tenent_id || "1"}`,
+          { timeout: 10000 }
+        );
+        if (holidayRes.data?.success && Array.isArray(holidayRes.data.data)) {
+          holidaysList = holidayRes.data.data;
+        }
+      } catch (err) {
+        console.warn("Error fetching holidays:", err);
+      }
+
+      setExportProgressText("Fetching attendance logs...");
+      const studentAttendanceMap = new Map();
+      let bulkLoaded = false;
+      try {
+        const attRes = await axios.get(
+          "https://namami-infotech.com/LIT/src/attendance/get_attendance.php",
+          { timeout: 15000 }
+        );
+        if (
+          attRes.data?.success &&
+          Array.isArray(attRes.data.data) &&
+          attRes.data.data.length > 0
+        ) {
+          attRes.data.data.forEach((rec) => {
+            const empId = String(
+              rec.EmpId || rec.emp_id || rec.StudentID || ""
+            )
+              .trim()
+              .toLowerCase();
+            if (!empId) return;
+            if (!studentAttendanceMap.has(empId)) {
+              studentAttendanceMap.set(empId, []);
+            }
+            studentAttendanceMap.get(empId).push(rec);
+          });
+          bulkLoaded = true;
+        }
+      } catch (err) {
+        console.warn("Bulk attendance API error, will fallback:", err);
+      }
+
+      // If bulk attendance didn't load or returned 0 records, fetch per student
+      const missingStudents = targetStudents.filter((s) => {
+        const sid = String(s.StudentID || "").trim().toLowerCase();
+        return !studentAttendanceMap.has(sid);
+      });
+
+      if (
+        !bulkLoaded ||
+        (missingStudents.length > 0 && missingStudents.length <= 60)
+      ) {
+        const toFetch = !bulkLoaded ? targetStudents : missingStudents;
+        const batchSize = 6;
+        for (let i = 0; i < toFetch.length; i += batchSize) {
+          const chunk = toFetch.slice(i, i + batchSize);
+          setExportProgressText(
+            `Fetching individual logs (${Math.min(
+              i + batchSize,
+              toFetch.length
+            )}/${toFetch.length})...`
+          );
+          await Promise.all(
+            chunk.map(async (stu) => {
+              const sid = String(stu.StudentID || "").trim();
+              if (!sid) return;
+              try {
+                const res = await axios.get(
+                  "https://namami-infotech.com/LIT/src/attendance/view_attendance.php",
+                  { params: { EmpId: sid }, timeout: 8000 }
+                );
+                if (res.data?.success && Array.isArray(res.data.data)) {
+                  studentAttendanceMap.set(sid.toLowerCase(), res.data.data);
+                }
+              } catch (e) {
+                // Ignore individual failure
+              }
+            })
+          );
+        }
+      }
+
+      setExportProgressText("Calculating attendance averages...");
+
+      // Helper function to check if a day is a working day (excluding Sunday and course/sem specific holidays)
+      const isWorkingDay = (day, studentCourse, studentSem) => {
+        if (isSunday(day)) return false;
+
+        const currentDate = format(day, "yyyy-MM-dd");
+        const normalizedCourse = String(studentCourse || "").trim().toLowerCase();
+        const normalizedSem = String(studentSem || "").trim();
+
+        const isHoliday = holidaysList.some((holiday) => {
+          if (!holiday.date) return false;
+          const holidayDate = String(holiday.date).trim().split(" ")[0].split("T")[0];
+          if (holidayDate !== currentDate) return false;
+
+          const holidayCourse = String(holiday.Course || "").trim().toLowerCase();
+          const holidaySem = String(holiday.Sem || "").trim();
+
+          const courseMatches =
+            !holidayCourse || holidayCourse === "all" || holidayCourse === normalizedCourse;
+          const semMatches =
+            !holidaySem || holidaySem.toLowerCase() === "all" || holidaySem === normalizedSem;
+
+          return courseMatches && semMatches;
+        });
+
+        return !isHoliday;
+      };
+
+      // Generate months array between targetStartMonth and targetEndMonth
+      const [sY, sM] = targetStartMonth.split("-").map(Number);
+      const [eY, eM] = targetEndMonth.split("-").map(Number);
+      const months = [];
+      let y = sY;
+      let m = sM - 1;
+      const targetEndVal = eY * 12 + (eM - 1);
+
+      while (y * 12 + m <= targetEndVal) {
+        const curDate = new Date(y, m, 1);
+        const monthKey = `${y}-${String(m + 1).padStart(2, "0")}`;
+        const monthName = curDate.toLocaleString("en-US", {
+          month: "short",
+          year: "numeric",
+        });
+        months.push({
+          year: y,
+          month: m,
+          monthKey,
+          monthName,
+          startDate: new Date(y, m, 1),
+          endDate: new Date(y, m + 1, 0),
+        });
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      const today = new Date();
+      const currentMonthKey = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}`;
+
+      // Build Excel Rows
+      const excelRows = targetStudents.map((student) => {
+        const studentIdNorm = String(student.StudentID || "")
+          .trim()
+          .toLowerCase();
+        const rawPunches = studentAttendanceMap.get(studentIdNorm) || [];
+
+        let studentTotalClasses = 0;
+        let studentTotalPresent = 0;
+
+        const row = {
+          "Student ID": student.StudentID || "N/A",
+          "Student Name": student.CandidateName || "N/A",
+          Semester: student.Sem || "N/A",
+          Course: student.Course || "N/A",
+          Batch: student.Session || "N/A",
+        };
+
+        months.forEach((mon) => {
+          const isFuture = mon.monthKey > currentMonthKey;
+          if (isFuture) {
+            row[`${mon.monthName} Classes`] = "-";
+            row[`${mon.monthName} Present`] = "-";
+            row[`${mon.monthName} (%)`] = "-";
+            return;
+          }
+
+          // Calculate working days in this month for this student
+          const daysInMonth = eachDayOfInterval({
+            start: mon.startDate,
+            end: mon.endDate,
+          });
+          const workingDays = daysInMonth.filter((d) =>
+            isWorkingDay(d, student.Course, student.Sem)
+          );
+          const totalClasses = workingDays.length;
+
+          // Find present dates within this month that fall on working days (Option 3)
+          const presentDates = new Set();
+          rawPunches.forEach((punch) => {
+            const rawVal =
+              punch.InTime || punch.date || punch.Date || punch.attendance_date;
+            const normDate = normalizeDateKey(rawVal);
+            if (!normDate) return;
+
+            const [pY, pM, pD] = normDate.split("-").map(Number);
+            if (pY === mon.year && pM === mon.month + 1) {
+              const punchDay = new Date(pY, pM - 1, pD);
+              if (isWorkingDay(punchDay, student.Course, student.Sem)) {
+                presentDates.add(normDate);
+              }
+            }
+          });
+
+          const presentCount = Math.min(totalClasses, presentDates.size);
+          const pct =
+            totalClasses > 0
+              ? Math.min(100, (presentCount / totalClasses) * 100).toFixed(1)
+              : "0.0";
+
+          row[`${mon.monthName} Classes`] = totalClasses;
+          row[`${mon.monthName} Present`] = presentCount;
+          row[`${mon.monthName} (%)`] = `${pct}%`;
+
+          studentTotalClasses += totalClasses;
+          studentTotalPresent += presentCount;
+        });
+
+        const studentTotalAbsent = Math.max(
+          0,
+          studentTotalClasses - studentTotalPresent
+        );
+        const averagePct =
+          studentTotalClasses > 0
+            ? Math.min(
+                100,
+                (studentTotalPresent / studentTotalClasses) * 100
+              ).toFixed(2)
+            : "0.00";
+
+        row["Total Classes"] = studentTotalClasses;
+        row["Total Present"] = studentTotalPresent;
+        row["Total Absent"] = studentTotalAbsent;
+        row["Attendance Average (%)"] = `${averagePct}%`;
+
+        return row;
+      });
+
+      // Export to Excel sheet
+      const ws = XLSX.utils.json_to_sheet(excelRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Attendance Average");
+
+      const semPart = targetSem ? `_Sem_${targetSem}` : "";
+      const fileName = `Student_Attendance_Average${semPart}_${targetStartMonth}_to_${targetEndMonth}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+
+      setSnackbarMessage(
+        `Attendance Average Excel downloaded successfully (${excelRows.length} students)!`
+      );
+      setOpenSnackbar(true);
+      setAttendanceDialogOpen(false);
+    } catch (err) {
+      console.error("Attendance Average export error:", err);
+      setSnackbarMessage(
+        "Failed to export attendance average: " +
+          (err.message || "Unknown error")
+      );
+      setOpenSnackbar(true);
+    } finally {
+      setAttendanceExportLoading(false);
+      setExportProgressText("");
+    }
+  };
+
   // Calculate counts for summary
   const activeCount = transactions.filter((tx) =>
     getStudentStatus(tx.StudentID),
@@ -498,6 +905,28 @@ const StudentsList = () => {
       >
         <h2 style={{ color: "#CC7A00" }}>Students List</h2>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Tooltip title="Export Attendance Average (Excel)">
+            <Button
+              variant="outlined"
+              startIcon={<AssessmentIcon />}
+              onClick={handleOpenAttendanceDialog}
+              sx={{
+                borderColor: "#CC7A00",
+                color: "#CC7A00",
+                "&:hover": {
+                  borderColor: "#B36B00",
+                  backgroundColor: "rgba(204, 122, 0, 0.08)",
+                },
+                textTransform: "none",
+                fontWeight: 600,
+                height: 40,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Attendance Avg Excel
+            </Button>
+          </Tooltip>
+
           <Tooltip title="Export to Excel">
             <IconButton
               onClick={exportToExcel}
@@ -607,7 +1036,7 @@ const StudentsList = () => {
             </Button>
           </Box>
 
-          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ alignItems: "center" }}>
             <FormControl size="small" sx={{ minWidth: 150 }}>
               <InputLabel>Course</InputLabel>
               <Select
@@ -668,6 +1097,42 @@ const StudentsList = () => {
                 <MenuItem value="inactive">Inactive Only</MenuItem>
               </Select>
             </FormControl>
+
+            <TextField
+              size="small"
+              type="month"
+              label="Start Month"
+              value={startMonth}
+              onChange={(e) => setStartMonth(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
+
+            <TextField
+              size="small"
+              type="month"
+              label="End Month"
+              value={endMonth}
+              onChange={(e) => setEndMonth(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
+
+            <Button
+              variant="contained"
+              startIcon={<AssessmentIcon />}
+              onClick={handleOpenAttendanceDialog}
+              sx={{
+                backgroundColor: "#CC7A00",
+                "&:hover": { backgroundColor: "#B36B00" },
+                textTransform: "none",
+                fontWeight: 600,
+                height: 40,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Export Attendance Avg
+            </Button>
           </Stack>
 
           {/* Active Filters Display */}
@@ -699,6 +1164,20 @@ const StudentsList = () => {
                   <Chip
                     label={`Semester: ${semesterFilter}`}
                     onDelete={() => setSemesterFilter("")}
+                    size="small"
+                  />
+                )}
+                {startMonth && (
+                  <Chip
+                    label={`Start Month: ${startMonth}`}
+                    onDelete={() => setStartMonth("")}
+                    size="small"
+                  />
+                )}
+                {endMonth && (
+                  <Chip
+                    label={`End Month: ${endMonth}`}
+                    onDelete={() => setEndMonth("")}
                     size="small"
                   />
                 )}
@@ -938,6 +1417,157 @@ const StudentsList = () => {
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button onClick={handleSubmit} color="primary">
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Attendance Average Export Dialog */}
+      <Dialog
+        open={attendanceDialogOpen}
+        onClose={() => !attendanceExportLoading && setAttendanceDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: "#CC7A00",
+            color: "#fff",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <AssessmentIcon /> Export Student Attendance Average (Excel)
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, mt: 1 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            Select Semester and the date range (Start &amp; End Month) to calculate student attendance averages, monthly breakdown, and download as an Excel file.
+          </Typography>
+
+          <Stack spacing={2.5}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Semester</InputLabel>
+              <Select
+                value={dialogSemester}
+                onChange={(e) => setDialogSemester(e.target.value)}
+                label="Semester"
+              >
+                <MenuItem value="">All Semesters</MenuItem>
+                {uniqueSemesters.map((sem) => (
+                  <MenuItem key={sem} value={sem}>
+                    Semester {sem}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                type="month"
+                label="Start Month (Month & Year)"
+                value={dialogStartMonth}
+                onChange={(e) => setDialogStartMonth(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                size="small"
+                type="month"
+                label="End Month (Month & Year)"
+                value={dialogEndMonth}
+                onChange={(e) => setDialogEndMonth(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+
+            <Box
+              sx={{
+                p: 1.5,
+                backgroundColor: "#f9f9f9",
+                borderRadius: 1.5,
+                border: "1px solid #e0e0e0",
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 600, color: "#333", mb: 0.5 }}
+              >
+                Export Summary Preview:
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                • Target:{" "}
+                {dialogSemester ? `Semester ${dialogSemester} students` : "All Semesters"}{" "}
+                (
+                {
+                  transactions.filter(
+                    (s) =>
+                      !dialogSemester ||
+                      String(s.Sem || "").trim() === String(dialogSemester).trim(),
+                  ).length
+                }{" "}
+                students)
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                • Months: {dialogStartMonth || "Not selected"} to{" "}
+                {dialogEndMonth || "Not selected"}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                • Columns: Student ID, Student Name, Semester, Course, Batch, Monthly Breakdowns, Total Classes, Total Present, Total Absent, Attendance Average (%)
+              </Typography>
+            </Box>
+
+            {attendanceExportLoading && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  p: 1.5,
+                  backgroundColor: "#fff8e1",
+                  borderRadius: 1,
+                  border: "1px solid #ffe082",
+                }}
+              >
+                <CircularProgress size={24} sx={{ color: "#CC7A00" }} />
+                <Typography variant="body2" sx={{ fontWeight: 500, color: "#CC7A00" }}>
+                  {exportProgressText || "Calculating attendance..."}
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={() => setAttendanceDialogOpen(false)}
+            disabled={attendanceExportLoading}
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleExportAttendanceAverage()}
+            variant="contained"
+            disabled={
+              attendanceExportLoading || !dialogStartMonth || !dialogEndMonth
+            }
+            sx={{
+              backgroundColor: "#CC7A00",
+              "&:hover": { backgroundColor: "#B36B00" },
+              fontWeight: 600,
+              textTransform: "none",
+            }}
+            startIcon={
+              attendanceExportLoading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <FileDownloadIcon />
+              )
+            }
+          >
+            {attendanceExportLoading ? "Processing..." : "Download Excel"}
           </Button>
         </DialogActions>
       </Dialog>
