@@ -1514,9 +1514,7 @@ const StudentsList = () => {
                 • Months: {dialogStartMonth || "Not selected"} to{" "}
                 {dialogEndMonth || "Not selected"}
               </Typography>
-              <Typography variant="body2" color="textSecondary">
-                • Columns: Student ID, Student Name, Semester, Course, Batch, Monthly Breakdowns, Total Classes, Total Present, Total Absent, Attendance Average (%)
-              </Typography>
+              
             </Box>
 
             {attendanceExportLoading && (
