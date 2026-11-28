@@ -776,10 +776,18 @@ const StudentsList = () => {
         const studentIdNorm = String(student.StudentID || "")
           .trim()
           .toLowerCase();
-        const rawPunches = studentAttendanceMap.get(studentIdNorm) || [];
+        const studentTempIdNorm = String(student.TempID || "")
+          .trim()
+          .toLowerCase();
+        const rawPunches =
+          studentAttendanceMap.get(studentIdNorm) ||
+          (studentTempIdNorm ? studentAttendanceMap.get(studentTempIdNorm) : null) ||
+          [];
 
         let studentTotalClasses = 0;
         let studentTotalPresent = 0;
+        let sumOfMonthlyPercentages = 0;
+        let validMonthsCount = 0;
 
         const row = {
           "Student ID": student.StudentID || "N/A",
@@ -837,24 +845,31 @@ const StudentsList = () => {
 
           studentTotalClasses += totalClasses;
           studentTotalPresent += presentCount;
+          if (totalClasses > 0) {
+            sumOfMonthlyPercentages += Number(pct);
+            validMonthsCount += 1;
+          }
         });
 
         const studentTotalAbsent = Math.max(
           0,
           studentTotalClasses - studentTotalPresent
         );
-        const averagePct =
-          studentTotalClasses > 0
+
+        // Exact calculation as AttendanceSummary.js (Mean of monthly percentages)
+        const summaryAveragePct =
+          validMonthsCount > 0
             ? Math.min(
                 100,
-                (studentTotalPresent / studentTotalClasses) * 100
+                sumOfMonthlyPercentages / validMonthsCount,
               ).toFixed(2)
             : "0.00";
 
         row["Total Classes"] = studentTotalClasses;
         row["Total Present"] = studentTotalPresent;
         row["Total Absent"] = studentTotalAbsent;
-        row["Attendance Average (%)"] = `${averagePct}%`;
+        // Matches AttendanceSummary.js (62.14%)
+        row["Attendance Average (%)"] = `${summaryAveragePct}%`;
 
         return row;
       });
